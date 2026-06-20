@@ -90,6 +90,14 @@
   .history-row .nums{text-align:right; font-size:11.5px; color:var(--muted); line-height:1.55; font-weight:600;}
   .history-row .nums b{color:var(--ink); font-size:13px;}
 
+  .backup-card{margin-top:20px; background:var(--card); border-radius:18px; padding:18px 18px 20px; box-shadow:0 4px 14px -10px rgba(44,38,64,.22); text-align:center;}
+  .backup-title{font-weight:800; font-size:15px;}
+  .backup-sub{font-size:12px; color:var(--muted); font-weight:600; margin-top:4px; margin-bottom:14px;}
+  .backup-actions{display:flex; gap:10px;}
+  .btn-backup{flex:1; padding:12px 8px; border-radius:13px; border:none; font-size:12.5px; font-weight:800; cursor:pointer; color:#fff;}
+  .btn-backup.export{background:linear-gradient(135deg,var(--violet),#a98bff);}
+  .btn-backup.import{background:linear-gradient(135deg,#13c08a,#37e0a4);}
+
   .savings-total-card{
     border-radius:18px; padding:18px 20px; margin-bottom:14px; color:#fff;
     background:linear-gradient(135deg,#ffb703,#ffd166); box-shadow:0 10px 24px -10px rgba(255,183,3,.55);
@@ -176,7 +184,19 @@
       <div class="section-title"><span>Savings this month</span></div>
       <ul class="entry-list" id="savingsList"></ul>
     </section>
-    <section id="tab-history" style="display:none;"><div class="section-title"><span>Previous months</span></div><div id="historyList" style="display:flex; flex-direction:column; gap:9px;"></div></section>
+    <section id="tab-history" style="display:none;">
+      <div class="section-title"><span>Previous months</span></div>
+      <div id="historyList" style="display:flex; flex-direction:column; gap:9px;"></div>
+      <div class="backup-card">
+        <div class="backup-title">🔒 Backup your data</div>
+        <div class="backup-sub">Save a copy of everything, or restore it on a new phone.</div>
+        <div class="backup-actions">
+          <button class="btn-backup export" id="exportBtn">⬇️ Export backup</button>
+          <button class="btn-backup import" id="importBtn">⬆️ Import backup</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json" style="display:none;">
+      </div>
+    </section>
   </main>
 </div>
 
@@ -415,6 +435,63 @@ saveBtn.onclick = ()=>{
   else { savings.push(entry); saveList(SAVINGS_KEY, savings); }
   overlay.classList.remove('open');
   render();
+};
+
+// Backup: export
+document.getElementById('exportBtn').onclick = ()=>{
+  const backup = {
+    app: 'My Money - Personal Ledger',
+    exportedAt: new Date().toISOString(),
+    expenses, incomes, savings
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateTag = todayStr();
+  a.href = url;
+  a.download = `my-money-backup-${dateTag}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+// Backup: import
+const importFile = document.getElementById('importFile');
+document.getElementById('importBtn').onclick = ()=> importFile.click();
+importFile.onchange = (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(!data || !Array.isArray(data.expenses) || !Array.isArray(data.incomes) || !Array.isArray(data.savings)){
+        alert('This file doesn\'t look like a valid backup.');
+        return;
+      }
+      const merge = confirm('Tap OK to MERGE this backup with your current data.\nTap Cancel to REPLACE all current data with the backup instead.');
+      if(merge){
+        const existingIds = new Set([...expenses, ...incomes, ...savings].map(x=>x.id));
+        expenses = [...expenses, ...data.expenses.filter(x=>!existingIds.has(x.id))];
+        incomes = [...incomes, ...data.incomes.filter(x=>!existingIds.has(x.id))];
+        savings = [...savings, ...data.savings.filter(x=>!existingIds.has(x.id))];
+      } else {
+        expenses = data.expenses;
+        incomes = data.incomes;
+        savings = data.savings;
+      }
+      saveList(STORAGE_KEY, expenses);
+      saveList(INCOME_KEY, incomes);
+      saveList(SAVINGS_KEY, savings);
+      render();
+      alert('Backup restored successfully!');
+    }catch(err){
+      alert('Could not read this file. Make sure it\'s a backup exported from this app.');
+    }
+    importFile.value = '';
+  };
+  reader.readAsText(file);
 };
 
 todayLabel.textContent = new Date().toLocaleDateString(undefined,{weekday:'short', day:'numeric', month:'short', year:'numeric'});
