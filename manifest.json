@@ -1,7 +1,7 @@
 {
   "name": "My Money",
   "short_name": "My Money",
-  "description": "Personal expense, income, savings and debt tracker",
+  "description": "Personal finance tracker — expenses, income, savings, debt",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#fff8f2",
