@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="My Money">
+<meta name="apple-mobile-web-app-title" content="FinMob">
 <title>FinMob</title>
 <link rel="manifest" href="manifest.json">
 <style>
@@ -261,7 +261,7 @@ nav.tabs button.active{background:var(--pri);color:#fff;}
 
 <header>
   <div class="htop">
-    <h1>My Money</h1>
+    <h1>FinMob</h1>
     <div class="hright">
       <div class="hdate" id="hdate"></div>
       <button class="gear-btn" onclick="openOv('ov-settings')" title="Settings">⚙️</button>
@@ -1302,7 +1302,7 @@ async function renderAppts(){
 // ══════════════════════════════════════════════════
 async function exportBk(){
   const stores=['expenses','incomes','savings','debts','payments','banks','people','documents','appointments'];
-  const data={app:'My Money',version:3,exportedAt:new Date().toISOString()};
+  const data={app:'FinMob',version:3,exportedAt:new Date().toISOString()};
   for(const s of stores) data[s]=await dbAll(s);
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
