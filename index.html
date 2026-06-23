@@ -464,7 +464,7 @@ nav.tabs button.active{background:var(--pri);color:#fff;}
           <option value="gold">🪙 Gold Loan</option>
           <option value="personal">👤 Personal Loan</option>
           <option value="car">🚗 Car Loan</option>
-          <option value="other">📌 Other Loan</option>
+          <option value="other">📌 Others</option>
         </select>
       </div>
       <div class="field"><label>Lender / Bank Name</label><input type="text" id="dLender" placeholder="e.g. Emirates NBD"></div>
@@ -524,7 +524,7 @@ nav.tabs button.active{background:var(--pri);color:#fff;}
         <button class="dtbtn" data-dt="govt_id" onclick="selDocType(this)">🪪 Government ID</button>
         <button class="dtbtn" data-dt="passport" onclick="selDocType(this)">🛂 Passport</button>
         <button class="dtbtn" data-dt="driving" onclick="selDocType(this)">🚗 Driving License</button>
-        <button class="dtbtn" data-dt="other" onclick="selDocType(this)">📁 Other Document</button>
+        <button class="dtbtn" data-dt="other" onclick="selDocType(this)">📁 Others</button>
         <button class="dtbtn" data-dt="tenancy" onclick="selDocType(this)">🏠 Tenancy Contract</button>
       </div>
       <!-- Common doc form -->
@@ -572,8 +572,9 @@ nav.tabs button.active{background:var(--pri);color:#fff;}
     <div class="stitle" style="margin-top:0">Add New Appointment</div>
     <div class="atype-row" id="apptTypes">
       <button class="atbtn sel" data-at="doctor" onclick="selAT(this)">🩺 Doctor</button>
-      <button class="atbtn" data-at="service" onclick="selAT(this)">🔧 Car Service</button>
-      <button class="atbtn" data-at="other" onclick="selAT(this)">📋 Other</button>
+      <button class="atbtn" data-at="service" onclick="selAT(this)">🔧 Service</button>
+      <button class="atbtn" data-at="parlour" onclick="selAT(this)">💇 Parlour</button>
+      <button class="atbtn" data-at="other" onclick="selAT(this)">📋 Others</button>
     </div>
     <!-- Car service extra -->
     <div id="af-service" style="display:none">
@@ -811,7 +812,7 @@ const EXP_CATS=[
   ]},
   {id:'transport',label:'Transport',icon:'🚌',subs:null},
   {id:'school',label:'School',icon:'🎓',subs:[
-    {id:'school_fees',label:'School Fees',icon:'🏫'},
+    {id:'school_fees',label:'Tuition Fees',icon:'🏫'},
     {id:'transport_fees',label:'Transport Fees',icon:'🚌'},
     {id:'school_o',label:'Others',icon:'📌'},
   ]},
@@ -820,6 +821,8 @@ const EXP_CATS=[
     {id:'shopping',label:'Online Shopping',icon:'🛍️'},
     {id:'movies',label:'Movies',icon:'🎥'},
     {id:'dine_out',label:'Dine Out',icon:'🍽️'},
+    {id:'clothing',label:'Clothing',icon:'👗'},
+    {id:'holiday',label:'Holiday',icon:'✈️'},
     {id:'ent_o',label:'Others',icon:'📌'},
   ]},
   {id:'utilities',label:'Utilities',icon:'💡',subs:[
@@ -829,21 +832,21 @@ const EXP_CATS=[
     {id:'util_o',label:'Others',icon:'📌'},
   ]},
   {id:'remittance',label:'Remittance',icon:'💸',subs:null},
-  {id:'other',label:'Other',icon:'📌',subs:null},
+  {id:'other',label:'Others',icon:'📌',subs:null},
 ];
-const INC_CATS=[{id:'salary',label:'Salary',icon:'💼'},{id:'business',label:'Business',icon:'🏪'},{id:'gift',label:'Gift',icon:'🎁'},{id:'other_i',label:'Other',icon:'➕'}];
+const INC_CATS=[{id:'salary',label:'Salary',icon:'💼'},{id:'business',label:'Business',icon:'🏪'},{id:'gift',label:'Gift',icon:'🎁'},{id:'other_i',label:'Others',icon:'➕'}];
 const SAV_TYPES=[
   {id:'cash',label:'Cash',icon:'💵'},
   {id:'mf',label:'Mutual Funds',icon:'📈'},
   {id:'shares',label:'Shares',icon:'📊'},
   {id:'gold',label:'Gold',icon:'🪙'},
   {id:'fd',label:'Fixed Deposit',icon:'🏦'},
-  {id:'other',label:'Other',icon:'➕'},
+  {id:'other',label:'Others',icon:'➕'},
 ];
-const DEBT_LABELS={mortgage:'Mortgage',gold:'Gold Loan',personal:'Personal Loan',car:'Car Loan',other:'Other Loan'};
-const DOC_LABELS={govt_id:'Government ID',passport:'Passport',driving:'Driving License',other:'Other Document',tenancy:'Tenancy Contract'};
+const DEBT_LABELS={mortgage:'Mortgage',gold:'Gold Loan',personal:'Personal Loan',car:'Car Loan',other:'Others'};
+const DOC_LABELS={govt_id:'Government ID',passport:'Passport',driving:'Driving License',other:'Others',tenancy:'Tenancy Contract'};
 const DOC_NUMLBL={govt_id:'ID Number',passport:'Passport No',driving:'License No',other:'Document No',tenancy:'Contract No'};
-const APPT_ICONS={doctor:'🩺',service:'🔧',other:'📋'};
+const APPT_ICONS={doctor:'🩺',service:'🔧',parlour:'💇',other:'📋'};
 
 // ══════════════════════════════════════════════════
 // UTILS
@@ -1329,7 +1332,7 @@ async function renderAppts(){
     const dt=d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})+' at '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
     const extra=a.type==='service'&&(a.car||a.svcType)?`<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:2px">${[a.car,a.svcType].filter(Boolean).join(' · ')}</div>`:'';
     return `<div class="acard">
-      <div class="aico" style="background:${a.type==='doctor'?'#fce4ec':a.type==='service'?'#e8f5e9':'#f3e5f5'}">${APPT_ICONS[a.type]||'📋'}</div>
+      <div class="aico" style="background:${a.type==='doctor'?'#fce4ec':a.type==='service'?'#e8f5e9':a.type==='parlour'?'#fce4ff':'#f3e5f5'}">${APPT_ICONS[a.type]||'📋'}</div>
       <div class="ainfo">
         <div class="atitle" style="${past?'opacity:.55;text-decoration:line-through':''}">${a.title}</div>
         <div class="adt">${dt}${past?' · past':''}</div>
