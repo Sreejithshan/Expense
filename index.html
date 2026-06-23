@@ -780,12 +780,32 @@ async function checkNotifications(){
 // ══════════════════════════════════════════════════
 const EXP_CATS=[
   {id:'rent',label:'Rent',icon:'🏠',subs:null},
-  {id:'car',label:'Car',icon:'🚗',subs:[{id:'fuel',label:'Fuel',icon:'⛽'},{id:'insurance',label:'Insurance',icon:'🛡️'},{id:'tolls',label:'Tolls',icon:'🛣️'},{id:'service',label:'Service',icon:'🔧'},{id:'car_o',label:'Others',icon:'📌'}]},
+  {id:'car',label:'Car',icon:'🚗',subs:[
+    {id:'fuel',label:'Fuel',icon:'⛽'},
+    {id:'insurance',label:'Insurance',icon:'🛡️'},
+    {id:'tolls',label:'Tolls',icon:'🛣️'},
+    {id:'car_service',label:'Service & Repair',icon:'🔧'},
+    {id:'car_o',label:'Others',icon:'📌'},
+  ]},
   {id:'transport',label:'Transport',icon:'🚌',subs:null},
-  {id:'school',label:'School',icon:'🎓',subs:null},
+  {id:'school',label:'School',icon:'🎓',subs:[
+    {id:'school_fees',label:'School Fees',icon:'🏫'},
+    {id:'transport_fees',label:'Transport Fees',icon:'🚌'},
+    {id:'school_o',label:'Others',icon:'📌'},
+  ]},
   {id:'groceries',label:'Groceries',icon:'🛒',subs:null},
-  {id:'entertainment',label:'Entertainment',icon:'🎬',subs:null},
-  {id:'utilities',label:'Utilities',icon:'💡',subs:[{id:'electricity',label:'Electricity',icon:'⚡'},{id:'phone',label:'Phone',icon:'📱'},{id:'internet',label:'Internet',icon:'🌐'},{id:'util_o',label:'Others',icon:'📌'}]},
+  {id:'entertainment',label:'Entertainment',icon:'🎬',subs:[
+    {id:'shopping',label:'Online Shopping',icon:'🛍️'},
+    {id:'movies',label:'Movies',icon:'🎥'},
+    {id:'dine_out',label:'Dine Out',icon:'🍽️'},
+    {id:'ent_o',label:'Others',icon:'📌'},
+  ]},
+  {id:'utilities',label:'Utilities',icon:'💡',subs:[
+    {id:'electricity',label:'Electricity',icon:'⚡'},
+    {id:'phone',label:'Phone',icon:'📱'},
+    {id:'internet',label:'Internet',icon:'🌐'},
+    {id:'util_o',label:'Others',icon:'📌'},
+  ]},
   {id:'remittance',label:'Remittance',icon:'💸',subs:null},
   {id:'other',label:'Other',icon:'📌',subs:null},
 ];
@@ -970,6 +990,8 @@ function pickCat(id){
   const sub=document.getElementById('subCats');
   if(mode==='expense' && cat && cat.subs){
     document.getElementById('subLbl').textContent='Select '+cat.label+' type';
+    const cols=cat.subs.length>=5?'five':'';
+    document.getElementById('subGrid').className='cgrid five';
     document.getElementById('subGrid').innerHTML=cat.subs.map(s=>`
       <button class="cpick${s.id===selSub?' sel me':''}" onclick="pickSub('${s.id}')">
         <span class="ci">${s.icon}</span><span>${s.label}</span>
