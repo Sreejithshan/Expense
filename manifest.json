@@ -1,0 +1,12 @@
+{
+  "name": "FinMob",
+  "short_name": "FinMob",
+  "description": "Personal finance tracker — expenses, income, savings, debt",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff8f2",
+  "theme_color": "#ff5f8f",
+  "start_url": ".",
+  "scope": ".",
+  "icons": []
+}
