@@ -261,10 +261,7 @@ nav.tabs button.active{background:var(--pri);color:#fff;}
 
 <header>
   <div class="htop">
-    <div>
-      <h1>FinMob</h1>
-      <div style="font-size:10px;color:var(--pri);font-weight:800;letter-spacing:.1em;">v4.0 — June 2026</div>
-    </div>
+    <h1>FinMob</h1>
     <div class="hright">
       <div class="hdate" id="hdate"></div>
       <button class="gear-btn" onclick="openOv('ov-settings')" title="Settings">⚙️</button>
@@ -999,9 +996,9 @@ function pickCat(id){
       <button class="cpick${s.id===selSub?' sel me':''}" onclick="pickSub('${s.id}')">
         <span class="ci">${s.icon}</span><span>${s.label}</span>
       </button>`).join('');
-    sub.style.display='';
+    sub.style.display='block';
   } else { sub.style.display='none'; }
-  document.getElementById('remF').style.display=(mode==='expense'&&id==='remittance')?'':'none';
+  document.getElementById('remF').style.display=(mode==='expense'&&id==='remittance')?'block':'none';
 }
 
 function pickSub(id){
