@@ -16,8 +16,50 @@
   --pri:#ff6348;--exp:#ff5e57;--exp-s:#ffe4e3;--inc:#13c08a;--inc-s:#d6f7ec;
   --sav:#f9a825;--sav-s:#fff3cf;--dbt:#7c5cff;--dbt-s:#ede9ff;
 }
+body.dark{
+  --bg:#1a1625;--bg2:#211c30;--card:#2a2440;--ink:#f0eaff;--muted:#8a7fa8;--line:#3a3358;
+  --exp-s:#3d1c1c;--inc-s:#1a3d30;--sav-s:#3d3010;--dbt-s:#2a2050;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
-body{background:linear-gradient(180deg,var(--bg2),var(--bg) 200px,var(--bg));color:var(--ink);min-height:100vh;padding-bottom:30px;font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif;font-size:14px;}
+body{background:linear-gradient(180deg,var(--bg2),var(--bg) 200px,var(--bg));color:var(--ink);min-height:100vh;padding-bottom:30px;font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif;font-size:14px;transition:background .3s,color .3s;}
+
+/* ── SPLASH SCREEN ── */
+#splash{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#2c2640,#4a3d6b);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .6s ease,transform .6s ease;}
+#splash.hide{opacity:0;transform:scale(1.05);pointer-events:none;}
+.splash-logo{width:90px;height:90px;border-radius:28px;background:linear-gradient(135deg,#ff5f8f,#ff7e6b 55%,#ffa45c);display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 16px 40px rgba(255,95,143,.5);animation:splashPop .6s cubic-bezier(.34,1.56,.64,1);}
+@keyframes splashPop{from{transform:scale(0.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+.splash-name{font-size:32px;font-weight:800;color:#fff;letter-spacing:.02em;animation:fadeUp .5s .3s both ease-out;}
+.splash-tag{font-size:13px;color:rgba(255,255,255,.65);font-weight:600;animation:fadeUp .5s .45s both ease-out;}
+.splash-bar{width:60px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin-top:10px;overflow:hidden;animation:fadeUp .5s .6s both ease-out;}
+.splash-bar-fill{height:100%;width:0;background:linear-gradient(90deg,#ff5f8f,#ffa45c);border-radius:2px;animation:loadBar 1.8s .5s ease-out forwards;}
+@keyframes loadBar{to{width:100%;}}
+@keyframes fadeUp{from{transform:translateY(14px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+/* ── ANIMATIONS ── */
+.fade-in{animation:fadeIn .4s ease-out both;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.erow{animation:fadeIn .35s ease-out both;}
+.mc{animation:fadeIn .4s ease-out both;}
+.dcard,.bkcard2,.doccard,.acard,.hrow{animation:fadeIn .35s ease-out both;}
+.feat-sec .feat-row:first-child .fbtn:nth-child(1){animation:fadeIn .3s .05s both ease-out;}
+.feat-sec .feat-row:first-child .fbtn:nth-child(2){animation:fadeIn .3s .1s both ease-out;}
+.feat-sec .feat-row:first-child .fbtn:nth-child(3){animation:fadeIn .3s .15s both ease-out;}
+.feat-sec .feat-row:first-child .fbtn:nth-child(4){animation:fadeIn .3s .2s both ease-out;}
+.feat-sec .feat-row:last-child .fbtn:nth-child(1){animation:fadeIn .3s .25s both ease-out;}
+.feat-sec .feat-row:last-child .fbtn:nth-child(2){animation:fadeIn .3s .3s both ease-out;}
+.feat-sec .feat-row:last-child .fbtn:nth-child(3){animation:fadeIn .3s .35s both ease-out;}
+.feat-sec .feat-row:last-child .fbtn:nth-child(4){animation:fadeIn .3s .4s both ease-out;}
+.sheet{animation:su .25s cubic-bezier(.34,1.2,.64,1);}
+@keyframes su{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.bal{animation:fadeIn .5s .1s both ease-out;}
+.mini .mc:nth-child(1){animation:fadeIn .4s .15s both ease-out;}
+.mini .mc:nth-child(2){animation:fadeIn .4s .2s both ease-out;}
+.mini .mc:nth-child(3){animation:fadeIn .4s .25s both ease-out;}
+
+/* ── DARK MODE TOGGLE ── */
+.dark-toggle{background:none;border:none;font-size:22px;padding:2px;cursor:pointer;transition:transform .3s;}
+.dark-toggle:active{transform:rotate(20deg);}
+.dark .bal-card input,.dark input,.dark select,.dark textarea{color-scheme:dark;}
 .wrap{max-width:480px;margin:0 auto;padding:0 15px;}
 input,select,textarea{font-family:inherit;font-size:14px;outline:none;}
 button{font-family:inherit;cursor:pointer;}
@@ -234,6 +276,14 @@ nav.tabs button.active{background:var(--pri);color:#fff;}
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════ SPLASH ═══ -->
+<div id="splash">
+  <div class="splash-logo">💰</div>
+  <div class="splash-name">FinMob</div>
+  <div class="splash-tag">Your Personal Finance Manager</div>
+  <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+</div>
+
 <!-- ═══════════════════════════════════════ PIN SCREEN ═══ -->
 <div id="pinScreen">
   <h2 id="pinTitle">Enter PIN</h2>
@@ -267,6 +317,7 @@ nav.tabs button.active{background:var(--pri);color:#fff;}
     <h1>FinMob</h1>
     <div class="hright">
       <div class="hdate" id="hdate"></div>
+      <button class="dark-toggle" onclick="toggleDark()" id="darkBtn" title="Toggle dark mode">🌙</button>
       <button class="gear-btn" onclick="openOv('ov-settings')" title="Settings">⚙️</button>
     </div>
   </div>
@@ -573,7 +624,7 @@ nav.tabs button.active{background:var(--pri);color:#fff;}
     <div class="atype-row" id="apptTypes">
       <button class="atbtn sel" data-at="doctor" onclick="selAT(this)">🩺 Doctor</button>
       <button class="atbtn" data-at="service" onclick="selAT(this)">🔧 Service</button>
-      <button class="atbtn" data-at="parlour" onclick="selAT(this)">💇 Parlour</button>
+      <button class="atbtn" data-at="parlour" onclick="selAT(this)">💆 Spa</button>
       <button class="atbtn" data-at="other" onclick="selAT(this)">📋 Others</button>
     </div>
     <!-- Car service extra -->
@@ -596,6 +647,16 @@ nav.tabs button.active{background:var(--pri);color:#fff;}
 <div class="ov" id="ov-settings">
   <div class="sheet">
     <div class="sh2"><h2>⚙️ Settings</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="stitle">Appearance</div>
+    <div class="set-row">
+      <div class="sr-left"><h3>🌙 Dark Mode</h3><p>Switch between light and dark theme</p></div>
+      <button onclick="toggleDark()" id="darkSettingBtn">Enable</button>
+    </div>
+    <div class="stitle">Reports</div>
+    <div class="set-row">
+      <div class="sr-left"><h3>📄 Monthly PDF Report</h3><p>Generate and download this month's report</p></div>
+      <button onclick="generatePDF()">Generate</button>
+    </div>
     <div class="stitle">Security</div>
     <div class="set-row">
       <div class="sr-left"><h3>🔒 Change PIN</h3><p>Update your app PIN for security</p></div>
@@ -669,7 +730,7 @@ function openDB(){
 }
 function dbAll(s){ return new Promise((res,rej)=>{ const r=db.transaction(s,'readonly').objectStore(s).getAll(); r.onsuccess=()=>res(r.result||[]); r.onerror=rej; }); }
 function dbGet(s,k){ return new Promise((res,rej)=>{ const r=db.transaction(s,'readonly').objectStore(s).get(k); r.onsuccess=()=>res(r.result); r.onerror=rej; }); }
-function dbPut(s,item){ return new Promise((res,rej)=>{ const r=db.transaction(s,'readwrite').objectStore(s).put(item); r.onsuccess=()=>res(r.result); r.onerror=rej; }); }
+function dbPut(s,item){ return new Promise((res,rej)=>{ const r=db.transaction(s,'readwrite').objectStore(s).put(item); r.onsuccess=()=>{ res(r.result); autoBackup(); }; r.onerror=rej; }); }
 function dbDel(s,id){ return new Promise((res,rej)=>{ const r=db.transaction(s,'readwrite').objectStore(s).delete(id); r.onsuccess=()=>res(); r.onerror=rej; }); }
 
 // ══════════════════════════════════════════════════
@@ -825,6 +886,8 @@ const EXP_CATS=[
     {id:'holiday',label:'Holiday',icon:'✈️'},
     {id:'ent_o',label:'Others',icon:'📌'},
   ]},
+  {id:'medical',label:'Medical',icon:'🏥',subs:null},
+  {id:'insurance',label:'Insurance',icon:'🛡️',subs:null},
   {id:'utilities',label:'Utilities',icon:'💡',subs:[
     {id:'electricity',label:'Electricity',icon:'⚡'},
     {id:'phone',label:'Phone',icon:'📱'},
@@ -846,7 +909,7 @@ const SAV_TYPES=[
 const DEBT_LABELS={mortgage:'Mortgage',gold:'Gold Loan',personal:'Personal Loan',car:'Car Loan',other:'Others'};
 const DOC_LABELS={govt_id:'Government ID',passport:'Passport',driving:'Driving License',other:'Others',tenancy:'Tenancy Contract'};
 const DOC_NUMLBL={govt_id:'ID Number',passport:'Passport No',driving:'License No',other:'Document No',tenancy:'Contract No'};
-const APPT_ICONS={doctor:'🩺',service:'🔧',parlour:'💇',other:'📋'};
+const APPT_ICONS={doctor:'🩺',service:'🔧',parlour:'💆',other:'📋'};
 
 // ══════════════════════════════════════════════════
 // UTILS
@@ -1378,6 +1441,154 @@ async function importBk(input){
 }
 
 // ══════════════════════════════════════════════════
+// SPLASH SCREEN
+// ══════════════════════════════════════════════════
+function hideSplash(){
+  const splash=document.getElementById('splash');
+  if(splash){ splash.classList.add('hide'); setTimeout(()=>splash.remove(),700); }
+}
+
+// ══════════════════════════════════════════════════
+// DARK MODE
+// ══════════════════════════════════════════════════
+function toggleDark(){
+  const isDark=document.body.classList.toggle('dark');
+  localStorage.setItem('finmob_dark', isDark?'1':'0');
+  document.getElementById('darkBtn').textContent=isDark?'☀️':'🌙';
+  const sb=document.getElementById('darkSettingBtn');
+  if(sb) sb.textContent=isDark?'Disable':'Enable';
+}
+function initDarkMode(){
+  const saved=localStorage.getItem('finmob_dark');
+  if(saved==='1'){
+    document.body.classList.add('dark');
+    const btn=document.getElementById('darkBtn');
+    if(btn) btn.textContent='☀️';
+    const sb=document.getElementById('darkSettingBtn');
+    if(sb) sb.textContent='Disable';
+  }
+}
+
+// ══════════════════════════════════════════════════
+// AUTO DAILY BACKUP (localStorage mirror)
+// ══════════════════════════════════════════════════
+const STORES=['expenses','incomes','savings','debts','payments','banks','people','documents','appointments'];
+
+async function autoBackup(){
+  try{
+    const today=todayStr();
+    const lastBk=localStorage.getItem('finmob_last_backup');
+    const data={savedAt:new Date().toISOString()};
+    for(const s of STORES) data[s]=await dbAll(s);
+    localStorage.setItem('finmob_auto_backup', JSON.stringify(data));
+    localStorage.setItem('finmob_last_backup', today);
+  }catch(e){ console.warn('Auto backup failed:',e); }
+}
+
+async function restoreFromAutoBackup(){
+  try{
+    const raw=localStorage.getItem('finmob_auto_backup');
+    if(!raw) return false;
+    const bk=JSON.parse(raw);
+    let restored=false;
+    for(const s of STORES){
+      if(!Array.isArray(bk[s])) continue;
+      const existing=await dbAll(s);
+      if(existing.length===0 && bk[s].length>0){
+        for(const item of bk[s]) await dbPut(s,item);
+        restored=true;
+      }
+    }
+    return restored;
+  }catch(e){ return false; }
+}
+
+// ══════════════════════════════════════════════════
+// MONTHLY PDF REPORT
+// ══════════════════════════════════════════════════
+async function generatePDF(){
+  const mk=curM();
+  const mName=mLabel(mk);
+  const [exps,incs,savs,debts]=await Promise.all([dbAll('expenses'),dbAll('incomes'),dbAll('savings'),dbAll('debts')]);
+  const mExp=exps.filter(e=>mKey(e.date)===mk);
+  const mInc=incs.filter(e=>mKey(e.date)===mk);
+  const mSav=savs.filter(e=>mKey(e.date)===mk);
+  const spent=mExp.reduce((s,e)=>s+Number(e.amount||0),0);
+  const earned=mInc.reduce((s,e)=>s+Number(e.amount||0),0);
+  const saved=mSav.reduce((s,e)=>s+Number(e.amount||e.totalVal||0),0);
+  const bal=earned-spent-saved;
+
+  // Build printable HTML report
+  const catSums={};
+  mExp.forEach(e=>{ const k=e.subcat||e.cat; catSums[k]=(catSums[k]||0)+Number(e.amount||0); });
+  const catRows=Object.entries(catSums).sort((a,b)=>b[1]-a[1])
+    .map(([id,tot])=>{ const c=catInfo(id,false); return `<tr><td>${c.icon} ${c.label}</td><td style="text-align:right;font-weight:700">${fmt(tot)}</td></tr>`; }).join('');
+
+  const incRows=mInc.sort((a,b)=>b.ts-a.ts).map(e=>{
+    const c=catInfo(e.cat,true);
+    return `<tr><td>${e.date}</td><td>${c.icon} ${c.label}</td><td>${e.note||''}</td><td style="text-align:right;color:#13c08a;font-weight:700">+${fmt(e.amount)}</td></tr>`;
+  }).join('');
+
+  const expRows=mExp.sort((a,b)=>b.ts-a.ts).map(e=>{
+    const c=catInfo(e.subcat||e.cat,false);
+    return `<tr><td>${e.date}</td><td>${c.icon} ${c.label}</td><td>${e.note||''}</td><td style="text-align:right;color:#ff5e57;font-weight:700">-${fmt(e.amount)}</td></tr>`;
+  }).join('');
+
+  const debtRows=debts.map(d=>`<tr><td>${DEBT_LABELS[d.type]||d.type}</td><td>${d.lender}</td><td style="text-align:right">${d.currency} ${fmt(d.total)}</td><td style="text-align:right">${d.currency} ${fmt(d.emi)}/mo</td></tr>`).join('');
+
+  const html=`
+  <html><head><meta charset="UTF-8">
+  <style>
+    body{font-family:'Trebuchet MS',sans-serif;color:#2c2640;padding:30px;max-width:700px;margin:0 auto;}
+    h1{font-size:28px;font-weight:800;color:#ff6348;margin:0 0 4px;}
+    .sub{font-size:13px;color:#9e8fa8;margin-bottom:24px;}
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+    .scard{background:#fff8f2;border-radius:12px;padding:14px;border:1px solid #f0e2ee;}
+    .scard .sl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#9e8fa8;font-weight:700;}
+    .scard .sv{font-size:20px;font-weight:800;margin-top:4px;}
+    .inc{color:#13c08a;} .exp{color:#ff5e57;} .sav{color:#f9a825;} .bal{color:#7c5cff;}
+    h2{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#9e8fa8;margin:20px 0 10px;border-bottom:2px solid #f0e2ee;padding-bottom:6px;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    td{padding:8px 10px;border-bottom:1px solid #f0e2ee;}
+    tr:last-child td{border-bottom:none;}
+    tr:nth-child(even){background:#fff8f2;}
+    .footer{margin-top:30px;font-size:11px;color:#9e8fa8;text-align:center;border-top:1px solid #f0e2ee;padding-top:14px;}
+  </style></head><body>
+  <h1>💰 FinMob</h1>
+  <div class="sub">Monthly Financial Report — ${mName} &nbsp;|&nbsp; Generated ${new Date().toLocaleDateString()}</div>
+  <div class="summary">
+    <div class="scard"><div class="sl">Income</div><div class="sv inc">${fmt(earned)}</div></div>
+    <div class="scard"><div class="sl">Spent</div><div class="sv exp">${fmt(spent)}</div></div>
+    <div class="scard"><div class="sl">Saved</div><div class="sv sav">${fmt(saved)}</div></div>
+    <div class="scard"><div class="sl">Balance</div><div class="sv bal">${fmt(bal)}</div></div>
+  </div>
+  <h2>💳 Spending by Category</h2>
+  <table><tr style="background:#f0e2ee"><td><b>Category</b></td><td style="text-align:right"><b>Amount</b></td></tr>${catRows}</table>
+  <h2>📥 Income Entries</h2>
+  <table><tr style="background:#f0e2ee"><td><b>Date</b></td><td><b>Type</b></td><td><b>Note</b></td><td style="text-align:right"><b>Amount</b></td></tr>${incRows||'<tr><td colspan="4" style="color:#9e8fa8;text-align:center">No income this month</td></tr>'}</table>
+  <h2>💸 Expense Entries</h2>
+  <table><tr style="background:#f0e2ee"><td><b>Date</b></td><td><b>Category</b></td><td><b>Note</b></td><td style="text-align:right"><b>Amount</b></td></tr>${expRows||'<tr><td colspan="4" style="color:#9e8fa8;text-align:center">No expenses this month</td></tr>'}</table>
+  ${debts.length?`<h2>💸 Active Loans</h2><table><tr style="background:#f0e2ee"><td><b>Type</b></td><td><b>Lender</b></td><td style="text-align:right"><b>Total</b></td><td style="text-align:right"><b>EMI</b></td></tr>${debtRows}</table>`:''}
+  <div class="footer">FinMob — Your Personal Finance Manager &nbsp;|&nbsp; All amounts are approximate</div>
+  </body></html>`;
+
+  const win=window.open('','_blank');
+  if(win){
+    win.document.write(html);
+    win.document.close();
+    setTimeout(()=>win.print(),500);
+  } else {
+    // fallback: download as HTML file
+    const blob=new Blob([html],{type:'text/html'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=`FinMob-Report-${mk}.html`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+}
+
+// ══════════════════════════════════════════════════
 // SAVINGS OVERLAY WIRING
 // ══════════════════════════════════════════════════
 document.getElementById('ov-savings').addEventListener('click',function(e){
@@ -1394,7 +1605,14 @@ window.openOv=function(id){
 // INIT
 // ══════════════════════════════════════════════════
 document.getElementById('hdate').textContent=new Date().toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-openDB().then(initPin);
+initDarkMode();
+openDB().then(async()=>{
+  // Restore from auto backup if IndexedDB is empty
+  await restoreFromAutoBackup();
+  // Show splash then go to PIN
+  setTimeout(hideSplash, 2200);
+  setTimeout(initPin, 500);
+});
 </script>
 </body>
 </html>
