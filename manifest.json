@@ -1,12 +1,19 @@
 {
   "name": "FinMob",
   "short_name": "FinMob",
-  "description": "Personal finance tracker — expenses, income, savings, debt",
+  "description": "Your Personal Finance Manager",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#fff8f2",
+  "background_color": "#2c2640",
   "theme_color": "#ff5f8f",
-  "start_url": ".",
-  "scope": ".",
-  "icons": []
+  "start_url": "/Expense/",
+  "scope": "/Expense/",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23ff5f8f'/><text y='.9em' font-size='75' x='12'>💰</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
