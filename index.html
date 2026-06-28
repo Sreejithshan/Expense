@@ -134,13 +134,16 @@ body.dark .htop h1{background:linear-gradient(135deg,#ff8f7a,#ffcc80);-webkit-ba
 /* FEATURE GRID */
 .feat-sec{margin:13px 0 0;}
 .feat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:9px;}
-.fbtn{background:var(--card);border-radius:var(--r2);padding:14px 4px 11px;
+.fbtn{
+  background:linear-gradient(160deg,#ffffff 0%,#f8f9ff 100%);
+  border-radius:var(--r2);padding:14px 4px 11px;
   display:flex;flex-direction:column;align-items:center;gap:7px;
   border:none;width:100%;
   box-shadow:0 2px 12px -4px rgba(26,26,46,.12),0 0 0 1px rgba(26,26,46,.04);
   transition:transform .14s,box-shadow .14s;position:relative;overflow:hidden;
-  background:linear-gradient(160deg,#ffffff 0%,#f8f9ff 100%);}
-.fbtn::before{content:"";position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 var(--r2) var(--r2);background:transparent;pointer-events:none;transition:opacity .2s;}
+}
+.fbtn::before{content:"";position:absolute;inset:0;border-radius:var(--r2);
+  background:linear-gradient(180deg,rgba(255,255,255,.06) 0%,transparent 100%);pointer-events:none;}
 .fbtn:active{transform:scale(.91);box-shadow:0 1px 4px -2px rgba(26,26,46,.1);}
 .fi{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;}
 .fl{font-size:9.5px;font-weight:800;color:var(--ink);letter-spacing:.01em;margin-top:1px;}
@@ -453,13 +456,9 @@ body.dark .fbtn{background:linear-gradient(160deg,#1e2138 0%,#1a1c32 100%);}
 .dash-panel .fbtn{
   background:linear-gradient(160deg,rgba(255,255,255,.95) 0%,rgba(245,244,255,.9) 100%);
   border:1px solid rgba(220,215,255,.6);
-  box-shadow:
-    0 2px 8px -3px rgba(100,90,180,.14),
-    0 1px 0 rgba(255,255,255,.8) inset;
+  box-shadow:0 2px 8px -3px rgba(100,90,180,.14),0 1px 0 rgba(255,255,255,.8) inset;
 }
-.dash-panel .fbtn:active{
-  background:linear-gradient(160deg,rgba(240,238,255,.95),rgba(230,228,255,.9));
-}
+.dash-panel .fbtn:active{background:linear-gradient(160deg,rgba(240,238,255,.95),rgba(230,228,255,.9));}
 /* Dark mode */
 body.dark .dash-panel{
   background:linear-gradient(160deg,#1e2050 0%,#1c1e48 50%,#201c4a 100%);
@@ -478,70 +477,23 @@ body.dark .dash-panel .fbtn{
   box-shadow:0 2px 8px -3px rgba(0,0,0,.3);
 }
 
-/* ══ MENU ICON BACKGROUNDS (Premium Fintech Style) ═══════ */
-
-/* Base fi — remove any inherited background */
-.fi {
-  background: transparent !important;
-}
-
-/* Income — emerald green */
-.fi-income {
-  background: linear-gradient(145deg, #bbf7d0, #6ee7b7) !important;
-  box-shadow: 0 4px 14px -4px rgba(16,185,129,.45) !important;
-}
-
-/* Expenses — coral red */
-.fi-expense {
-  background: linear-gradient(145deg, #fecaca, #f87171) !important;
-  box-shadow: 0 4px 14px -4px rgba(239,68,68,.4) !important;
-}
-
-/* Savings — warm amber */
-.fi-savings {
-  background: linear-gradient(145deg, #fde68a, #fbbf24) !important;
-  box-shadow: 0 4px 14px -4px rgba(245,158,11,.4) !important;
-}
-
-/* Debt — violet purple */
-.fi-debt {
-  background: linear-gradient(145deg, #c4b5fd, #8b5cf6) !important;
-  box-shadow: 0 4px 14px -4px rgba(139,92,246,.4) !important;
-}
-
-/* Bank — royal blue */
-.fi-bank {
-  background: linear-gradient(145deg, #93c5fd, #3b82f6) !important;
-  box-shadow: 0 4px 14px -4px rgba(59,130,246,.4) !important;
-}
-
-/* Documents — rose pink */
-.fi-docs {
-  background: linear-gradient(145deg, #fbcfe8, #f472b6) !important;
-  box-shadow: 0 4px 14px -4px rgba(236,72,153,.35) !important;
-}
-
-/* Appointments — indigo */
-.fi-appts {
-  background: linear-gradient(145deg, #a5b4fc, #6366f1) !important;
-  box-shadow: 0 4px 14px -4px rgba(99,102,241,.4) !important;
-}
-
-/* Settings — teal */
-.fi-settings {
-  background: linear-gradient(145deg, #5eead4, #14b8a6) !important;
-  box-shadow: 0 4px 14px -4px rgba(20,184,166,.4) !important;
-}
-
-/* Dark mode — slightly deeper tones, same hues */
-body.dark .fi-income  { background: linear-gradient(145deg, #065f46, #059669) !important; box-shadow: 0 4px 14px -4px rgba(5,150,105,.5) !important; }
-body.dark .fi-expense { background: linear-gradient(145deg, #991b1b, #dc2626) !important; box-shadow: 0 4px 14px -4px rgba(220,38,38,.5) !important; }
-body.dark .fi-savings { background: linear-gradient(145deg, #92400e, #d97706) !important; box-shadow: 0 4px 14px -4px rgba(217,119,6,.5) !important; }
-body.dark .fi-debt    { background: linear-gradient(145deg, #4c1d95, #7c3aed) !important; box-shadow: 0 4px 14px -4px rgba(124,58,237,.5) !important; }
-body.dark .fi-bank    { background: linear-gradient(145deg, #1e3a8a, #2563eb) !important; box-shadow: 0 4px 14px -4px rgba(37,99,235,.5) !important; }
-body.dark .fi-docs    { background: linear-gradient(145deg, #831843, #be185d) !important; box-shadow: 0 4px 14px -4px rgba(190,24,93,.5) !important; }
-body.dark .fi-appts   { background: linear-gradient(145deg, #312e81, #4338ca) !important; box-shadow: 0 4px 14px -4px rgba(67,56,202,.5) !important; }
-body.dark .fi-settings{ background: linear-gradient(145deg, #134e4a, #0f766e) !important; box-shadow: 0 4px 14px -4px rgba(15,118,110,.5) !important; }
+/* ══ MENU ICON BACKGROUNDS ═══════════════════════════════ */
+.fi-income  { background:linear-gradient(145deg,#bbf7d0,#6ee7b7) !important; box-shadow:0 4px 14px -4px rgba(16,185,129,.45) !important; }
+.fi-expense { background:linear-gradient(145deg,#fecaca,#f87171) !important; box-shadow:0 4px 14px -4px rgba(239,68,68,.4) !important; }
+.fi-savings { background:linear-gradient(145deg,#fde68a,#fbbf24) !important; box-shadow:0 4px 14px -4px rgba(245,158,11,.4) !important; }
+.fi-debt    { background:linear-gradient(145deg,#c4b5fd,#8b5cf6) !important; box-shadow:0 4px 14px -4px rgba(139,92,246,.4) !important; }
+.fi-bank    { background:linear-gradient(145deg,#93c5fd,#3b82f6) !important; box-shadow:0 4px 14px -4px rgba(59,130,246,.4) !important; }
+.fi-docs    { background:linear-gradient(145deg,#fbcfe8,#f472b6) !important; box-shadow:0 4px 14px -4px rgba(236,72,153,.35) !important; }
+.fi-appts   { background:linear-gradient(145deg,#a5b4fc,#6366f1) !important; box-shadow:0 4px 14px -4px rgba(99,102,241,.4) !important; }
+.fi-settings{ background:linear-gradient(145deg,#5eead4,#14b8a6) !important; box-shadow:0 4px 14px -4px rgba(20,184,166,.4) !important; }
+body.dark .fi-income  { background:linear-gradient(145deg,#065f46,#059669) !important; }
+body.dark .fi-expense { background:linear-gradient(145deg,#991b1b,#dc2626) !important; }
+body.dark .fi-savings { background:linear-gradient(145deg,#92400e,#d97706) !important; }
+body.dark .fi-debt    { background:linear-gradient(145deg,#4c1d95,#7c3aed) !important; }
+body.dark .fi-bank    { background:linear-gradient(145deg,#1e3a8a,#2563eb) !important; }
+body.dark .fi-docs    { background:linear-gradient(145deg,#831843,#be185d) !important; }
+body.dark .fi-appts   { background:linear-gradient(145deg,#312e81,#4338ca) !important; }
+body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !important; }
 </style>
 </head>
 <body>
@@ -594,16 +546,16 @@ body.dark .fi-settings{ background: linear-gradient(145deg, #134e4a, #0f766e) !i
       </div>
       <div class="feat-sec">
         <div class="feat-row">
-          <button class="fbtn fbtn-income" onclick="openEntry('income')"><div class="fi">📥</div><div class="fl">Income</div></button>
-          <button class="fbtn fbtn-expense" onclick="openEntry('expense')"><div class="fi">💳</div><div class="fl">Expenses</div></button>
-          <button class="fbtn fbtn-savings" onclick="openOv('ov-savings')"><div class="fi">💰</div><div class="fl">Savings</div></button>
-          <button class="fbtn fbtn-debt" onclick="openOv('ov-debt')"><div class="fi">💸</div><div class="fl">Debt</div></button>
+          <button class="fbtn" onclick="openEntry('income')"><div class="fi fi-income">📥</div><div class="fl">Income</div></button>
+          <button class="fbtn" onclick="openEntry('expense')"><div class="fi fi-expense">💳</div><div class="fl">Expenses</div></button>
+          <button class="fbtn" onclick="openOv('ov-savings')"><div class="fi fi-savings">💰</div><div class="fl">Savings</div></button>
+          <button class="fbtn" onclick="openOv('ov-debt')"><div class="fi fi-debt">💸</div><div class="fl">Debt</div></button>
         </div>
         <div class="feat-row">
-          <button class="fbtn fbtn-bank" onclick="openOv('ov-bank')"><div class="fi">🏦</div><div class="fl">Bank</div></button>
-          <button class="fbtn fbtn-docs" onclick="openOv('ov-docs')"><div class="fi">📄</div><div class="fl">Documents</div></button>
-          <button class="fbtn fbtn-appts" onclick="openOv('ov-appts')"><div class="fi">📅</div><div class="fl">Appointments</div></button>
-          <button class="fbtn fbtn-settings" onclick="openOv('ov-settings')"><div class="fi">⚙️</div><div class="fl">Settings</div></button>
+          <button class="fbtn" onclick="openOv('ov-bank')"><div class="fi fi-bank">🏦</div><div class="fl">Bank</div></button>
+          <button class="fbtn" onclick="openOv('ov-docs')"><div class="fi fi-docs">📄</div><div class="fl">Documents</div></button>
+          <button class="fbtn" onclick="openOv('ov-appts')"><div class="fi fi-appts">📅</div><div class="fl">Appointments</div></button>
+          <button class="fbtn" onclick="openOv('ov-settings')"><div class="fi fi-settings">⚙️</div><div class="fl">Settings</div></button>
         </div>
       </div>
     </div>
@@ -841,9 +793,20 @@ body.dark .fi-settings{ background: linear-gradient(145deg, #134e4a, #0f766e) !i
 // ══ SERVICE WORKER ══════════════════════════════════
 if('serviceWorker' in navigator && location.hostname==='sreejithshan.github.io'){
   navigator.serviceWorker.register('/Expense/sw.js',{scope:'/Expense/'})
-    .then(reg=>{reg.update();reg.addEventListener('updatefound',()=>{const n=reg.installing;n.addEventListener('statechange',()=>{if(n.state==='installed'&&navigator.serviceWorker.controller)location.reload();});});})
-    .catch(e=>console.warn('SW:',e));
-  navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload());
+    .then(reg=>{
+      reg.update();
+      reg.addEventListener('updatefound',()=>{
+        const n=reg.installing;
+        n.addEventListener('statechange',async ()=>{
+          if(n.state==='installed' && navigator.serviceWorker.controller){
+            // Save backup BEFORE reloading so no data is lost
+            await safeBackupBeforeReload();
+            window.location.reload();
+          }
+        });
+      });
+    }).catch(e=>console.warn('SW:',e));
+  // Remove controllerchange reload — updatefound handles it already
 }
 // ══ INDEXEDDB ══════════════════════════════════════
 const DB_NAME='FinMobDB',DB_VER=3;
@@ -851,8 +814,8 @@ let db;
 function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;['expenses','incomes','savings','debts','payments','banks','people','documents','appointments','notifLog'].forEach(s=>{if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:'id'});});if(!d.objectStoreNames.contains('config'))d.createObjectStore('config',{keyPath:'key'});};r.onsuccess=e=>{db=e.target.result;res(db);};r.onerror=rej;});}
 function dbAll(s){return new Promise((res,rej)=>{const r=db.transaction(s,'readonly').objectStore(s).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=rej;});}
 function dbGet(s,k){return new Promise((res,rej)=>{const r=db.transaction(s,'readonly').objectStore(s).get(k);r.onsuccess=()=>res(r.result);r.onerror=rej;});}
-function dbPut(s,item){return new Promise((res,rej)=>{const r=db.transaction(s,'readwrite').objectStore(s).put(item);r.onsuccess=()=>{res(r.result);autoBackup();};r.onerror=rej;});}
-function dbDel(s,id){return new Promise((res,rej)=>{const r=db.transaction(s,'readwrite').objectStore(s).delete(id);r.onsuccess=()=>{res();autoBackup();};r.onerror=rej;});}
+function dbPut(s,item){return new Promise((res,rej)=>{const r=db.transaction(s,'readwrite').objectStore(s).put(item);r.onsuccess=()=>{res(r.result);scheduleBackup();};r.onerror=rej;});}
+function dbDel(s,id){return new Promise((res,rej)=>{const r=db.transaction(s,'readwrite').objectStore(s).delete(id);r.onsuccess=()=>{res();scheduleBackup();};r.onerror=rej;});}
 
 // ══ PIN ════════════════════════════════════════════
 let pinBuf='',pinMode='enter',newPinBuf='';
@@ -877,8 +840,75 @@ function initDarkMode(){if(localStorage.getItem('fm_dark')==='1'){document.body.
 
 // ══ AUTO BACKUP ════════════════════════════════════
 const BSTORES=['expenses','incomes','savings','debts','payments','banks','people','documents','appointments'];
-async function autoBackup(){try{const data={savedAt:new Date().toISOString()};for(const s of BSTORES)data[s]=await dbAll(s);localStorage.setItem('fm_backup',JSON.stringify(data));}catch(e){}}
-async function restoreFromAutoBackup(){try{const raw=localStorage.getItem('fm_backup');if(!raw)return;const bk=JSON.parse(raw);for(const s of BSTORES){if(!Array.isArray(bk[s]))continue;const ex=await dbAll(s);if(ex.length===0&&bk[s].length>0)for(const item of bk[s])await dbPut(s,item);}}catch(e){}}
+
+// Debounce backup — waits 2s after last change before saving
+let _backupTimer=null;
+function scheduleBackup(){
+  clearTimeout(_backupTimer);
+  _backupTimer=setTimeout(autoBackup, 2000);
+}
+
+async function autoBackup(){
+  try{
+    const data={savedAt:new Date().toISOString(),v:4};
+    for(const s of BSTORES){
+      const items=await dbAll(s);
+      // Strip base64 file data to stay within localStorage 5MB limit
+      // Files remain safe in IndexedDB
+      if(s==='documents'){
+        data[s]=items.map(d=>{
+          const copy={...d};
+          delete copy.fileData; // exclude file blobs from localStorage backup
+          return copy;
+        });
+      } else {
+        data[s]=items;
+      }
+    }
+    localStorage.setItem('fm_backup', JSON.stringify(data));
+    localStorage.setItem('fm_last_backup', new Date().toISOString());
+  }catch(e){ console.warn('Backup error:',e); }
+}
+
+// Run full backup before page reloads (SW update)
+async function safeBackupBeforeReload(){
+  try{
+    const data={savedAt:new Date().toISOString(),v:4};
+    for(const s of BSTORES){
+      const items=await dbAll(s);
+      if(s==='documents') data[s]=items.map(d=>{const c={...d};delete c.fileData;return c;});
+      else data[s]=items;
+    }
+    localStorage.setItem('fm_backup', JSON.stringify(data));
+    localStorage.setItem('fm_last_backup', new Date().toISOString());
+    // Small delay to ensure localStorage write completes
+    await new Promise(r=>setTimeout(r,300));
+  }catch(e){}
+}
+
+async function restoreFromAutoBackup(){
+  try{
+    const raw=localStorage.getItem('fm_backup');
+    if(!raw) return;
+    const bk=JSON.parse(raw);
+    let restored=0;
+    for(const s of BSTORES){
+      if(!Array.isArray(bk[s])) continue;
+      const existing=await dbAll(s);
+      const existingIds=new Set(existing.map(x=>x.id));
+      for(const item of bk[s]){
+        if(!existingIds.has(item.id)){
+          await dbPut(s,item);
+          restored++;
+        }
+      }
+    }
+    if(restored>0) console.log(`Restored ${restored} items from backup`);
+  }catch(e){ console.warn('Restore error:',e); }
+}
+
+// Run backup every 3 minutes while app is open
+setInterval(autoBackup, 3*60*1000);
 
 // ══ NOTIFICATIONS ══════════════════════════════════
 async function requestNotif(){if(!('Notification' in window)){alert('Notifications not supported.');return;}const p=await Notification.requestPermission();alert(p==='granted'?'✅ Notifications enabled!':'Please enable in browser settings.');}
