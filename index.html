@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="FinMob">
 <title>FinMob</title>
 <link rel="manifest" href="manifest.json">
+
 <style>
 :root{
   --bg:#f7f8fa;--bg2:#eef0f5;--card:#ffffff;--ink:#1a1a2e;--ink2:#3d3d5c;
@@ -563,6 +564,18 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
 </header>
 <div class="wrap">
   <div class="notif-banner" id="notifBanner"><b>🔔 Reminders</b><ul id="notifList"></ul></div>
+  <div class="notif-banner" id="backupReminder" style="background:linear-gradient(135deg,#1e3a5f,#0d6efd);cursor:pointer;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <b>&#128190; Daily Backup Reminder</b>
+        <div style="font-size:11px;font-weight:500;margin-top:3px;opacity:.9;">Tap to save today's backup to your phone</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="doDailyBackup()" style="background:rgba(255,255,255,.9);color:#1e3a5f;border:none;padding:7px 14px;border-radius:20px;font-weight:800;font-size:12px;">Save Now</button>
+        <button onclick="dismissBackupReminder()" style="background:rgba(255,255,255,.2);color:#fff;border:none;padding:7px 10px;border-radius:20px;font-weight:800;font-size:12px;">Later</button>
+      </div>
+    </div>
+  </div>
   <nav class="tabs">
     <button class="active" data-t="income" onclick="switchTab('income')">Income</button>
     <button data-t="today" onclick="switchTab('today')">Today</button>
@@ -781,6 +794,11 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
     <div class="set-row"><div class="sr-left"><h3>🔒 Change PIN</h3><p>Update your app PIN</p></div><button onclick="closeAll();startChangePin()">Change</button></div>
     <div class="stitle">Notifications</div>
     <div class="set-row"><div class="sr-left"><h3>🔔 Enable Notifications</h3><p>Get alerts for EMIs, cheques, visa expiry</p></div><button onclick="requestNotif()">Enable</button></div>
+    <div class="stitle">Daily Backup Reminder</div>
+    <div class="set-row">
+      <div class="sr-left"><h3>&#128190; Save Backup Today</h3><p>Tap to save a backup file to your phone</p></div>
+      <button onclick="doDailyBackup()">Backup Now</button>
+    </div>
     <div class="stitle">Data</div>
     <div class="set-row"><div class="sr-left"><h3>⬇️ Export Backup</h3><p>Save all data as a file</p></div><button onclick="exportBk()">Export</button></div>
     <div class="set-row"><div class="sr-left"><h3>⬆️ Import Backup</h3><p>Restore data from backup file</p></div><button onclick="document.getElementById('impFile').click()">Import</button></div>
@@ -806,7 +824,7 @@ if('serviceWorker' in navigator && location.hostname==='sreejithshan.github.io')
         });
       });
     }).catch(e=>console.warn('SW:',e));
-  // Remove controllerchange reload — updatefound handles it already
+  // Remove controllerchange reload  -  updatefound handles it already
 }
 // ══ INDEXEDDB ══════════════════════════════════════
 const DB_NAME='FinMobDB',DB_VER=3;
@@ -832,7 +850,7 @@ async function handlePin(){
   else if(pinMode==='ch-confirm'){if(pinBuf===newPinBuf){await dbPut('config',{key:'pin',value:pinBuf});alert('✅ PIN changed!');unlockApp();}else{document.getElementById('pinErr').textContent='✗ PINs don\'t match';pinMode='ch-new';pinBuf='';newPinBuf='';document.getElementById('pinTitle').textContent='Enter New PIN';updateDots();}}
 }
 function startChangePin(){showPin('ch-old');document.getElementById('pinChangeBtn').style.display='none';}
-async function unlockApp(){document.getElementById('pinScreen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('pinChangeBtn').style.display='block';await renderAll();checkNotifications();}
+async function unlockApp(){document.getElementById('pinScreen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('pinChangeBtn').style.display='block';await renderAll();checkNotifications();checkDailyBackupReminder();}
 
 // ══ DARK MODE ══════════════════════════════════════
 function toggleDark(){const d=document.body.classList.toggle('dark');localStorage.setItem('fm_dark',d?'1':'0');document.getElementById('darkBtn').textContent=d?'☀️':'🌙';const sb=document.getElementById('darkSettingBtn');if(sb)sb.textContent=d?'Disable':'Enable';}
@@ -841,7 +859,7 @@ function initDarkMode(){if(localStorage.getItem('fm_dark')==='1'){document.body.
 // ══ AUTO BACKUP ════════════════════════════════════
 const BSTORES=['expenses','incomes','savings','debts','payments','banks','people','documents','appointments'];
 
-// Debounce backup — waits 2s after last change before saving
+// Debounce backup  -  waits 2s after last change before saving
 let _backupTimer=null;
 function scheduleBackup(){
   clearTimeout(_backupTimer);
@@ -1189,7 +1207,7 @@ async function renderPeople(){
   list.innerHTML=people.map(p=>`<div class="person-row"><div class="person-name">👤 ${p.name}</div><div class="person-actions"><button class="person-edit" onclick="editPerson('${p.id}','${p.name}')">Edit</button><button class="person-del" onclick="deletePerson('${p.id}','${p.name}')">Delete</button></div></div>`).join('');
   const sel=document.getElementById('personSel');
   const prev=sel.value;
-  sel.innerHTML='<option value="">— Select person —</option>'+people.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  sel.innerHTML='<option value=""> -  Select person  - </option>'+people.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   if(prev)sel.value=prev;
 }
 async function addPerson(){
@@ -1227,7 +1245,7 @@ async function renderDocs(){
     const exp=d.endDate?new Date(d.endDate+'T00:00:00'):null;
     const days=exp?Math.round((exp-new Date())/86400000):null;
     const soon=days!==null&&days<30;
-    return`<div class="ten-card" onclick="openTenDetail('${d.id}')"><div class="tc-tag">Tenancy Contract</div><div class="tc-name">${d.contractNo||'Contract'} — ${d.landlord||''}</div><div class="tc-dates">${d.startDate||''} → ${d.endDate||''}</div>${soon?`<div class="tc-exp soon">⚠️ Expires in ${days} days</div>`:''}</div>`;
+    return`<div class="ten-card" onclick="openTenDetail('${d.id}')"><div class="tc-tag">Tenancy Contract</div><div class="tc-name">${d.contractNo||'Contract'}  -  ${d.landlord||''}</div><div class="tc-dates">${d.startDate||''} → ${d.endDate||''}</div>${soon?`<div class="tc-exp soon">⚠️ Expires in ${days} days</div>`:''}</div>`;
   }).join('')||'';
   // Other docs
   const otherDocs=docs.filter(d=>d.type!=='tenancy');
@@ -1235,7 +1253,7 @@ async function renderDocs(){
     const exp=d.expiry?new Date(d.expiry+'T00:00:00'):null;
     const days=exp?Math.round((exp-new Date())/86400000):null;
     const soon=days!==null&&days<90;
-    return`<div class="doccard"><div class="dctop"><div><div class="dctag">${DOC_LABELS[d.type]||d.type}${d.docName?' — '+d.docName:''}</div><div class="dcnum">${d.docNum||'—'}</div>${d.expiry?`<div class="dcexp ${soon?'soon':''}">${soon?`⚠️ Expires ${d.expiry} (${days} days)`:`Expires ${d.expiry}`}</div>`:''}${d.issuedBy?`<div class="dcexp">Issued by: ${d.issuedBy}</div>`:''}</div><button class="dcdel" onclick="delDoc('${d.id}')">×</button></div>${d.fileData?`<div class="file-actions"><button class="file-btn view" onclick="viewFile('${d.id}')">👁 View</button><button class="file-btn dl" onclick="dlFile('${d.id}')">⬇️ Download</button><button class="file-btn rep" onclick="replaceFile('${d.id}')">🔄 Replace</button><button class="file-btn rm" onclick="removeFile('${d.id}')">🗑 Remove</button></div>`:`<div class="file-actions"><button class="file-btn rep" onclick="replaceFile('${d.id}')">📎 Attach file</button></div>`}</div>`;
+    return`<div class="doccard"><div class="dctop"><div><div class="dctag">${DOC_LABELS[d.type]||d.type}${d.docName?'  -  '+d.docName:''}</div><div class="dcnum">${d.docNum||' - '}</div>${d.expiry?`<div class="dcexp ${soon?'soon':''}">${soon?`⚠️ Expires ${d.expiry} (${days} days)`:`Expires ${d.expiry}`}</div>`:''}${d.issuedBy?`<div class="dcexp">Issued by: ${d.issuedBy}</div>`:''}</div><button class="dcdel" onclick="delDoc('${d.id}')">×</button></div>${d.fileData?`<div class="file-actions"><button class="file-btn view" onclick="viewFile('${d.id}')">👁 View</button><button class="file-btn dl" onclick="dlFile('${d.id}')">⬇️ Download</button><button class="file-btn rep" onclick="replaceFile('${d.id}')">🔄 Replace</button><button class="file-btn rm" onclick="removeFile('${d.id}')">🗑 Remove</button></div>`:`<div class="file-actions"><button class="file-btn rep" onclick="replaceFile('${d.id}')">📎 Attach file</button></div>`}</div>`;
   }).join('')||'<div class="empty">No documents yet. Select a type above to add one.</div>';
 }
 
@@ -1248,15 +1266,15 @@ async function openTenDetail(id){
   content.innerHTML=`
     <div class="doccard" style="margin-bottom:10px">
       <div class="dctag">Tenancy Contract</div>
-      <div class="dcnum">${d.contractNo||'—'}</div>
-      <div class="dcexp">Landlord: ${d.landlord||'—'}</div>
+      <div class="dcnum">${d.contractNo||' - '}</div>
+      <div class="dcexp">Landlord: ${d.landlord||' - '}</div>
       <div class="dcexp">${d.startDate||''} → ${d.endDate||''}</div>
       ${soon?`<div class="dcexp soon">⚠️ Expires in ${days} days</div>`:''}
       <div class="dcexp">Total Rent: ${fmt(d.totalRent||0)} · ${(d.cheques||[]).length} cheques</div>
       ${d.fileData?`<div class="file-actions"><button class="file-btn view" onclick="viewTenFile('${d.id}')">👁 View Contract</button><button class="file-btn dl" onclick="dlTenFile('${d.id}')">⬇️ Download</button><button class="file-btn rep" onclick="replaceTenFile('${d.id}')">🔄 Replace</button><button class="file-btn rm" onclick="removeTenFile('${d.id}')">🗑 Remove</button></div>`:`<div class="file-actions"><button class="file-btn rep" onclick="replaceTenFile('${d.id}')">📎 Attach Contract</button></div>`}
     </div>
     <div class="stitle">Cheques</div>
-    ${(d.cheques||[]).map((ch,i)=>`<div class="ch-row"><div class="cr-top">Cheque #${i+1} — ${fmt(ch.amount)}</div><div style="font-size:11px;color:var(--muted);font-weight:600">Due: ${ch.date||'—'}</div></div>`).join('')||'<div class="empty">No cheques.</div>'}
+    ${(d.cheques||[]).map((ch,i)=>`<div class="ch-row"><div class="cr-top">Cheque #${i+1}  -  ${fmt(ch.amount)}</div><div style="font-size:11px;color:var(--muted);font-weight:600">Due: ${ch.date||' - '}</div></div>`).join('')||'<div class="empty">No cheques.</div>'}
     <div class="sacts" style="margin-top:12px">
       <button class="btn ghost" onclick="deleteTenancy('${d.id}')">🗑 Delete</button>
     </div>`;
@@ -1357,7 +1375,7 @@ async function generatePDF(){
   const catRows=Object.entries(sums).sort((a,b)=>b[1]-a[1]).map(([id,tot])=>{const c=catInfo(id,false);return`<tr><td>${c.icon} ${c.label}</td><td style="text-align:right;font-weight:700">${fmt(tot)}</td></tr>`;}).join('');
   const incRows=mInc.sort((a,b)=>b.ts-a.ts).map(e=>{const c=catInfo(e.cat,true);return`<tr><td>${e.date}</td><td>${c.icon} ${c.label}</td><td>${e.note||''}</td><td style="text-align:right;color:#00c48c;font-weight:700">+${fmt(e.amount)}</td></tr>`;}).join('');
   const expRows=mExp.sort((a,b)=>b.ts-a.ts).map(e=>{const c=catInfo(e.subcat||e.cat,false);return`<tr><td>${e.date}</td><td>${c.icon} ${c.label}</td><td>${e.note||''}</td><td style="text-align:right;color:#ff5e57;font-weight:700">-${fmt(e.amount)}</td></tr>`;}).join('');
-  const html=`<html><head><meta charset="UTF-8"><style>body{font-family:-apple-system,sans-serif;color:#1a1a2e;padding:28px;max-width:700px;margin:0 auto;}h1{font-size:26px;font-weight:800;color:#ff5f8f;margin:0 0 3px;}h2{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#8e8ea8;margin:18px 0 8px;border-bottom:2px solid #eaeaf2;padding-bottom:5px;}.sub{font-size:12px;color:#8e8ea8;margin-bottom:22px;}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}.sc{background:#f7f8fa;border-radius:10px;padding:12px;}.scl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#8e8ea8;font-weight:700;}.scv{font-size:18px;font-weight:800;margin-top:4px;}table{width:100%;border-collapse:collapse;font-size:12.5px;}td{padding:8px 10px;border-bottom:1px solid #eaeaf2;}tr:nth-child(even){background:#f7f8fa;}.ft{margin-top:28px;font-size:10.5px;color:#8e8ea8;text-align:center;border-top:1px solid #eaeaf2;padding-top:12px;}</style></head><body><h1>💰 FinMob</h1><div class="sub">Monthly Report — ${mName} · Generated ${new Date().toLocaleDateString()}</div><div class="summary"><div class="sc"><div class="scl">Income</div><div class="scv" style="color:#00c48c">${fmt(earned)}</div></div><div class="sc"><div class="scl">Spent</div><div class="scv" style="color:#ff5e57">${fmt(spent)}</div></div><div class="sc"><div class="scl">Saved</div><div class="scv" style="color:#f5a623">${fmt(saved)}</div></div><div class="sc"><div class="scl">Balance</div><div class="scv" style="color:#7c5cff">${fmt(bal)}</div></div></div><h2>Spending by Category</h2><table><tr style="background:#eaeaf2"><td><b>Category</b></td><td style="text-align:right"><b>Amount</b></td></tr>${catRows}</table><h2>Income</h2><table><tr style="background:#eaeaf2"><td><b>Date</b></td><td><b>Type</b></td><td><b>Note</b></td><td><b>Amount</b></td></tr>${incRows||'<tr><td colspan="4" style="color:#8e8ea8;text-align:center">No income this month</td></tr>'}</table><h2>Expenses</h2><table><tr style="background:#eaeaf2"><td><b>Date</b></td><td><b>Category</b></td><td><b>Note</b></td><td><b>Amount</b></td></tr>${expRows||'<tr><td colspan="4" style="color:#8e8ea8;text-align:center">No expenses</td></tr>'}</table><div class="ft">FinMob — Your Personal Finance Manager</div></body></html>`;
+  const html=`<html><head><meta charset="UTF-8"><style>body{font-family:-apple-system,sans-serif;color:#1a1a2e;padding:28px;max-width:700px;margin:0 auto;}h1{font-size:26px;font-weight:800;color:#ff5f8f;margin:0 0 3px;}h2{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#8e8ea8;margin:18px 0 8px;border-bottom:2px solid #eaeaf2;padding-bottom:5px;}.sub{font-size:12px;color:#8e8ea8;margin-bottom:22px;}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}.sc{background:#f7f8fa;border-radius:10px;padding:12px;}.scl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#8e8ea8;font-weight:700;}.scv{font-size:18px;font-weight:800;margin-top:4px;}table{width:100%;border-collapse:collapse;font-size:12.5px;}td{padding:8px 10px;border-bottom:1px solid #eaeaf2;}tr:nth-child(even){background:#f7f8fa;}.ft{margin-top:28px;font-size:10.5px;color:#8e8ea8;text-align:center;border-top:1px solid #eaeaf2;padding-top:12px;}</style></head><body><h1>💰 FinMob</h1><div class="sub">Monthly Report  -  ${mName} · Generated ${new Date().toLocaleDateString()}</div><div class="summary"><div class="sc"><div class="scl">Income</div><div class="scv" style="color:#00c48c">${fmt(earned)}</div></div><div class="sc"><div class="scl">Spent</div><div class="scv" style="color:#ff5e57">${fmt(spent)}</div></div><div class="sc"><div class="scl">Saved</div><div class="scv" style="color:#f5a623">${fmt(saved)}</div></div><div class="sc"><div class="scl">Balance</div><div class="scv" style="color:#7c5cff">${fmt(bal)}</div></div></div><h2>Spending by Category</h2><table><tr style="background:#eaeaf2"><td><b>Category</b></td><td style="text-align:right"><b>Amount</b></td></tr>${catRows}</table><h2>Income</h2><table><tr style="background:#eaeaf2"><td><b>Date</b></td><td><b>Type</b></td><td><b>Note</b></td><td><b>Amount</b></td></tr>${incRows||'<tr><td colspan="4" style="color:#8e8ea8;text-align:center">No income this month</td></tr>'}</table><h2>Expenses</h2><table><tr style="background:#eaeaf2"><td><b>Date</b></td><td><b>Category</b></td><td><b>Note</b></td><td><b>Amount</b></td></tr>${expRows||'<tr><td colspan="4" style="color:#8e8ea8;text-align:center">No expenses</td></tr>'}</table><div class="ft">FinMob  -  Your Personal Finance Manager</div></body></html>`;
   const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),500);}else{const blob=new Blob([html],{type:'text/html'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`FinMob-${mk}.html`;a.click();URL.revokeObjectURL(url);}
 }
 
@@ -1385,6 +1403,27 @@ async function importBk(input){
 
 // ══ SPLASH ═════════════════════════════════════════
 function hideSplash(){const s=document.getElementById('splash');if(s){s.classList.add('hide');setTimeout(()=>s.remove(),700);}}
+
+// === DAILY LOCAL BACKUP REMINDER (simple, no setup) ===
+function checkDailyBackupReminder(){
+  var lastDate = localStorage.getItem('fm_local_backup_date');
+  if(lastDate === todayStr()) return; // Already backed up today
+  var banner = document.getElementById('backupReminder');
+  if(banner) banner.classList.add('show');
+}
+
+async function doDailyBackup(){
+  await exportBk();
+  localStorage.setItem('fm_local_backup_date', todayStr());
+  var banner = document.getElementById('backupReminder');
+  if(banner) banner.classList.remove('show');
+}
+
+function dismissBackupReminder(){
+  var banner = document.getElementById('backupReminder');
+  if(banner) banner.classList.remove('show');
+  // Will show again tomorrow since we don't set fm_local_backup_date here
+}
 
 // ══ INIT ═══════════════════════════════════════════
 document.getElementById('hdate').textContent=new Date().toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'});
