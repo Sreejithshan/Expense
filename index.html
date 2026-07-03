@@ -776,6 +776,13 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
     <div class="field"><label>Title / Description</label><input type="text" id="apptTitle" placeholder="e.g. Dr. Ahmed — Dental"></div>
     <div class="field"><label>Date &amp; Time</label><input type="datetime-local" id="apptDT"></div>
     <div class="field"><label>Notes (optional)</label><textarea id="apptNotes" placeholder="Any extra notes..."></textarea></div>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--sh1);margin-bottom:8px;">
+      <input type="checkbox" id="apptRecurring" style="width:18px;height:18px;accent-color:var(--pri);">
+      <div>
+        <div style="font-weight:700;font-size:13.5px;">Repeat monthly</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Auto-carry forward to same date next month</div>
+      </div>
+    </div>
     <button class="addbtn" onclick="saveAppt()">+ Save Appointment</button>
     <div class="stitle">Upcoming &amp; Recent</div>
     <div id="apptList"></div>
@@ -851,7 +858,7 @@ async function handlePin(){
   else if(pinMode==='ch-confirm'){if(pinBuf===newPinBuf){await dbPut('config',{key:'pin',value:pinBuf});alert('✅ PIN changed!');unlockApp();}else{document.getElementById('pinErr').textContent='✗ PINs don\'t match';pinMode='ch-new';pinBuf='';newPinBuf='';document.getElementById('pinTitle').textContent='Enter New PIN';updateDots();}}
 }
 function startChangePin(){showPin('ch-old');document.getElementById('pinChangeBtn').style.display='none';}
-async function unlockApp(){document.getElementById('pinScreen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('pinChangeBtn').style.display='block';await renderAll();checkNotifications();checkDailyBackupReminder();}
+async function unlockApp(){document.getElementById('pinScreen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('pinChangeBtn').style.display='block';await renderAll();checkNotifications();checkDailyBackupReminder();checkAppointmentCarryForward();}
 
 // ══ DARK MODE ══════════════════════════════════════
 function toggleDark(){const d=document.body.classList.toggle('dark');localStorage.setItem('fm_dark',d?'1':'0');document.getElementById('darkBtn').textContent=d?'☀️':'🌙';const sb=document.getElementById('darkSettingBtn');if(sb)sb.textContent=d?'Disable':'Enable';}
@@ -1407,10 +1414,10 @@ function selAT(btn){selAType=btn.dataset.at;document.querySelectorAll('.atbtn').
 async function saveAppt(){
   const title=document.getElementById('apptTitle').value.trim(),dt=document.getElementById('apptDT').value;
   if(!title||!dt){alert('Please enter title and date/time.');return;}
-  const entry={id:mkid(),type:selAType,title,datetime:dt,notes:document.getElementById('apptNotes').value.trim(),ts:Date.now()};
+  const entry={id:mkid(),type:selAType,title,datetime:dt,notes:document.getElementById('apptNotes').value.trim(),recurring:document.getElementById('apptRecurring').checked,ts:Date.now()};
   if(selAType==='service'){entry.car=document.getElementById('svcCar').value.trim();entry.svcType=document.getElementById('svcType').value.trim();}
   await dbPut('appointments',entry);
-  document.getElementById('apptTitle').value='';document.getElementById('apptDT').value='';document.getElementById('apptNotes').value='';
+  document.getElementById('apptTitle').value='';document.getElementById('apptDT').value='';document.getElementById('apptNotes').value='';document.getElementById('apptRecurring').checked=false;
   if(selAType==='service'){document.getElementById('svcCar').value='';document.getElementById('svcType').value='';}
   renderAppts();
 }
@@ -1423,7 +1430,23 @@ async function renderAppts(){
     const d=new Date(a.datetime),past=d<new Date();
     const dt=d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})+' at '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
     const extra=a.type==='service'&&(a.car||a.svcType)?`<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:2px">${[a.car,a.svcType].filter(Boolean).join(' · ')}</div>`:'';
-    return`<div class="acard"><div class="aico" style="background:${APPT_COLORS[a.type]||'#f3f0ff'}">${APPT_ICONS[a.type]||'📋'}</div><div class="ainfo"><div class="atitle" style="${past?'opacity:.5;text-decoration:line-through':''}">${a.title}</div><div class="adt">${dt}${past?' · past':''}</div>${extra}${a.notes?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${a.notes}</div>`:''}</div><button class="adel" onclick="delAppt('${a.id}')">×</button></div>`;
+        const recurringBadge = a.recurring && !a.carriedForwardFrom
+      ? '<span style="font-size:9px;background:#fff3cf;color:#c07800;font-weight:800;padding:2px 7px;border-radius:10px;margin-top:3px;margin-right:4px;display:inline-block;">Monthly</span>'
+      : '';
+    const carriedBadge = a.carriedForwardFrom
+      ? '<span style="font-size:9px;background:#ede9ff;color:#4338ca;font-weight:800;padding:2px 7px;border-radius:10px;margin-top:3px;display:inline-block;">Carried forward</span>'
+      : '';
+    return '<div class="acard">'
+      + '<div class="aico" style="background:' + (APPT_COLORS[a.type]||'#f3f0ff') + '">' + (APPT_ICONS[a.type]||'📋') + '</div>'
+      + '<div class="ainfo">'
+      + '<div class="atitle" style="' + (past?'opacity:.5;text-decoration:line-through':'') + '">' + a.title + '</div>'
+      + '<div class="adt">' + dt + (past?' · past':'') + '</div>'
+      + extra
+      + (a.notes ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + a.notes + '</div>' : '')
+      + recurringBadge + carriedBadge
+      + '</div>'
+      + '<button class="adel" onclick="delAppt(\'' + a.id + '\')">×</button>'
+      + '</div>';
   }).join('');
 }
 
@@ -1542,6 +1565,62 @@ async function getDebtRemainingForLoan(debtId){
   const pmts = await dbAll('payments');
   const paid = pmts.filter(p=>p.debtId===debtId).reduce((s,p)=>s+Number(p.amount||0),0);
   return Math.max(0, Number(debt.total||0) - paid);
+}
+
+// ══ APPOINTMENT CARRY-FORWARD (silent & automatic) ═════════════
+// Runs silently on app open. No prompts. Date is already set correctly.
+
+async function checkAppointmentCarryForward(){
+  const appts = await dbAll('appointments');
+  const now   = new Date();
+
+  // Appointments in the past that have NOT been carried forward yet
+  // i.e. their datetime has passed and they don't have carriedForwardFrom set
+  // We DO NOT create copies — appointments already have their correct dates.
+  // Carry-forward means: if a RECURRING appointment's date has passed,
+  // roll it to the equivalent date next month ONCE.
+  // Only applies to appointments explicitly marked recurring (a.recurring===true).
+  // For normal appointments: they stay as-is with their date. No action needed.
+
+  // Find appointments that are past AND marked recurring
+  const toCarry = appts.filter(a => {
+    if(!a.datetime || !a.recurring) return false;
+    const d = new Date(a.datetime);
+    if(d >= now) return false;                // not past yet
+    if(a.carriedForwardFrom) return false;    // already a carried copy
+    // Check no future copy already exists for this source
+    const alreadyCopied = appts.some(b => b.carriedForwardFrom === a.id && new Date(b.datetime) >= now);
+    return !alreadyCopied;
+  });
+
+  for(const a of toCarry){
+    const orig = new Date(a.datetime);
+    // Move to next month, same day & time
+    const nextMonth = orig.getMonth() === 11 ? 0 : orig.getMonth() + 1;
+    const nextYear  = orig.getMonth() === 11 ? orig.getFullYear()+1 : orig.getFullYear();
+    // Clamp day to last day of target month
+    const lastDay   = new Date(nextYear, nextMonth+1, 0).getDate();
+    const targetDay = Math.min(orig.getDate(), lastDay);
+    const newDate   = new Date(nextYear, nextMonth, targetDay, orig.getHours(), orig.getMinutes());
+    const pad = n => String(n).padStart(2,'0');
+    const newDatetime = newDate.getFullYear()+'-'+pad(newDate.getMonth()+1)+'-'+pad(newDate.getDate())
+      +'T'+pad(newDate.getHours())+':'+pad(newDate.getMinutes());
+
+    await dbPut('appointments',{
+      id:                 mkid(),
+      type:               a.type,
+      title:              a.title,
+      datetime:           newDatetime,
+      notes:              a.notes||'',
+      car:                a.car||'',
+      svcType:            a.svcType||'',
+      recurring:          true,
+      carriedForwardFrom: a.id,
+      ts:                 Date.now()
+    });
+  }
+
+  if(toCarry.length > 0) await renderAppts();
 }
 
 // ══ INIT ═══════════════════════════════════════════
