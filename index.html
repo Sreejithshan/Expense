@@ -378,6 +378,26 @@ nav.tabs button.active{background:linear-gradient(135deg,var(--pri),#ff9f43);col
 .dark-toggle:active{transform:rotate(28deg);}
 body.dark input,body.dark select,body.dark textarea{color-scheme:dark;}
 
+/* Payment Schedule icon */
+.fi-payschedule { background: linear-gradient(145deg, #c7d2fe, #818cf8) !important; box-shadow: 0 4px 14px -4px rgba(99,102,241,.4) !important; }
+body.dark .fi-payschedule { background: linear-gradient(145deg, #312e81, #4338ca) !important; }
+.fbtn-payschedule { }
+
+/* Payment Schedule card styles */
+.pay-card { background:var(--card); border-radius:var(--r2); padding:14px 15px; margin-bottom:9px; box-shadow:var(--sh2); border-left:3px solid #6366f1; }
+.pay-card-head { display:flex; justify-content:space-between; align-items:flex-start; }
+.pay-tag { font-size:9px; color:#6366f1; font-weight:800; text-transform:uppercase; letter-spacing:.08em; background:#ede9ff; padding:3px 9px; border-radius:14px; }
+.pay-name { font-weight:800; font-size:14px; margin-top:5px; }
+.pay-meta { font-size:11.5px; color:var(--muted); font-weight:500; margin-top:3px; }
+.pay-amt { font-weight:800; font-size:14px; color:var(--exp); margin-top:4px; }
+.pay-del { border:none; background:var(--exp-s); color:var(--exp); width:26px; height:26px; border-radius:50%; font-size:13px; display:flex; align-items:center; justify-content:center; flex:0 0 26px; }
+.pay-soon { font-size:10px; color:#e17055; font-weight:700; background:#fff3ef; padding:2px 8px; border-radius:10px; display:inline-block; margin-top:4px; }
+.pay-section-tabs { display:flex; gap:8px; margin-bottom:14px; }
+.pay-tab { flex:1; padding:10px; border-radius:12px; border:1.5px solid var(--line); background:transparent; font-weight:700; font-size:12.5px; color:var(--muted); transition:all .2s; }
+.pay-tab.active { border-color:#6366f1; color:#6366f1; background:#ede9ff; font-weight:800; }
+
+/* Withdrawal overlay */
+#ov-withdraw .sheet { }
 /* ══ PREMIUM CARD ACCENTS ════════════════════════════════ */
 /* Mini stat cards dark mode */
 body.dark .mc.e{background:linear-gradient(145deg,#2e1a1a,#3d2020);box-shadow:0 4px 16px -4px rgba(255,94,87,.15);}
@@ -557,7 +577,7 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
           <button class="fbtn" onclick="openOv('ov-bank')"><div class="fi fi-bank">🏦</div><div class="fl">Bank</div></button>
           <button class="fbtn" onclick="openOv('ov-docs')"><div class="fi fi-docs">📄</div><div class="fl">Documents</div></button>
           <button class="fbtn" onclick="openOv('ov-appts')"><div class="fi fi-appts">📅</div><div class="fl">Appointments</div></button>
-          <button class="fbtn" onclick="openOv('ov-settings')"><div class="fi fi-settings">⚙️</div><div class="fl">Settings</div></button>
+          <button class="fbtn fbtn-payschedule" onclick="openOv('ov-payschedule')"><div class="fi fi-payschedule">📆</div><div class="fl">Payment Schedule</div></button>
         </div>
       </div>
     </div>
@@ -590,8 +610,33 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
   <section id="tab-month" style="display:none"><div class="stitle">All expenses this month</div><ul class="elist" id="lMonth"></ul></section>
   <section id="tab-breakdown" style="display:none"><div class="stitle">Spending by category</div><div class="cbars" id="catBars"></div></section>
   <section id="tab-savings" style="display:none">
-    <div class="savtop"><div class="stl">Total Savings (All Time)</div><div class="stv" id="savAllV">0</div></div>
-    <div class="stitle">Savings this month</div><ul class="elist" id="lSavings"></ul>
+    <!-- Overall savings card -->
+    <div class="savtop" style="position:relative;">
+      <div class="stl">Overall Savings Balance</div>
+      <div class="stv" id="savAllV">0</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:6px;">Accumulated across all months</div>
+    </div>
+    <!-- Monthly savings card -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div style="background:var(--card);border-radius:var(--r2);padding:14px;box-shadow:var(--sh2);border-top:3px solid var(--sav);">
+        <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;">This Month</div>
+        <div style="font-size:20px;font-weight:800;margin-top:4px;color:#c07800;" id="savMonthV">0</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">Saved so far</div>
+      </div>
+      <div style="background:var(--card);border-radius:var(--r2);padding:14px;box-shadow:var(--sh2);border-top:3px solid #e17055;">
+        <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;">Withdrawals</div>
+        <div style="font-size:20px;font-weight:800;margin-top:4px;color:#e17055;" id="savWithdrawV">0</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">Total withdrawn</div>
+      </div>
+    </div>
+    <!-- Withdraw / adjust button -->
+    <button onclick="openWithdrawSavings()" style="width:100%;padding:11px;border-radius:var(--r1);border:1.5px dashed #e17055;background:transparent;color:#e17055;font-weight:800;font-size:13px;margin-bottom:14px;">
+      - Record Withdrawal / Adjustment
+    </button>
+    <div class="stitle">This month's savings</div>
+    <ul class="elist" id="lSavings"></ul>
+    <div class="stitle" style="margin-top:14px;">Withdrawal history</div>
+    <ul class="elist" id="lWithdrawals"></ul>
   </section>
   <section id="tab-history" style="display:none">
     <div class="stitle">Previous months</div><div id="histList"></div>
@@ -814,6 +859,118 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
     <p style="font-size:11.5px;color:var(--muted);font-weight:500;line-height:1.6;background:var(--card);border-radius:var(--r2);padding:13px;">All data is stored <b style="color:var(--ink)">only on this device</b>. Nothing is uploaded anywhere. Friends using the same link see only their own data on their own phones.</p>
   </div>
 </div>
+<!-- OVERLAY: PAYMENT SCHEDULE -->
+<div class="ov" id="ov-payschedule">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📆 Payment Schedule</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <!-- Section tabs -->
+    <div class="pay-section-tabs">
+      <button class="pay-tab active" id="payTab-bills" onclick="switchPayTab('bills')">🧾 Utility Bills</button>
+      <button class="pay-tab" id="payTab-cheques" onclick="switchPayTab('cheques')">💳 Cheque Payments</button>
+    </div>
+
+    <!-- UTILITY BILLS SECTION -->
+    <div id="paySection-bills">
+      <button class="addbtn" onclick="togglePayForm('bill-form')">+ Add Bill</button>
+      <div id="bill-form" style="display:none">
+        <div class="field"><label>Bill Category</label>
+          <select id="billCat" onchange="toggleCustomBill()">
+            <option value="electricity">⚡ Electricity Bill</option>
+            <option value="phone">📱 Phone Bill</option>
+            <option value="internet">🌐 Internet Bill</option>
+            <option value="school">🎓 School Fees</option>
+            <option value="custom">✏️ Custom Bill</option>
+          </select>
+        </div>
+        <div class="field" id="customBillRow" style="display:none">
+          <label>Bill Name</label>
+          <input type="text" id="customBillName" placeholder="e.g. Water Bill">
+        </div>
+        <div class="two">
+          <div class="field"><label>Due Date</label><input type="date" id="billDueDate"></div>
+          <div class="field"><label>Amount (optional)</label><input type="number" inputmode="decimal" id="billAmt" placeholder="0"></div>
+        </div>
+        <div class="field"><label>Notes (optional)</label><input type="text" id="billNotes" placeholder="Any notes..."></div>
+        <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--sh1);margin-bottom:12px;">
+          <input type="checkbox" id="billRecurring" style="width:18px;height:18px;accent-color:#6366f1;">
+          <div>
+            <div style="font-weight:700;font-size:13.5px;">Repeat Monthly</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Auto-add every month on same date</div>
+          </div>
+        </div>
+        <div class="sacts">
+          <button class="btn ghost" onclick="togglePayForm('bill-form')">Cancel</button>
+          <button class="btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;" onclick="saveBill()">Save Bill</button>
+        </div>
+      </div>
+      <div class="stitle">This Month's Bills</div>
+      <div id="billList"></div>
+    </div>
+
+    <!-- CHEQUE PAYMENTS SECTION -->
+    <div id="paySection-cheques" style="display:none">
+      <button class="addbtn" onclick="togglePayForm('cheque-form')">+ Add Cheque</button>
+      <div id="cheque-form" style="display:none">
+        <div class="two">
+          <div class="field"><label>Cheque Number</label><input type="text" id="chequeNum" placeholder="e.g. 001234"></div>
+          <div class="field"><label>Cheque Date</label><input type="date" id="chequeDueDate"></div>
+        </div>
+        <div class="field"><label>Payee (To Whom)</label><input type="text" id="chequePayee" placeholder="e.g. Al Futtaim Properties"></div>
+        <div class="two">
+          <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="chequeAmt" placeholder="0"></div>
+          <div class="field"><label>Bank (optional)</label><input type="text" id="chequeBankName" placeholder="e.g. Emirates NBD"></div>
+        </div>
+        <div class="field"><label>Notes (optional)</label><input type="text" id="chequeNotes" placeholder="Any notes..."></div>
+        <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--sh1);margin-bottom:12px;">
+          <input type="checkbox" id="chequeRecurring" style="width:18px;height:18px;accent-color:#6366f1;">
+          <div>
+            <div style="font-weight:700;font-size:13.5px;">Repeat Monthly</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Auto-add every month on same date</div>
+          </div>
+        </div>
+        <div class="sacts">
+          <button class="btn ghost" onclick="togglePayForm('cheque-form')">Cancel</button>
+          <button class="btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;" onclick="saveCheque()">Save Cheque</button>
+        </div>
+      </div>
+      <div class="stitle">This Month's Cheques</div>
+      <div id="chequeList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY: WITHDRAW SAVINGS -->
+<div class="ov" id="ov-withdraw">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>💸 Withdrawal / Adjustment</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="wdAmt" placeholder="0" min="0"></div>
+    <div class="field"><label>Type</label>
+      <select id="wdType">
+        <option value="withdrawal">💸 Withdrawal (taken out)</option>
+        <option value="adjustment">⚖️ Manual Adjustment (correction)</option>
+      </select>
+    </div>
+    <div class="field"><label>Savings Type</label>
+      <select id="wdCat">
+        <option value="cash">💵 Cash</option>
+        <option value="mf">📈 Mutual Funds</option>
+        <option value="shares">📊 Shares</option>
+        <option value="gold">🪙 Gold</option>
+        <option value="fd">🏦 Fixed Deposit</option>
+        <option value="other">📌 Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Date</label><input type="date" id="wdDate"></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="wdNote" placeholder="e.g. Emergency withdrawal"></div>
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn" style="background:linear-gradient(135deg,#e17055,#d63031);color:#fff;" onclick="saveWithdrawal()">Record</button>
+    </div>
+  </div>
+</div>
+
 </div>
 <script>
 // ══ SERVICE WORKER ══════════════════════════════════
@@ -835,9 +992,9 @@ if('serviceWorker' in navigator && location.hostname==='sreejithshan.github.io')
   // Remove controllerchange reload  -  updatefound handles it already
 }
 // ══ INDEXEDDB ══════════════════════════════════════
-const DB_NAME='FinMobDB',DB_VER=4;
+const DB_NAME='FinMobDB',DB_VER=6;
 let db;
-function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;['expenses','incomes','savings','debts','payments','banks','people','documents','appointments','notifLog','rollover'].forEach(s=>{if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:'id'});});if(!d.objectStoreNames.contains('config'))d.createObjectStore('config',{keyPath:'key'});};r.onsuccess=e=>{db=e.target.result;res(db);};r.onerror=rej;});}
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;['expenses','incomes','savings','withdrawals','debts','payments','banks','people','documents','appointments','notifLog','rollover','bills','cheques'].forEach(s=>{if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:'id'});});if(!d.objectStoreNames.contains('config'))d.createObjectStore('config',{keyPath:'key'});};r.onsuccess=e=>{db=e.target.result;res(db);};r.onerror=rej;});}
 function dbAll(s){return new Promise((res,rej)=>{const r=db.transaction(s,'readonly').objectStore(s).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=rej;});}
 function dbGet(s,k){return new Promise((res,rej)=>{const r=db.transaction(s,'readonly').objectStore(s).get(k);r.onsuccess=()=>res(r.result);r.onerror=rej;});}
 function dbPut(s,item){return new Promise((res,rej)=>{const r=db.transaction(s,'readwrite').objectStore(s).put(item);r.onsuccess=()=>{res(r.result);scheduleBackup();};r.onerror=rej;});}
@@ -858,14 +1015,14 @@ async function handlePin(){
   else if(pinMode==='ch-confirm'){if(pinBuf===newPinBuf){await dbPut('config',{key:'pin',value:pinBuf});alert('✅ PIN changed!');unlockApp();}else{document.getElementById('pinErr').textContent='✗ PINs don\'t match';pinMode='ch-new';pinBuf='';newPinBuf='';document.getElementById('pinTitle').textContent='Enter New PIN';updateDots();}}
 }
 function startChangePin(){showPin('ch-old');document.getElementById('pinChangeBtn').style.display='none';}
-async function unlockApp(){document.getElementById('pinScreen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('pinChangeBtn').style.display='block';await renderAll();checkNotifications();checkDailyBackupReminder();checkAppointmentCarryForward();}
+async function unlockApp(){document.getElementById('pinScreen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('pinChangeBtn').style.display='block';await renderAll();checkNotifications();checkDailyBackupReminder();checkAppointmentCarryForward();checkPaymentNotifications();}
 
 // ══ DARK MODE ══════════════════════════════════════
 function toggleDark(){const d=document.body.classList.toggle('dark');localStorage.setItem('fm_dark',d?'1':'0');document.getElementById('darkBtn').textContent=d?'☀️':'🌙';const sb=document.getElementById('darkSettingBtn');if(sb)sb.textContent=d?'Disable':'Enable';}
 function initDarkMode(){if(localStorage.getItem('fm_dark')==='1'){document.body.classList.add('dark');document.getElementById('darkBtn').textContent='☀️';}}
 
 // ══ AUTO BACKUP ════════════════════════════════════
-const BSTORES=['expenses','incomes','savings','debts','payments','banks','people','documents','appointments'];
+const BSTORES=['expenses','incomes','savings','withdrawals','debts','payments','banks','people','documents','appointments','bills','cheques'];
 
 // Debounce backup  -  waits 2s after last change before saving
 let _backupTimer=null;
@@ -1054,9 +1211,11 @@ async function renderAll(){
   const spent  = mExp.reduce((s,e)=>s+Number(e.amount||0),0);
   const earned = mInc.reduce((s,e)=>s+Number(e.amount||0),0);
   const savedM = mSav.reduce((s,e)=>s+Number(e.amount||e.totalVal||0),0);
+  const wds    = await dbAll('withdrawals');
+  const totalWithdrawn = wds.reduce((s,w)=>s+Number(w.amount||0),0);
 
-  // ── All-time savings total (carry-forward) ──
-  const savAll = savs.reduce((s,e)=>s+Number(e.amount||e.totalVal||0),0);
+  // ── Overall savings = all deposits minus all withdrawals ──
+  const savAll = Math.max(0, savs.reduce((s,e)=>s+Number(e.amount||e.totalVal||0),0) - totalWithdrawn);
 
   // ── Debt remaining: total - all payments ──
   const totalDebtRemaining = debts.reduce((sum,d)=>{
@@ -1075,6 +1234,10 @@ async function renderAll(){
   document.getElementById('mIncV').textContent=fmt(earned);
   document.getElementById('totalSavV').textContent=fmt(savAll);
   document.getElementById('savAllV').textContent=fmt(savAll);
+  var smEl=document.getElementById('savMonthV');
+  if(smEl) smEl.textContent=fmt(savedM);
+  var swEl=document.getElementById('savWithdrawV');
+  if(swEl) swEl.textContent=fmt(totalWithdrawn);
 
   // ── Update debt remaining display if element exists ──
   const dbrEl = document.getElementById('totalDebtRemaining');
@@ -1084,6 +1247,7 @@ async function renderAll(){
   renderList('lToday',exps.filter(e=>e.date===today).sort((a,b)=>b.ts-a.ts),'expense');
   renderList('lMonth',mExp.slice().sort((a,b)=>b.ts-a.ts),'expense');
   renderSavList('lSavings',mSav.slice().sort((a,b)=>b.ts-a.ts));
+  renderWithdrawalList(wds);
 
   // ── Breakdown ──
   const sums={};
@@ -1150,7 +1314,7 @@ function openOv(id){
   if(id==='ov-debt')renderDebtList();
   if(id==='ov-bank')renderBankList();
   if(id==='ov-docs'){renderPeople();renderDocs();}
-  if(id==='ov-appts')renderAppts();
+  if(id==='ov-appts')renderAppts();if(id==='ov-payschedule'){carryForwardPayments().then(()=>{renderBills();renderCheques();});}
   if(id==='ov-savings'){selSavType='cash';initSavingsOv();}
 }
 function closeAll(){document.querySelectorAll('.ov').forEach(o=>o.classList.remove('open'));}
@@ -1513,8 +1677,8 @@ function dismissBackupReminder(){
 
 // ══ MONTH ROLLOVER LOGIC ═══════════════════════════════════════
 // Income & Expenses: reset automatically each month (date-filtered)
-// Savings: carry forward — cumulative all-time total always shown
-// Debt: carry forward — remaining = original - all payments ever made
+// Savings: carry forward  -  cumulative all-time total always shown
+// Debt: carry forward  -  remaining = original - all payments ever made
 
 async function checkMonthRollover(){
   const mk = curM();
@@ -1576,7 +1740,7 @@ async function checkAppointmentCarryForward(){
 
   // Appointments in the past that have NOT been carried forward yet
   // i.e. their datetime has passed and they don't have carriedForwardFrom set
-  // We DO NOT create copies — appointments already have their correct dates.
+  // We DO NOT create copies  -  appointments already have their correct dates.
   // Carry-forward means: if a RECURRING appointment's date has passed,
   // roll it to the equivalent date next month ONCE.
   // Only applies to appointments explicitly marked recurring (a.recurring===true).
@@ -1621,6 +1785,327 @@ async function checkAppointmentCarryForward(){
   }
 
   if(toCarry.length > 0) await renderAppts();
+}
+
+
+// ══ PAYMENT SCHEDULE ═══════════════════════════════════════════
+const BILL_CATS = {
+  electricity: {label:'Electricity Bill', icon:'⚡'},
+  phone:       {label:'Phone Bill',       icon:'📱'},
+  internet:    {label:'Internet Bill',    icon:'🌐'},
+  school:      {label:'School Fees',      icon:'🎓'},
+  custom:      {label:'Custom Bill',      icon:'🧾'},
+};
+
+let activePayTab = 'bills';
+
+function switchPayTab(tab){
+  activePayTab = tab;
+  ['bills','cheques'].forEach(t=>{
+    document.getElementById('paySection-'+t).style.display = t===tab ? '' : 'none';
+    document.getElementById('payTab-'+t).classList.toggle('active', t===tab);
+  });
+  if(tab==='bills') renderBills();
+  else renderCheques();
+}
+
+function togglePayForm(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+
+function toggleCustomBill(){
+  const cat = document.getElementById('billCat').value;
+  document.getElementById('customBillRow').style.display = cat==='custom' ? '' : 'none';
+}
+
+// ── Bills ───────────────────────────────────────────────────────
+async function saveBill(){
+  const cat      = document.getElementById('billCat').value;
+  const custom   = document.getElementById('customBillName').value.trim();
+  const dueDate  = document.getElementById('billDueDate').value;
+  const amt      = parseFloat(document.getElementById('billAmt').value)||0;
+  const notes    = document.getElementById('billNotes').value.trim();
+  const recurring= document.getElementById('billRecurring').checked;
+
+  if(!dueDate){ alert('Please enter a due date.'); return; }
+  if(cat==='custom' && !custom){ alert('Please enter a bill name.'); return; }
+
+  const bill = {
+    id:        mkid(),
+    cat,
+    customName: custom,
+    dueDate,
+    amount:    amt,
+    notes,
+    recurring,
+    paid:      false,
+    carriedForwardFrom: null,
+    ts:        Date.now()
+  };
+
+  await dbPut('bills', bill);
+  document.getElementById('billDueDate').value='';
+  document.getElementById('billAmt').value='';
+  document.getElementById('billNotes').value='';
+  document.getElementById('billRecurring').checked=false;
+  document.getElementById('billCat').value='electricity';
+  document.getElementById('customBillRow').style.display='none';
+  togglePayForm('bill-form');
+  renderBills();
+}
+
+async function toggleBillPaid(id){
+  const bill = await dbGet('bills', id);
+  if(!bill) return;
+  bill.paid = !bill.paid;
+  await dbPut('bills', bill);
+  renderBills();
+}
+
+async function delBill(id){
+  if(!confirm('Delete this bill?')) return;
+  await dbDel('bills', id);
+  renderBills();
+}
+
+async function renderBills(){
+  var mk    = curM();
+  var today = new Date(); today.setHours(0,0,0,0);
+  var bills = await dbAll('bills');
+  var shown = bills.filter(function(b){
+    return mKey(b.dueDate)===mk || b.recurring;
+  }).sort(function(a,b){return a.dueDate.localeCompare(b.dueDate);});
+  var el = document.getElementById('billList');
+  if(!shown.length){el.innerHTML='<div class="empty">No bills this month. Tap + Add Bill.</div>';return;}
+  el.innerHTML = shown.map(function(b){
+    var info = BILL_CATS[b.cat] || {label:b.customName||'Bill',icon:'🧾'};
+    var label = b.cat==='custom' ? (b.customName||'Custom') : info.label;
+    var due  = new Date(b.dueDate+'T00:00:00');
+    var days = Math.round((due-today)/86400000);
+    var soonTxt = days>=0&&days<=3 ? '<span class="pay-soon">Due in '+days+' day(s)!</span>'
+                : days<0 ? '<span class="pay-soon">Overdue by '+Math.abs(days)+' day(s)</span>' : '';
+    var paidStyle = b.paid ? 'opacity:.5;text-decoration:line-through;' : '';
+    var recurBadge = b.recurring ? '<span style="font-size:9px;background:#ede9ff;color:#6366f1;font-weight:800;padding:2px 7px;border-radius:10px;margin-right:4px;">Monthly</span>' : '';
+    var paidBadge = b.paid ? '<span style="font-size:9px;background:#edfaf5;color:#00966d;font-weight:800;padding:2px 7px;border-radius:10px;">Paid</span>' : '';
+    var bg  = b.paid ? '#ffe4e3' : '#edfaf5';
+    var col = b.paid ? '#ff5e57' : '#00c48c';
+    var lbl = b.paid ? 'Unpay' : 'Mark Paid';
+    return '<div class="pay-card" id="bc-'+b.id+'">'
+      +'<div class="pay-card-head"><div>'
+      +'<span class="pay-tag">'+info.icon+' '+label+'</span>'
+      +'<div class="pay-name" style="'+paidStyle+'">'+label+'</div>'
+      +'<div class="pay-meta">Due: '+due.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})+'</div>'
+      +(b.amount?'<div class="pay-amt">AED '+fmt(b.amount)+'</div>':'')
+      +(b.notes?'<div class="pay-meta" style="margin-top:2px;">'+b.notes+'</div>':'')
+      +soonTxt+'<div style="margin-top:6px;">'+recurBadge+paidBadge+'</div></div>'
+      +'<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">'
+      +'<button class="pay-del" data-id="'+b.id+'" data-action="delbill">×</button>'
+      +'<button data-id="'+b.id+'" data-action="paidbill" style="font-size:10px;padding:5px 10px;border-radius:20px;border:none;font-weight:800;background:'+bg+';color:'+col+';">'+lbl+'</button>'
+      +'</div></div></div>';
+  }).join('');
+  el.querySelectorAll('button[data-action]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = this.getAttribute('data-id');
+      var action = this.getAttribute('data-action');
+      if(action==='delbill') delBill(id);
+      else if(action==='paidbill') toggleBillPaid(id);
+    });
+  });
+}
+
+// ── Cheques ─────────────────────────────────────────────────────
+async function saveCheque(){
+  const num      = document.getElementById('chequeNum').value.trim();
+  const dueDate  = document.getElementById('chequeDueDate').value;
+  const payee    = document.getElementById('chequePayee').value.trim();
+  const amt      = parseFloat(document.getElementById('chequeAmt').value)||0;
+  const bank     = document.getElementById('chequeBankName').value.trim();
+  const notes    = document.getElementById('chequeNotes').value.trim();
+  const recurring= document.getElementById('chequeRecurring').checked;
+
+  if(!dueDate||!payee){ alert('Please enter cheque date and payee.'); return; }
+
+  await dbPut('cheques',{id:mkid(),num,dueDate,payee,amount:amt,bank,notes,recurring,paid:false,carriedForwardFrom:null,ts:Date.now()});
+  ['chequeNum','chequeDueDate','chequePayee','chequeAmt','chequeBankName','chequeNotes'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('chequeRecurring').checked=false;
+  togglePayForm('cheque-form');
+  renderCheques();
+}
+
+async function toggleChequePaid(id){
+  const ch = await dbGet('cheques',id);
+  if(!ch) return;
+  ch.paid = !ch.paid;
+  await dbPut('cheques',ch);
+  renderCheques();
+}
+
+async function delCheque(id){
+  if(!confirm('Delete this cheque?')) return;
+  await dbDel('cheques',id);
+  renderCheques();
+}
+
+async function renderCheques(){
+  var mk    = curM();
+  var today = new Date(); today.setHours(0,0,0,0);
+  var cheqs = await dbAll('cheques');
+  var shown = cheqs.filter(function(c){
+    return mKey(c.dueDate)===mk || c.recurring;
+  }).sort(function(a,b){return a.dueDate.localeCompare(b.dueDate);});
+  var el = document.getElementById('chequeList');
+  if(!shown.length){el.innerHTML='<div class="empty">No cheques this month. Tap + Add Cheque.</div>';return;}
+  el.innerHTML = shown.map(function(c){
+    var due  = new Date(c.dueDate+'T00:00:00');
+    var days = Math.round((due-today)/86400000);
+    var soonTxt = days>=0&&days<=3 ? '<span class="pay-soon">Due in '+days+' day(s)!</span>'
+                : days<0 ? '<span class="pay-soon">Overdue</span>' : '';
+    var paidStyle = c.paid ? 'opacity:.5;text-decoration:line-through;' : '';
+    var recurBadge = c.recurring ? '<span style="font-size:9px;background:#ede9ff;color:#6366f1;font-weight:800;padding:2px 7px;border-radius:10px;margin-right:4px;">Monthly</span>' : '';
+    var paidBadge = c.paid ? '<span style="font-size:9px;background:#edfaf5;color:#00966d;font-weight:800;padding:2px 7px;border-radius:10px;">Paid</span>' : '';
+    var bg  = c.paid ? '#ffe4e3' : '#edfaf5';
+    var col = c.paid ? '#ff5e57' : '#00c48c';
+    var lbl = c.paid ? 'Unpay' : 'Mark Paid';
+    return '<div class="pay-card" id="cc-'+c.id+'">'
+      +'<div class="pay-card-head"><div>'
+      +'<span class="pay-tag">💳 Cheque</span>'
+      +'<div class="pay-name" style="'+paidStyle+'">'+c.payee+'</div>'
+      +'<div class="pay-meta">Cheque #'+(c.num||'-')+' · '+(c.bank||'')+'</div>'
+      +'<div class="pay-meta">Due: '+due.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})+'</div>'
+      +(c.amount?'<div class="pay-amt">AED '+fmt(c.amount)+'</div>':'')
+      +(c.notes?'<div class="pay-meta" style="margin-top:2px;">'+c.notes+'</div>':'')
+      +soonTxt+'<div style="margin-top:6px;">'+recurBadge+paidBadge+'</div></div>'
+      +'<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">'
+      +'<button class="pay-del" data-id="'+c.id+'" data-action="delcheque">×</button>'
+      +'<button data-id="'+c.id+'" data-action="paidcheque" style="font-size:10px;padding:5px 10px;border-radius:20px;border:none;font-weight:800;background:'+bg+';color:'+col+';">'+lbl+'</button>'
+      +'</div></div></div>';
+  }).join('');
+  el.querySelectorAll('button[data-action]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = this.getAttribute('data-id');
+      var action = this.getAttribute('data-action');
+      if(action==='delcheque') delCheque(id);
+      else if(action==='paidcheque') toggleChequePaid(id);
+    });
+  });
+}
+
+// ── Recurring carry-forward for bills & cheques ─────────────────
+async function carryForwardPayments(){
+  const mk    = curM();
+  const today = new Date();
+  const pad   = n=>String(n).padStart(2,'0');
+
+  async function carryStore(storeName){
+    const items = await dbAll(storeName);
+    for(const item of items){
+      if(!item.recurring || !item.dueDate) continue;
+      // Only carry forward if original is from a past month
+      if(mKey(item.dueDate)===mk) continue;
+      // Check if a carried copy already exists for this month
+      const already = items.some(x=>x.carriedForwardFrom===item.id && mKey(x.dueDate)===mk);
+      if(already) continue;
+      // Create copy with date moved to same day this month
+      const orig    = new Date(item.dueDate+'T00:00:00');
+      const lastDay = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+      const day     = Math.min(orig.getDate(), lastDay);
+      const newDate = today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(day);
+      const copy    = Object.assign({}, item, {
+        id: mkid(),
+        dueDate: newDate,
+        paid: false,
+        carriedForwardFrom: item.id,
+        ts: Date.now()
+      });
+      await dbPut(storeName, copy);
+    }
+  }
+
+  await carryStore('bills');
+  await carryStore('cheques');
+}
+
+// ── Payment notifications (3 days before) ──────────────────────
+async function checkPaymentNotifications(){
+  if(!('Notification' in window)||Notification.permission!=='granted') return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d3    = new Date(today); d3.setDate(d3.getDate()+3);
+  const d3s   = fmtDate(d3);
+  const sent  = new Set((await dbAll('notifLog')).map(n=>n.id));
+
+  async function notifyItem(storeName, items, labelFn){
+    for(const item of items){
+      if(item.dueDate !== d3s) continue;
+      const key = 'pay_'+storeName+'_'+item.id+'_'+d3s;
+      if(sent.has(key)) continue;
+      const label = labelFn(item);
+      try{ new Notification('Payment Due in 3 Days', {body: label}); }catch(e){}
+      await dbPut('notifLog', {id:key});
+    }
+  }
+
+  const [bills,cheques] = await Promise.all([dbAll('bills'),dbAll('cheques')]);
+  await notifyItem('bills',   bills,   b=>(BILL_CATS[b.cat]?.label||b.customName||'Bill')+' due on '+b.dueDate+(b.amount?' - AED '+fmt(b.amount):''));
+  await notifyItem('cheques', cheques, c=>'Cheque #'+(c.num||'-')+' to '+c.payee+' due on '+c.dueDate+(c.amount?' - AED '+fmt(c.amount):''));
+}
+
+
+// ══ WITHDRAWAL / SAVINGS ADJUSTMENT ═══════════════════════════
+function openWithdrawSavings(){
+  document.getElementById('wdAmt').value='';
+  document.getElementById('wdNote').value='';
+  document.getElementById('wdDate').value=todayStr();
+  openOv('ov-withdraw');
+  setTimeout(()=>document.getElementById('wdAmt').focus(),60);
+}
+
+async function saveWithdrawal(){
+  var amt  = parseFloat(document.getElementById('wdAmt').value);
+  if(!amt||amt<=0){alert('Please enter an amount.');return;}
+  var entry = {
+    id:     mkid(),
+    amount: amt,
+    type:   document.getElementById('wdType').value,
+    cat:    document.getElementById('wdCat').value,
+    date:   document.getElementById('wdDate').value||todayStr(),
+    note:   document.getElementById('wdNote').value.trim(),
+    ts:     Date.now()
+  };
+  await dbPut('withdrawals', entry);
+  closeAll();
+  renderAll();
+}
+
+function renderWithdrawalList(wds){
+  var el = document.getElementById('lWithdrawals');
+  if(!el) return;
+  if(!wds||!wds.length){
+    el.innerHTML='<div class="empty">No withdrawals recorded.</div>';
+    return;
+  }
+  var sorted = wds.slice().sort(function(a,b){return b.ts-a.ts;});
+  var SAV_INFO = {cash:{icon:'💵'},mf:{icon:'📈'},shares:{icon:'📊'},gold:{icon:'🪙'},fd:{icon:'🏦'},other:{icon:'📌'}};
+  el.innerHTML = sorted.map(function(w){
+    var icon = SAV_INFO[w.cat]?SAV_INFO[w.cat].icon:'💸';
+    var typeLabel = w.type==='withdrawal'?'Withdrawal':'Adjustment';
+    var note = w.note || new Date(w.date+'T00:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+    return '<li class="erow exp-row">'
+      +'<div class="eicon" style="background:#fff0ef">'+icon+'</div>'
+      +'<div class="emeta"><div class="ecat">'+typeLabel+'</div><div class="enote">'+note+'</div></div>'
+      +'<div class="eamt exp">-'+fmt(w.amount)+'</div>'
+      +'<button class="edel" data-wid="'+w.id+'" data-action="delwd">x</button>'
+      +'</li>';
+  }).join('');
+}
+
+async function delWithdrawal(id){
+  if(!confirm('Delete this withdrawal record?')) return;
+  await dbDel('withdrawals',id);
+  renderAll();
 }
 
 // ══ INIT ═══════════════════════════════════════════
