@@ -379,8 +379,8 @@ nav.tabs button.active{background:linear-gradient(135deg,var(--pri),#ff9f43);col
 body.dark input,body.dark select,body.dark textarea{color-scheme:dark;}
 
 /* Payment Schedule icon */
-.fi-payschedule { background: linear-gradient(145deg, #c7d2fe, #818cf8) !important; box-shadow: 0 4px 14px -4px rgba(99,102,241,.4) !important; }
-body.dark .fi-payschedule { background: linear-gradient(145deg, #312e81, #4338ca) !important; }
+.fi-payschedule { background:linear-gradient(145deg,#bbf7d0,#6ee7b7) !important; box-shadow:0 4px 14px -4px rgba(16,185,129,.45) !important; }
+body.dark .fi-payschedule { background:linear-gradient(145deg,#065f46,#059669) !important; }
 .fbtn-payschedule { }
 
 /* Payment Schedule card styles */
@@ -502,18 +502,18 @@ body.dark .dash-panel .fbtn{
 .fi-income  { background:linear-gradient(145deg,#bbf7d0,#6ee7b7) !important; box-shadow:0 4px 14px -4px rgba(16,185,129,.45) !important; }
 .fi-expense { background:linear-gradient(145deg,#fecaca,#f87171) !important; box-shadow:0 4px 14px -4px rgba(239,68,68,.4) !important; }
 .fi-savings { background:linear-gradient(145deg,#fde68a,#fbbf24) !important; box-shadow:0 4px 14px -4px rgba(245,158,11,.4) !important; }
-.fi-debt    { background:linear-gradient(145deg,#c4b5fd,#8b5cf6) !important; box-shadow:0 4px 14px -4px rgba(139,92,246,.4) !important; }
+.fi-debt    { background:linear-gradient(145deg,#93c5fd,#3b82f6) !important; box-shadow:0 4px 14px -4px rgba(59,130,246,.4) !important; }
 .fi-bank    { background:linear-gradient(145deg,#93c5fd,#3b82f6) !important; box-shadow:0 4px 14px -4px rgba(59,130,246,.4) !important; }
-.fi-docs    { background:linear-gradient(145deg,#fbcfe8,#f472b6) !important; box-shadow:0 4px 14px -4px rgba(236,72,153,.35) !important; }
-.fi-appts   { background:linear-gradient(145deg,#a5b4fc,#6366f1) !important; box-shadow:0 4px 14px -4px rgba(99,102,241,.4) !important; }
+.fi-docs    { background:linear-gradient(145deg,#fde68a,#fbbf24) !important; box-shadow:0 4px 14px -4px rgba(245,158,11,.4) !important; }
+.fi-appts   { background:linear-gradient(145deg,#fecaca,#f87171) !important; box-shadow:0 4px 14px -4px rgba(239,68,68,.4) !important; }
 .fi-settings{ background:linear-gradient(145deg,#5eead4,#14b8a6) !important; box-shadow:0 4px 14px -4px rgba(20,184,166,.4) !important; }
 body.dark .fi-income  { background:linear-gradient(145deg,#065f46,#059669) !important; }
 body.dark .fi-expense { background:linear-gradient(145deg,#991b1b,#dc2626) !important; }
 body.dark .fi-savings { background:linear-gradient(145deg,#92400e,#d97706) !important; }
-body.dark .fi-debt    { background:linear-gradient(145deg,#4c1d95,#7c3aed) !important; }
+body.dark .fi-debt    { background:linear-gradient(145deg,#1e3a8a,#2563eb) !important; }
 body.dark .fi-bank    { background:linear-gradient(145deg,#1e3a8a,#2563eb) !important; }
-body.dark .fi-docs    { background:linear-gradient(145deg,#831843,#be185d) !important; }
-body.dark .fi-appts   { background:linear-gradient(145deg,#312e81,#4338ca) !important; }
+body.dark .fi-docs    { background:linear-gradient(145deg,#92400e,#d97706) !important; }
+body.dark .fi-appts   { background:linear-gradient(145deg,#991b1b,#dc2626) !important; }
 body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !important; }
 </style>
 </head>
@@ -973,1148 +973,1186 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
 
 </div>
 <script>
-// ══ SERVICE WORKER ══════════════════════════════════
-if('serviceWorker' in navigator && location.hostname==='sreejithshan.github.io'){
-  navigator.serviceWorker.register('/Expense/sw.js',{scope:'/Expense/'})
-    .then(reg=>{
+"use strict";
+
+// ================================================================
+// FINMOB  -  Production JS
+// Architecture:
+//   - No inline onclick strings (event delegation only)
+//   - No emoji inside JS alert/error strings
+//   - All async functions wrapped in try/catch
+//   - Single source of truth per data type
+//   - DOM helpers for safe element creation
+// ================================================================
+
+// ── SERVICE WORKER ──────────────────────────────────────────────
+if ("serviceWorker" in navigator && location.hostname === "sreejithshan.github.io") {
+  navigator.serviceWorker.register("/Expense/sw.js", { scope: "/Expense/" })
+    .then(function(reg) {
       reg.update();
-      reg.addEventListener('updatefound',()=>{
-        const n=reg.installing;
-        n.addEventListener('statechange',async ()=>{
-          if(n.state==='installed' && navigator.serviceWorker.controller){
-            // Save backup BEFORE reloading so no data is lost
+      reg.addEventListener("updatefound", function() {
+        var nw = reg.installing;
+        nw.addEventListener("statechange", async function() {
+          if (nw.state === "installed" && navigator.serviceWorker.controller) {
             await safeBackupBeforeReload();
-            window.location.reload();
+            location.reload();
           }
         });
       });
-    }).catch(e=>console.warn('SW:',e));
-  // Remove controllerchange reload  -  updatefound handles it already
-}
-// ══ INDEXEDDB ══════════════════════════════════════
-const DB_NAME='FinMobDB',DB_VER=6;
-let db;
-function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;['expenses','incomes','savings','withdrawals','debts','payments','banks','people','documents','appointments','notifLog','rollover','bills','cheques'].forEach(s=>{if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:'id'});});if(!d.objectStoreNames.contains('config'))d.createObjectStore('config',{keyPath:'key'});};r.onsuccess=e=>{db=e.target.result;res(db);};r.onerror=rej;});}
-function dbAll(s){return new Promise((res,rej)=>{const r=db.transaction(s,'readonly').objectStore(s).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=rej;});}
-function dbGet(s,k){return new Promise((res,rej)=>{const r=db.transaction(s,'readonly').objectStore(s).get(k);r.onsuccess=()=>res(r.result);r.onerror=rej;});}
-function dbPut(s,item){return new Promise((res,rej)=>{const r=db.transaction(s,'readwrite').objectStore(s).put(item);r.onsuccess=()=>{res(r.result);scheduleBackup();};r.onerror=rej;});}
-function dbDel(s,id){return new Promise((res,rej)=>{const r=db.transaction(s,'readwrite').objectStore(s).delete(id);r.onsuccess=()=>{res();scheduleBackup();};r.onerror=rej;});}
-
-// ══ PIN ════════════════════════════════════════════
-let pinBuf='',pinMode='enter',newPinBuf='';
-async function initPin(){const cfg=await dbGet('config','pin');if(!cfg){showPin('setup');}else{showPin('enter');document.getElementById('pinChangeBtn').style.display='block';}}
-function showPin(mode){pinMode=mode;pinBuf='';const titles={enter:'Enter PIN',setup:'Set Up Your PIN','ch-old':'Enter Current PIN','ch-new':'Enter New PIN','ch-confirm':'Confirm New PIN'};document.getElementById('pinTitle').textContent=titles[mode]||mode;updateDots();document.getElementById('pinErr').textContent='';document.getElementById('pinScreen').style.display='flex';document.getElementById('app').style.display='none';}
-function updateDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i).className='pdot'+(i<pinBuf.length?' filled':'');}
-function pp(d){if(pinBuf.length>=4)return;pinBuf+=d;updateDots();if(pinBuf.length===4)setTimeout(handlePin,280);}
-function ppDel(){if(pinBuf.length>0){pinBuf=pinBuf.slice(0,-1);updateDots();}}
-async function handlePin(){
-  if(pinMode==='setup'){await dbPut('config',{key:'pin',value:pinBuf});unlockApp();}
-  else if(pinMode==='enter'){const cfg=await dbGet('config','pin');if(cfg&&cfg.value===pinBuf){unlockApp();}else{document.getElementById('pinErr').textContent='✗ Wrong PIN';pinBuf='';updateDots();}}
-  else if(pinMode==='ch-old'){const cfg=await dbGet('config','pin');if(cfg&&cfg.value===pinBuf){pinMode='ch-new';pinBuf='';document.getElementById('pinTitle').textContent='Enter New PIN';updateDots();document.getElementById('pinErr').textContent='';}else{document.getElementById('pinErr').textContent='✗ Wrong PIN';pinBuf='';updateDots();}}
-  else if(pinMode==='ch-new'){newPinBuf=pinBuf;pinMode='ch-confirm';pinBuf='';document.getElementById('pinTitle').textContent='Confirm New PIN';updateDots();}
-  else if(pinMode==='ch-confirm'){if(pinBuf===newPinBuf){await dbPut('config',{key:'pin',value:pinBuf});alert('✅ PIN changed!');unlockApp();}else{document.getElementById('pinErr').textContent='✗ PINs don\'t match';pinMode='ch-new';pinBuf='';newPinBuf='';document.getElementById('pinTitle').textContent='Enter New PIN';updateDots();}}
-}
-function startChangePin(){showPin('ch-old');document.getElementById('pinChangeBtn').style.display='none';}
-async function unlockApp(){document.getElementById('pinScreen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('pinChangeBtn').style.display='block';await renderAll();checkNotifications();checkDailyBackupReminder();checkAppointmentCarryForward();checkPaymentNotifications();}
-
-// ══ DARK MODE ══════════════════════════════════════
-function toggleDark(){const d=document.body.classList.toggle('dark');localStorage.setItem('fm_dark',d?'1':'0');document.getElementById('darkBtn').textContent=d?'☀️':'🌙';const sb=document.getElementById('darkSettingBtn');if(sb)sb.textContent=d?'Disable':'Enable';}
-function initDarkMode(){if(localStorage.getItem('fm_dark')==='1'){document.body.classList.add('dark');document.getElementById('darkBtn').textContent='☀️';}}
-
-// ══ AUTO BACKUP ════════════════════════════════════
-const BSTORES=['expenses','incomes','savings','withdrawals','debts','payments','banks','people','documents','appointments','bills','cheques'];
-
-// Debounce backup  -  waits 2s after last change before saving
-let _backupTimer=null;
-function scheduleBackup(){
-  clearTimeout(_backupTimer);
-  _backupTimer=setTimeout(autoBackup, 2000);
+    }).catch(function(e) { console.warn("SW:", e); });
 }
 
-async function autoBackup(){
-  try{
-    const data={savedAt:new Date().toISOString(),v:4};
-    for(const s of BSTORES){
-      const items=await dbAll(s);
-      // Strip base64 file data to stay within localStorage 5MB limit
-      // Files remain safe in IndexedDB
-      if(s==='documents'){
-        data[s]=items.map(d=>{
-          const copy={...d};
-          delete copy.fileData; // exclude file blobs from localStorage backup
-          return copy;
-        });
+// ── INDEXEDDB ────────────────────────────────────────────────────
+var DB_NAME = "FinMobDB", DB_VER = 7;
+var db;
+
+function openDB() {
+  return new Promise(function(res, rej) {
+    var r = indexedDB.open(DB_NAME, DB_VER);
+    r.onupgradeneeded = function(e) {
+      var d = e.target.result;
+      ["expenses","incomes","savings","withdrawals","debts","payments",
+       "banks","people","documents","appointments","notifLog","rollover",
+       "bills","cheques","config"].forEach(function(s) {
+        if (!d.objectStoreNames.contains(s)) {
+          d.createObjectStore(s, { keyPath: s === "config" ? "key" : "id" });
+        }
+      });
+    };
+    r.onsuccess = function(e) { db = e.target.result; res(db); };
+    r.onerror = rej;
+  });
+}
+function dbAll(s) {
+  return new Promise(function(res, rej) {
+    var r = db.transaction(s, "readonly").objectStore(s).getAll();
+    r.onsuccess = function() { res(r.result || []); };
+    r.onerror = rej;
+  });
+}
+function dbGet(s, k) {
+  return new Promise(function(res, rej) {
+    var r = db.transaction(s, "readonly").objectStore(s).get(k);
+    r.onsuccess = function() { res(r.result); };
+    r.onerror = rej;
+  });
+}
+function dbPut(s, item) {
+  return new Promise(function(res, rej) {
+    var r = db.transaction(s, "readwrite").objectStore(s).put(item);
+    r.onsuccess = function() { res(r.result); scheduleBackup(); };
+    r.onerror = rej;
+  });
+}
+function dbDel(s, id) {
+  return new Promise(function(res, rej) {
+    var r = db.transaction(s, "readwrite").objectStore(s).delete(id);
+    r.onsuccess = function() { res(); scheduleBackup(); };
+    r.onerror = rej;
+  });
+}
+
+// ── PIN ──────────────────────────────────────────────────────────
+var pinBuf = "", pinMode = "enter", newPinBuf = "";
+
+async function initPin() {
+  try {
+    var cfg = await dbGet("config", "pin");
+    if (!cfg) { showPin("setup"); }
+    else { showPin("enter"); el("pinChangeBtn").style.display = "block"; }
+  } catch(e) { showPin("setup"); }
+}
+function showPin(mode) {
+  var titles = { enter:"Enter PIN", setup:"Set Up Your PIN",
+    "ch-old":"Enter Current PIN", "ch-new":"Enter New PIN", "ch-confirm":"Confirm New PIN" };
+  pinMode = mode; pinBuf = "";
+  el("pinTitle").textContent = titles[mode] || mode;
+  updateDots(); el("pinErr").textContent = "";
+  el("pinScreen").style.display = "flex";
+  el("app").style.display = "none";
+}
+function updateDots() {
+  for (var i = 0; i < 4; i++)
+    el("pd" + i).className = "pdot" + (i < pinBuf.length ? " filled" : "");
+}
+function pp(d) {
+  if (pinBuf.length >= 4) return;
+  pinBuf += d; updateDots();
+  if (pinBuf.length === 4) setTimeout(handlePin, 280);
+}
+function ppDel() { if (pinBuf.length > 0) { pinBuf = pinBuf.slice(0, -1); updateDots(); } }
+async function handlePin() {
+  try {
+    if (pinMode === "setup") {
+      await dbPut("config", { key: "pin", value: pinBuf });
+      unlockApp();
+    } else if (pinMode === "enter") {
+      var cfg = await dbGet("config", "pin");
+      if (cfg && cfg.value === pinBuf) { unlockApp(); }
+      else { el("pinErr").textContent = "Wrong PIN"; pinBuf = ""; updateDots(); }
+    } else if (pinMode === "ch-old") {
+      var cfg = await dbGet("config", "pin");
+      if (cfg && cfg.value === pinBuf) {
+        pinMode = "ch-new"; pinBuf = "";
+        el("pinTitle").textContent = "Enter New PIN"; updateDots(); el("pinErr").textContent = "";
+      } else { el("pinErr").textContent = "Wrong PIN"; pinBuf = ""; updateDots(); }
+    } else if (pinMode === "ch-new") {
+      newPinBuf = pinBuf; pinMode = "ch-confirm"; pinBuf = "";
+      el("pinTitle").textContent = "Confirm New PIN"; updateDots();
+    } else if (pinMode === "ch-confirm") {
+      if (pinBuf === newPinBuf) {
+        await dbPut("config", { key: "pin", value: pinBuf });
+        alert("PIN changed successfully!"); unlockApp();
       } else {
-        data[s]=items;
+        el("pinErr").textContent = "PINs do not match";
+        pinMode = "ch-new"; pinBuf = ""; newPinBuf = "";
+        el("pinTitle").textContent = "Enter New PIN"; updateDots();
       }
     }
-    localStorage.setItem('fm_backup', JSON.stringify(data));
-    localStorage.setItem('fm_last_backup', new Date().toISOString());
-  }catch(e){ console.warn('Backup error:',e); }
+  } catch(e) { console.error("PIN error:", e); }
+}
+function startChangePin() { showPin("ch-old"); el("pinChangeBtn").style.display = "none"; }
+async function unlockApp() {
+  el("pinScreen").style.display = "none";
+  el("app").style.display = "block";
+  el("pinChangeBtn").style.display = "block";
+  await renderAll();
+  updateEmailUI();
+  checkNotifications();
+  checkDailyBackupReminder();
+  checkAppointmentCarryForward();
+  checkPaymentNotifications();
 }
 
-// Run full backup before page reloads (SW update)
-async function safeBackupBeforeReload(){
-  try{
-    const data={savedAt:new Date().toISOString(),v:4};
-    for(const s of BSTORES){
-      const items=await dbAll(s);
-      if(s==='documents') data[s]=items.map(d=>{const c={...d};delete c.fileData;return c;});
-      else data[s]=items;
+// ── DARK MODE ────────────────────────────────────────────────────
+function toggleDark() {
+  var d = document.body.classList.toggle("dark");
+  localStorage.setItem("fm_dark", d ? "1" : "0");
+  el("darkBtn").textContent = d ? "☀️" : "🌙";
+  var sb = el("darkSettingBtn"); if (sb) sb.textContent = d ? "Disable" : "Enable";
+}
+function initDarkMode() {
+  if (localStorage.getItem("fm_dark") === "1") {
+    document.body.classList.add("dark");
+    el("darkBtn").textContent = "☀️";
+  }
+}
+
+// ── BACKUP ───────────────────────────────────────────────────────
+var BSTORES = ["expenses","incomes","savings","withdrawals","debts","payments",
+               "banks","people","documents","appointments","bills","cheques"];
+var _backupTimer = null;
+
+function scheduleBackup() {
+  clearTimeout(_backupTimer);
+  _backupTimer = setTimeout(autoBackup, 2000);
+}
+async function autoBackup() {
+  try {
+    var data = { savedAt: new Date().toISOString(), v: 7 };
+    for (var i = 0; i < BSTORES.length; i++) {
+      var s = BSTORES[i], items = await dbAll(s);
+      data[s] = s === "documents" ? items.map(function(d) { var c = Object.assign({}, d); delete c.fileData; return c; }) : items;
     }
-    localStorage.setItem('fm_backup', JSON.stringify(data));
-    localStorage.setItem('fm_last_backup', new Date().toISOString());
-    // Small delay to ensure localStorage write completes
-    await new Promise(r=>setTimeout(r,300));
-  }catch(e){}
+    localStorage.setItem("fm_backup", JSON.stringify(data));
+    localStorage.setItem("fm_last_backup", new Date().toISOString());
+  } catch(e) { console.warn("Backup error:", e); }
+}
+async function safeBackupBeforeReload() {
+  await autoBackup();
+  await new Promise(function(r) { setTimeout(r, 300); });
+}
+async function restoreFromAutoBackup() {
+  try {
+    var raw = localStorage.getItem("fm_backup");
+    if (!raw) return;
+    var bk = JSON.parse(raw);
+    for (var i = 0; i < BSTORES.length; i++) {
+      var s = BSTORES[i];
+      if (!Array.isArray(bk[s])) continue;
+      var existing = await dbAll(s);
+      var ids = new Set(existing.map(function(x) { return x.id; }));
+      for (var j = 0; j < bk[s].length; j++) {
+        if (!ids.has(bk[s][j].id)) await dbPut(s, bk[s][j]);
+      }
+    }
+  } catch(e) { console.warn("Restore error:", e); }
+}
+setInterval(autoBackup, 3 * 60 * 1000);
+
+// ── BACKUP REMINDER ──────────────────────────────────────────────
+function checkDailyBackupReminder() {
+  if (localStorage.getItem("fm_local_backup_date") === todayStr()) return;
+  var b = el("backupReminder"); if (b) b.classList.add("show");
+}
+async function doDailyBackup() {
+  await exportBk();
+  localStorage.setItem("fm_local_backup_date", todayStr());
+  var b = el("backupReminder"); if (b) b.classList.remove("show");
+}
+function dismissBackupReminder() {
+  var b = el("backupReminder"); if (b) b.classList.remove("show");
 }
 
-async function restoreFromAutoBackup(){
-  try{
-    const raw=localStorage.getItem('fm_backup');
-    if(!raw) return;
-    const bk=JSON.parse(raw);
-    let restored=0;
-    for(const s of BSTORES){
-      if(!Array.isArray(bk[s])) continue;
-      const existing=await dbAll(s);
-      const existingIds=new Set(existing.map(x=>x.id));
-      for(const item of bk[s]){
-        if(!existingIds.has(item.id)){
-          await dbPut(s,item);
-          restored++;
+// ── EMAIL BACKUP (stub  -  user can configure) ─────────────────────
+function updateEmailUI() { /* stub for settings display */ }
+
+// ── NOTIFICATIONS ────────────────────────────────────────────────
+async function requestNotif() {
+  if (!("Notification" in window)) { alert("Notifications not supported on this browser."); return; }
+  var p = await Notification.requestPermission();
+  alert(p === "granted" ? "Notifications enabled!" : "Please enable in browser/phone settings.");
+}
+async function checkNotifications() {
+  try {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var d1 = new Date(today); d1.setDate(d1.getDate() + 1); var d1s = fmtDate(d1);
+    var d3 = new Date(today); d3.setDate(d3.getDate() + 3); var d3s = fmtDate(d3);
+    var d30 = new Date(today); d30.setDate(d30.getDate() + 30); var d30s = fmtDate(d30);
+    var sent = new Set((await dbAll("notifLog")).map(function(n) { return n.id; }));
+    var alerts = [];
+    async function notify(key, title, body) {
+      if (sent.has(key)) return;
+      try { new Notification(title, { body: body }); } catch(e) {}
+      await dbPut("notifLog", { id: key });
+      alerts.push(body);
+    }
+    var debts = await dbAll("debts");
+    for (var i = 0; i < debts.length; i++) {
+      var d = debts[i];
+      if (d.emiDate === d1s) await notify("emi_" + d.id + "_" + d1s, "EMI Due Tomorrow", d.lender + " EMI due tomorrow");
+    }
+    var appts = await dbAll("appointments");
+    for (var i = 0; i < appts.length; i++) {
+      var a = appts[i];
+      if (a.datetime && a.datetime.slice(0, 10) === d1s)
+        await notify("appt_" + a.id + "_" + d1s, "Appointment Tomorrow", a.title + " is tomorrow");
+    }
+    var docs = await dbAll("documents");
+    for (var i = 0; i < docs.length; i++) {
+      var d = docs[i], exp = d.expiry || d.endDate;
+      if (exp === d30s) await notify("doc30_" + d.id, "Document Expiring Soon", (DOC_LABELS[d.type] || "Document") + " expires in 30 days");
+      if (exp === d3s)  await notify("doc3_"  + d.id, "Document Expiring in 3 Days", (DOC_LABELS[d.type] || "Document") + " expires in 3 days");
+      if (d.cheques) {
+        for (var j = 0; j < d.cheques.length; j++) {
+          var ch = d.cheques[j];
+          if (ch.date === d30s) await notify("ch30_" + d.id + "_" + j, "Cheque Due in 30 Days", "Cheque #" + (j+1) + " due " + ch.date);
+          if (ch.date === d3s)  await notify("ch3_"  + d.id + "_" + j, "Cheque Due in 3 Days",  "Cheque #" + (j+1) + " due in 3 days");
         }
       }
     }
-    if(restored>0) console.log(`Restored ${restored} items from backup`);
-  }catch(e){ console.warn('Restore error:',e); }
+    if (alerts.length) {
+      el("notifList").innerHTML = alerts.map(function(a) { return "<li>" + a + "</li>"; }).join("");
+      el("notifBanner").classList.add("show");
+    }
+  } catch(e) { console.warn("Notification error:", e); }
+}
+async function checkPaymentNotifications() {
+  try {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var d3 = new Date(today); d3.setDate(d3.getDate() + 3); var d3s = fmtDate(d3);
+    var sent = new Set((await dbAll("notifLog")).map(function(n) { return n.id; }));
+    async function notify(key, title, body) {
+      if (sent.has(key)) return;
+      try { new Notification(title, { body: body }); } catch(e) {}
+      await dbPut("notifLog", { id: key });
+    }
+    var bills = await dbAll("bills");
+    for (var i = 0; i < bills.length; i++) {
+      var b = bills[i];
+      if (b.dueDate === d3s) await notify("bill3_" + b.id + "_" + d3s, "Bill Due in 3 Days", (BILL_CATS[b.cat] ? BILL_CATS[b.cat].label : b.customName) + " due " + b.dueDate);
+    }
+    var cheqs = await dbAll("cheques");
+    for (var i = 0; i < cheqs.length; i++) {
+      var c = cheqs[i];
+      if (c.dueDate === d3s) await notify("chq3_" + c.id + "_" + d3s, "Cheque Due in 3 Days", "Cheque to " + c.payee + " due " + c.dueDate);
+    }
+  } catch(e) { console.warn("Payment notification error:", e); }
 }
 
-// Run backup every 3 minutes while app is open
-setInterval(autoBackup, 3*60*1000);
+// ── CATEGORIES ───────────────────────────────────────────────────
+var EXP_CATS = [
+  { id:"rent",          label:"Rent",          icon:"🏠", subs:null },
+  { id:"food",          label:"Food & Dining",  icon:"🍽️", subs:[
+    { id:"restaurant",  label:"Restaurant",     icon:"🍴" },
+    { id:"cafe",        label:"Cafe",           icon:"☕" },
+    { id:"delivery",    label:"Delivery",       icon:"🛵" },
+    { id:"takeout",     label:"Takeout",        icon:"🥡" },
+    { id:"food_o",      label:"Others",         icon:"📌" }
+  ]},
+  { id:"car",           label:"Car",            icon:"🚗", subs:[
+    { id:"fuel",        label:"Fuel",           icon:"⛽" },
+    { id:"car_ins",     label:"Insurance",      icon:"🛡️" },
+    { id:"tolls",       label:"Tolls",          icon:"🛣️" },
+    { id:"car_svc",     label:"Service & Repair",icon:"🔧" },
+    { id:"car_o",       label:"Others",         icon:"📌" }
+  ]},
+  { id:"transport",     label:"Transport",      icon:"🚌", subs:null },
+  { id:"school",        label:"School",         icon:"🎓", subs:[
+    { id:"tuition",     label:"Tuition Fees",   icon:"🏫" },
+    { id:"trans_fee",   label:"Transport Fees", icon:"🚌" },
+    { id:"school_o",    label:"Others",         icon:"📌" }
+  ]},
+  { id:"groceries",     label:"Groceries",      icon:"🛒", subs:null },
+  { id:"entertainment", label:"Entertainment",  icon:"🎬", subs:[
+    { id:"shopping",    label:"Online Shopping",icon:"🛍️" },
+    { id:"movies",      label:"Movies",         icon:"🎥" },
+    { id:"clothing",    label:"Clothing",       icon:"👗" },
+    { id:"holiday",     label:"Holiday",        icon:"✈️" },
+    { id:"ent_o",       label:"Others",         icon:"📌" }
+  ]},
+  { id:"utilities",     label:"Utilities",      icon:"💡", subs:[
+    { id:"electricity", label:"Electricity",    icon:"⚡" },
+    { id:"phone",       label:"Phone",          icon:"📱" },
+    { id:"internet",    label:"Internet",       icon:"🌐" },
+    { id:"util_o",      label:"Others",         icon:"📌" }
+  ]},
+  { id:"medical",       label:"Medical",        icon:"🏥", subs:null },
+  { id:"insurance",     label:"Insurance",      icon:"🛡️", subs:null },
+  { id:"remittance",    label:"Remittance",     icon:"💸", subs:null },
+  { id:"other",         label:"Others",         icon:"📌", subs:null }
+];
+var INC_CATS = [
+  { id:"salary",    label:"Salary",   icon:"💼" },
+  { id:"business",  label:"Business", icon:"🏪" },
+  { id:"gift",      label:"Gift",     icon:"🎁" },
+  { id:"other_i",   label:"Others",   icon:"➕" }
+];
+var SAV_TYPES = [
+  { id:"cash",  label:"Cash",          icon:"💵" },
+  { id:"mf",    label:"Mutual Funds",  icon:"📈" },
+  { id:"shares",label:"Shares",        icon:"📊" },
+  { id:"gold",  label:"Gold",          icon:"🪙" },
+  { id:"fd",    label:"Fixed Deposit", icon:"🏦" },
+  { id:"other", label:"Others",        icon:"➕" }
+];
+var DEBT_LABELS  = { mortgage:"Mortgage", gold:"Gold Loan", personal:"Personal Loan", car:"Car Loan", other:"Others" };
+var DOC_LABELS   = { govt_id:"Government ID", passport:"Passport", driving:"Driving License", other:"Others", tenancy:"Tenancy Contract" };
+var DOC_NUMLBL   = { govt_id:"ID Number", passport:"Passport No", driving:"License No", other:"Document No", tenancy:"Contract No" };
+var APPT_ICONS   = { doctor:"🩺", service:"🔧", spa:"💆", other:"📋" };
+var APPT_COLORS  = { doctor:"#fce4ec", service:"#e8f5e9", spa:"#f3e5f5", other:"#f3f0ff" };
+var BILL_CATS    = {
+  electricity:{ label:"Electricity Bill", icon:"⚡" },
+  phone:      { label:"Phone Bill",       icon:"📱" },
+  internet:   { label:"Internet Bill",    icon:"🌐" },
+  school:     { label:"School Fees",      icon:"🎓" },
+  custom:     { label:"Custom Bill",      icon:"🧾" }
+};
 
-// ══ NOTIFICATIONS ══════════════════════════════════
-async function requestNotif(){if(!('Notification' in window)){alert('Notifications not supported.');return;}const p=await Notification.requestPermission();alert(p==='granted'?'✅ Notifications enabled!':'Please enable in browser settings.');}
-async function checkNotifications(){
-  if(!('Notification' in window)||Notification.permission!=='granted')return;
-  const now=new Date();now.setHours(0,0,0,0);
-  const d3=new Date(now);d3.setDate(d3.getDate()+3);const d3s=fmtDate(d3);
-  const d30=new Date(now);d30.setDate(d30.getDate()+30);const d30s=fmtDate(d30);
-  const d1=new Date(now);d1.setDate(d1.getDate()+1);const d1s=fmtDate(d1);
-  const sent=new Set((await dbAll('notifLog')).map(n=>n.id));
-  const alerts=[];
-  async function notify(key,title,body){if(sent.has(key))return;try{new Notification(title,{body});}catch(e){}await dbPut('notifLog',{id:key});alerts.push(body);}
-  // EMI - 1 day before
-  const debts=await dbAll('debts');
-  for(const d of debts){if(d.emiDate===d1s)await notify(`emi_${d.id}_${d1s}`,'💸 EMI Due Tomorrow',`${d.lender} EMI of ${d.currency} ${fmt(d.emi)} is due tomorrow`);}
-  // Appointments - 1 day before
-  const appts=await dbAll('appointments');
-  for(const a of appts){if(a.datetime&&a.datetime.slice(0,10)===d1s)await notify(`appt_${a.id}_${d1s}`,'📅 Appointment Tomorrow',`${a.title} is tomorrow`);}
-  // Documents
-  const docs=await dbAll('documents');
-  for(const d of docs){
-    const expDate=d.expiry||d.endDate;
-    if(expDate){
-      // 30 days before
-      if(expDate===d30s)await notify(`doc30_${d.id}_${d30s}`,'📄 Document Expiring Soon',`${DOC_LABELS[d.type]||'Document'} ${d.docNum||d.contractNo||''} expires in 30 days`);
-      // 3 days before
-      if(expDate===d3s)await notify(`doc3_${d.id}_${d3s}`,'⚠️ Document Expiring in 3 Days',`${DOC_LABELS[d.type]||'Document'} ${d.docNum||d.contractNo||''} expires in 3 days!`);
-    }
-    // Visa-specific (passport, govt_id) - same logic covered above
-    // Cheques - 30 days AND 3 days
-    if(d.cheques&&Array.isArray(d.cheques)){
-      for(let i=0;i<d.cheques.length;i++){
-        const ch=d.cheques[i];
-        if(ch.date===d30s)await notify(`ch30_${d.id}_${i}_${d30s}`,'💳 Cheque Due in 30 Days',`Cheque #${i+1} of ${fmt(ch.amount)} due on ${ch.date}`);
-        if(ch.date===d3s)await notify(`ch3_${d.id}_${i}_${d3s}`,'💳 Cheque Due in 3 Days',`Cheque #${i+1} of ${fmt(ch.amount)} due in 3 days (${ch.date})`);
-      }
+// ── UTILS ────────────────────────────────────────────────────────
+function el(id) { return document.getElementById(id); }
+function fmt(n) { return Number(n || 0).toLocaleString(undefined, { minimumFractionDigits:0, maximumFractionDigits:2 }); }
+function mkid() { return Date.now() + "-" + Math.random().toString(36).slice(2, 6); }
+function todayStr() { return fmtDate(new Date()); }
+function fmtDate(d) { return d.toISOString().slice(0, 10); }
+function mKey(d) { return (d || "").slice(0, 7); }
+function curM() { return mKey(todayStr()); }
+function mLabel(k) {
+  if (!k) return "";
+  var parts = k.split("-").map(Number);
+  return new Date(parts[0], parts[1] - 1, 1).toLocaleDateString(undefined, { month:"long", year:"numeric" });
+}
+function catInfo(id, isInc) {
+  var pool = isInc ? INC_CATS : EXP_CATS;
+  for (var i = 0; i < pool.length; i++) {
+    if (pool[i].id === id) return pool[i];
+    if (pool[i].subs) {
+      var s = pool[i].subs.filter(function(x) { return x.id === id; })[0];
+      if (s) return s;
     }
   }
-  if(alerts.length){const banner=document.getElementById('notifBanner');document.getElementById('notifList').innerHTML=alerts.map(a=>`<li>${a}</li>`).join('');banner.classList.add('show');}
+  return { label: id, icon:"📌" };
+}
+function savInfo(id) { return SAV_TYPES.filter(function(s) { return s.id === id; })[0] || { label:id, icon:"📌" }; }
+async function fileToDataURL(file) {
+  if (!file) return null;
+  return new Promise(function(res) { var r = new FileReader(); r.onload = function(e) { res(e.target.result); }; r.readAsDataURL(file); });
 }
 
-// ══ CATEGORIES ════════════════════════════════════
-const EXP_CATS=[
-  {id:'rent',label:'Rent',icon:'🏠',subs:null},
-  {id:'food',label:'Food & Dining',icon:'🍽️',subs:[
-    {id:'restaurant',label:'Restaurant',icon:'🍴'},
-    {id:'cafe',label:'Café',icon:'☕'},
-    {id:'delivery',label:'Delivery',icon:'🛵'},
-    {id:'takeout',label:'Takeout',icon:'🥡'},
-    {id:'food_o',label:'Others',icon:'📌'},
-  ]},
-  {id:'car',label:'Car',icon:'🚗',subs:[
-    {id:'fuel',label:'Fuel',icon:'⛽'},
-    {id:'car_insurance',label:'Insurance',icon:'🛡️'},
-    {id:'tolls',label:'Tolls',icon:'🛣️'},
-    {id:'car_service',label:'Service & Repair',icon:'🔧'},
-    {id:'car_o',label:'Others',icon:'📌'},
-  ]},
-  {id:'transport',label:'Transport',icon:'🚌',subs:null},
-  {id:'school',label:'School',icon:'🎓',subs:[
-    {id:'tuition',label:'Tuition Fees',icon:'🏫'},
-    {id:'transport_fee',label:'Transport Fees',icon:'🚌'},
-    {id:'school_o',label:'Others',icon:'📌'},
-  ]},
-  {id:'groceries',label:'Groceries',icon:'🛒',subs:null},
-  {id:'entertainment',label:'Entertainment',icon:'🎬',subs:[
-    {id:'shopping',label:'Online Shopping',icon:'🛍️'},
-    {id:'movies',label:'Movies',icon:'🎥'},
-    {id:'clothing',label:'Clothing',icon:'👗'},
-    {id:'holiday',label:'Holiday',icon:'✈️'},
-    {id:'ent_o',label:'Others',icon:'📌'},
-  ]},
-  {id:'utilities',label:'Utilities',icon:'💡',subs:[
-    {id:'electricity',label:'Electricity',icon:'⚡'},
-    {id:'phone',label:'Phone',icon:'📱'},
-    {id:'internet',label:'Internet',icon:'🌐'},
-    {id:'util_o',label:'Others',icon:'📌'},
-  ]},
-  {id:'medical',label:'Medical',icon:'🏥',subs:null},
-  {id:'insurance',label:'Insurance',icon:'🛡️',subs:null},
-  {id:'remittance',label:'Remittance',icon:'💸',subs:null},
-  {id:'other',label:'Others',icon:'📌',subs:null},
-];
-const INC_CATS=[{id:'salary',label:'Salary',icon:'💼'},{id:'business',label:'Business',icon:'🏪'},{id:'gift',label:'Gift',icon:'🎁'},{id:'other_i',label:'Others',icon:'➕'}];
-const SAV_TYPES=[{id:'cash',label:'Cash',icon:'💵'},{id:'mf',label:'Mutual Funds',icon:'📈'},{id:'shares',label:'Shares',icon:'📊'},{id:'gold',label:'Gold',icon:'🪙'},{id:'fd',label:'Fixed Deposit',icon:'🏦'},{id:'other',label:'Others',icon:'➕'}];
-const DEBT_LABELS={mortgage:'Mortgage',gold:'Gold Loan',personal:'Personal Loan',car:'Car Loan',other:'Others'};
-const DOC_LABELS={govt_id:'Government ID',passport:'Passport',driving:'Driving License',other:'Others',tenancy:'Tenancy Contract'};
-const DOC_NUMLBL={govt_id:'ID Number',passport:'Passport No',driving:'License No',other:'Document No',tenancy:'Contract No'};
-const APPT_ICONS={doctor:'🩺',service:'🔧',spa:'💆',other:'📋'};
-const APPT_COLORS={doctor:'#fce4ec',service:'#e8f5e9',spa:'#f3e5f5',other:'#f3f0ff'};
-
-// ══ UTILS ══════════════════════════════════════════
-function fmt(n){return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2});}
-function mkid(){return Date.now()+'-'+Math.random().toString(36).slice(2,6);}
-function todayStr(){return fmtDate(new Date());}
-function fmtDate(d){return d.toISOString().slice(0,10);}
-function mKey(d){return (d||'').slice(0,7);}
-function curM(){return mKey(todayStr());}
-function mLabel(k){if(!k)return'';const[y,m]=k.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});}
-function catInfo(id,isInc){const pool=isInc?INC_CATS:EXP_CATS;for(const c of pool){if(c.id===id)return c;if(c.subs){const s=c.subs.find(s=>s.id===id);if(s)return s;}}return{label:id,icon:'📌'};}
-function savInfo(id){return SAV_TYPES.find(s=>s.id===id)||{label:id,icon:'📌'};}
-async function fileToDataURL(file){if(!file)return null;return new Promise(res=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.readAsDataURL(file);});}
-
-// ══ RENDER ALL ═════════════════════════════════════
-async function renderAll(){
-  // ── Rollover check: on first open of a new month ──
-  await checkMonthRollover();
-
-  const mk=curM(), today=todayStr();
-  const[exps,incs,savs,pmts,debts]=await Promise.all([
-    dbAll('expenses'),dbAll('incomes'),dbAll('savings'),
-    dbAll('payments'),dbAll('debts')
-  ]);
-  const mExp=exps.filter(e=>mKey(e.date)===mk);
-  const mInc=incs.filter(e=>mKey(e.date)===mk);
-  const mSav=savs.filter(e=>mKey(e.date)===mk);
-  const spent  = mExp.reduce((s,e)=>s+Number(e.amount||0),0);
-  const earned = mInc.reduce((s,e)=>s+Number(e.amount||0),0);
-  const savedM = mSav.reduce((s,e)=>s+Number(e.amount||e.totalVal||0),0);
-  const wds    = await dbAll('withdrawals');
-  const totalWithdrawn = wds.reduce((s,w)=>s+Number(w.amount||0),0);
-
-  // ── Overall savings = all deposits minus all withdrawals ──
-  const savAll = Math.max(0, savs.reduce((s,e)=>s+Number(e.amount||e.totalVal||0),0) - totalWithdrawn);
-
-  // ── Debt remaining: total - all payments ──
-  const totalDebtRemaining = debts.reduce((sum,d)=>{
-    const paid=pmts.filter(p=>p.debtId===d.id).reduce((s,p)=>s+Number(p.amount||0),0);
-    return sum + Math.max(0, Number(d.total||0) - paid);
-  },0);
-
-  // ── Balance = income - spent - this month savings ──
-  const bal = earned - spent - savedM;
-
-  document.getElementById('balVal').textContent=(bal<0?'-':'')+fmt(Math.abs(bal));
-  document.getElementById('bInc').textContent=fmt(earned);
-  document.getElementById('bSpent').textContent=fmt(spent);
-  document.getElementById('bSaved').textContent=fmt(savedM);
-  document.getElementById('todayV').textContent=fmt(exps.filter(e=>e.date===today).reduce((s,e)=>s+Number(e.amount||0),0));
-  document.getElementById('mIncV').textContent=fmt(earned);
-  document.getElementById('totalSavV').textContent=fmt(savAll);
-  document.getElementById('savAllV').textContent=fmt(savAll);
-  var smEl=document.getElementById('savMonthV');
-  if(smEl) smEl.textContent=fmt(savedM);
-  var swEl=document.getElementById('savWithdrawV');
-  if(swEl) swEl.textContent=fmt(totalWithdrawn);
-
-  // ── Update debt remaining display if element exists ──
-  const dbrEl = document.getElementById('totalDebtRemaining');
-  if(dbrEl) dbrEl.textContent=fmt(totalDebtRemaining);
-
-  renderList('lIncome',mInc.slice().sort((a,b)=>b.ts-a.ts),'income');
-  renderList('lToday',exps.filter(e=>e.date===today).sort((a,b)=>b.ts-a.ts),'expense');
-  renderList('lMonth',mExp.slice().sort((a,b)=>b.ts-a.ts),'expense');
-  renderSavList('lSavings',mSav.slice().sort((a,b)=>b.ts-a.ts));
-  renderWithdrawalList(wds);
-
-  // ── Breakdown ──
-  const sums={};
-  mExp.forEach(e=>{const k=e.subcat||e.cat;sums[k]=(sums[k]||0)+Number(e.amount||0);});
-  const maxV=Math.max(1,...Object.values(sums));
-  document.getElementById('catBars').innerHTML=Object.entries(sums).sort((a,b)=>b[1]-a[1]).map(([id,tot])=>{
-    const c=catInfo(id,false);
-    return '<div class="brow"><div class="bname">'+c.icon+' '+c.label+'</div><div class="btrack"><div class="bfill" style="width:'+((tot/maxV)*100).toFixed(0)+'%"></div></div><div class="bamt">'+fmt(tot)+'</div></div>';
-  }).join('')||'<div class="empty">No data yet.</div>';
-
-  // ── History: all months with data ──
-  const allKeys=new Set([...exps,...incs,...savs].map(e=>mKey(e.date)));
-  allKeys.delete(mk);
-  document.getElementById('histList').innerHTML=[...allKeys].sort().reverse().map(k=>{
-    const ex=exps.filter(e=>mKey(e.date)===k).reduce((s,e)=>s+Number(e.amount||0),0);
-    const ic=incs.filter(e=>mKey(e.date)===k).reduce((s,e)=>s+Number(e.amount||0),0);
-    const sv=savs.filter(e=>mKey(e.date)===k).reduce((s,e)=>s+Number(e.amount||e.totalVal||0),0);
-    const b=ic-ex-sv;
-    return '<div class="hrow"><div class="hm">'+mLabel(k)+'</div><div class="hn">Inc '+fmt(ic)+' · Spent '+fmt(ex)+' · Saved '+fmt(sv)+'<br>Balance <b>'+(b<0?'-':'')+''+fmt(Math.abs(b))+'</b></div></div>';
-  }).join('')||'<div class="empty">No previous months yet.</div>';
+// ── RENDER ALL ───────────────────────────────────────────────────
+async function renderAll() {
+  try {
+    await checkMonthRollover();
+    var mk = curM(), today = todayStr();
+    var results = await Promise.all([dbAll("expenses"), dbAll("incomes"), dbAll("savings"), dbAll("payments"), dbAll("debts"), dbAll("withdrawals")]);
+    var exps = results[0], incs = results[1], savs = results[2], pmts = results[3], debts = results[4], wds = results[5];
+    var mExp = exps.filter(function(e) { return mKey(e.date) === mk; });
+    var mInc = incs.filter(function(e) { return mKey(e.date) === mk; });
+    var mSav = savs.filter(function(e) { return mKey(e.date) === mk; });
+    var spent    = mExp.reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+    var earned   = mInc.reduce(function(s, e) { return s + Number(e.amount || 0); }, 0);
+    var savedM   = mSav.reduce(function(s, e) { return s + Number(e.amount || e.totalVal || 0); }, 0);
+    var totalWd  = wds.reduce(function(s, w) { return s + Number(w.amount || 0); }, 0);
+    var savAll   = Math.max(0, savs.reduce(function(s, e) { return s + Number(e.amount || e.totalVal || 0); }, 0) - totalWd);
+    var totalDebtRem = debts.reduce(function(sum, d) {
+      var paid = pmts.filter(function(p) { return p.debtId === d.id; }).reduce(function(s, p) { return s + Number(p.amount || 0); }, 0);
+      return sum + Math.max(0, Number(d.total || 0) - paid);
+    }, 0);
+    var bal = earned - spent - savedM;
+    el("balVal").textContent = (bal < 0 ? "-" : "") + fmt(Math.abs(bal));
+    el("bInc").textContent = fmt(earned);
+    el("bSpent").textContent = fmt(spent);
+    el("bSaved").textContent = fmt(savedM);
+    el("todayV").textContent = fmt(exps.filter(function(e) { return e.date === today; }).reduce(function(s, e) { return s + Number(e.amount || 0); }, 0));
+    el("mIncV").textContent = fmt(earned);
+    el("totalSavV").textContent = fmt(savAll);
+    if (el("savAllV"))  el("savAllV").textContent  = fmt(savAll);
+    if (el("savMonthV"))el("savMonthV").textContent = fmt(savedM);
+    if (el("savWithdrawV")) el("savWithdrawV").textContent = fmt(totalWd);
+    if (el("totalDebtRemaining")) el("totalDebtRemaining").textContent = fmt(totalDebtRem);
+    renderList("lIncome",  mInc.slice().sort(function(a,b){return b.ts-a.ts;}), "income");
+    renderList("lToday",   exps.filter(function(e){return e.date===today;}).sort(function(a,b){return b.ts-a.ts;}), "expense");
+    renderList("lMonth",   mExp.slice().sort(function(a,b){return b.ts-a.ts;}), "expense");
+    renderSavList("lSavings", mSav.slice().sort(function(a,b){return b.ts-a.ts;}));
+    renderWithdrawalList(wds);
+    var sums = {};
+    mExp.forEach(function(e) { var k = e.subcat || e.cat; sums[k] = (sums[k] || 0) + Number(e.amount || 0); });
+    var maxV = Math.max(1, Math.max.apply(null, Object.values(sums).concat([0])));
+    el("catBars").innerHTML = Object.entries(sums).sort(function(a,b){return b[1]-a[1];}).map(function(entry) {
+      var id = entry[0], tot = entry[1], c = catInfo(id, false);
+      return '<div class="brow"><div class="bname">' + c.icon + " " + c.label + '</div><div class="btrack"><div class="bfill" style="width:' + ((tot/maxV)*100).toFixed(0) + '%"></div></div><div class="bamt">' + fmt(tot) + "</div></div>";
+    }).join("") || '<div class="empty">No data yet.</div>';
+    var allKeys = new Set(exps.concat(incs).concat(savs).map(function(e) { return mKey(e.date); }));
+    allKeys.delete(mk);
+    el("histList").innerHTML = Array.from(allKeys).sort().reverse().map(function(k) {
+      var ex = exps.filter(function(e){return mKey(e.date)===k;}).reduce(function(s,e){return s+Number(e.amount||0);},0);
+      var ic = incs.filter(function(e){return mKey(e.date)===k;}).reduce(function(s,e){return s+Number(e.amount||0);},0);
+      var sv = savs.filter(function(e){return mKey(e.date)===k;}).reduce(function(s,e){return s+Number(e.amount||e.totalVal||0);},0);
+      var b = ic - ex - sv;
+      return '<div class="hrow"><div class="hm">' + mLabel(k) + '</div><div class="hn">Inc ' + fmt(ic) + " · Spent " + fmt(ex) + " · Saved " + fmt(sv) + "<br>Balance <b>" + (b<0?"-":"") + fmt(Math.abs(b)) + "</b></div></div>";
+    }).join("") || '<div class="empty">No previous months yet.</div>';
+  } catch(e) { console.error("renderAll error:", e); }
 }
 
-function renderList(id,items,kind){
-  const el=document.getElementById(id);
-  if(!items.length){el.innerHTML='<div class="empty">Nothing here yet.</div>';return;}
-  el.innerHTML=items.map(e=>{
-    const isInc=kind==='income',isSav=kind==='savings';
-    const c=catInfo(e.subcat||e.cat,isInc);
-    const bg=isInc?'var(--inc-s)':isSav?'var(--sav-s)':'var(--exp-s)';
-    const note=e.note||(e.remDest?`→ ${e.remDest} (${e.remCur})`:new Date(e.date+'T00:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short'}));
-    return`<li class="erow ${isInc?'inc-row':isSav?'sav-row':'exp-row'}"><div class="eicon ${isInc?'big':''}" style="background:${bg}">${c.icon}</div><div class="emeta"><div class="ecat">${c.label}</div><div class="enote">${note}</div></div><div class="eamt ${isInc?'inc':isSav?'sav':'exp'}">${isInc?'+':'−'}${fmt(e.amount)}</div><button class="edel" onclick="delItem('${kind}','${e.id}')">×</button></li>`;
-  }).join('');
+// ── ENTRY LISTS ──────────────────────────────────────────────────
+function renderList(id, items, kind) {
+  var container = el(id);
+  if (!items.length) { container.innerHTML = '<div class="empty">Nothing here yet.</div>'; return; }
+  var html = items.map(function(e) {
+    var isInc = kind === "income", isSav = kind === "savings";
+    var c = catInfo(e.subcat || e.cat, isInc);
+    var bg = isInc ? "var(--inc-s)" : isSav ? "var(--sav-s)" : "var(--exp-s)";
+    var note = e.note || (e.remDest ? "→ " + e.remDest + " (" + e.remCur + ")" : new Date(e.date + "T00:00:00").toLocaleDateString(undefined, { day:"numeric", month:"short" }));
+    var cls = isInc ? "inc-row" : isSav ? "sav-row" : "exp-row";
+    var amt = isInc ? "+" + fmt(e.amount) : "-" + fmt(e.amount);
+    var amtCls = isInc ? "inc" : isSav ? "sav" : "exp";
+    return '<li class="erow ' + cls + '" data-id="' + e.id + '" data-kind="' + kind + '">'
+      + '<div class="eicon' + (isInc?" big":"") + '" style="background:' + bg + '">' + c.icon + '</div>'
+      + '<div class="emeta"><div class="ecat">' + c.label + '</div><div class="enote">' + note + '</div></div>'
+      + '<div class="eamt ' + amtCls + '">' + amt + '</div>'
+      + '<button class="edel" data-action="del-entry">x</button></li>';
+  }).join("");
+  container.innerHTML = html;
+  container.querySelectorAll("[data-action='del-entry']").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var row = this.closest("[data-id]");
+      delItem(row.dataset.kind, row.dataset.id);
+    });
+  });
+}
+function renderSavList(id, items) {
+  var container = el(id);
+  if (!items.length) { container.innerHTML = '<div class="empty">Nothing here yet.</div>'; return; }
+  var html = items.map(function(e) {
+    var t = savInfo(e.savType), sub = "";
+    if (e.savType==="cash") sub = e.cashCur||"";
+    else if (e.savType==="mf") sub = e.mfFund||"";
+    else if (e.savType==="shares") sub = (e.shComp||"") + " · " + (e.shNum||0) + " shares";
+    else if (e.savType==="gold") sub = (e.goldGrams||0) + "g";
+    else if (e.savType==="fd") sub = (e.fdBank||"") + " · " + (e.fdCur||"");
+    else if (e.savType==="other") sub = e.savDesc||"";
+    if (e.note) sub += (sub ? " · " : "") + e.note;
+    return '<li class="erow sav-row" data-id="' + e.id + '" data-kind="savings">'
+      + '<div class="eicon" style="background:var(--sav-s)">' + t.icon + '</div>'
+      + '<div class="emeta"><div class="ecat">' + t.label + '</div><div class="enote">' + sub + '</div></div>'
+      + '<div class="eamt sav">+' + fmt(e.amount || e.totalVal || 0) + '</div>'
+      + '<button class="edel" data-action="del-entry">x</button></li>';
+  }).join("");
+  container.innerHTML = html;
+  container.querySelectorAll("[data-action='del-entry']").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var row = this.closest("[data-id]");
+      delItem("savings", row.dataset.id);
+    });
+  });
+}
+function renderWithdrawalList(wds) {
+  var container = el("lWithdrawals");
+  if (!container) return;
+  if (!wds || !wds.length) { container.innerHTML = '<div class="empty">No withdrawals recorded.</div>'; return; }
+  var sorted = wds.slice().sort(function(a,b){return b.ts-a.ts;});
+  var SAV_ICONS = { cash:"💵", mf:"📈", shares:"📊", gold:"🪙", fd:"🏦", other:"📌" };
+  var html = sorted.map(function(w) {
+    var icon = SAV_ICONS[w.cat] || "💸";
+    var label = w.type === "withdrawal" ? "Withdrawal" : "Adjustment";
+    var note = w.note || new Date(w.date+"T00:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
+    return '<li class="erow exp-row" data-id="' + w.id + '">'
+      + '<div class="eicon" style="background:#fff0ef">' + icon + '</div>'
+      + '<div class="emeta"><div class="ecat">' + label + '</div><div class="enote">' + note + '</div></div>'
+      + '<div class="eamt exp">-' + fmt(w.amount) + '</div>'
+      + '<button class="edel" data-action="del-wd">x</button></li>';
+  }).join("");
+  container.innerHTML = html;
+  container.querySelectorAll("[data-action='del-wd']").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      delWithdrawal(this.closest("[data-id]").dataset.id);
+    });
+  });
+}
+async function delItem(kind, id) {
+  try {
+    var storeMap = { expense:"expenses", income:"incomes", savings:"savings" };
+    await dbDel(storeMap[kind], id);
+    renderAll();
+  } catch(e) { console.error("delItem:", e); }
 }
 
-function renderSavList(id,items){
-  const el=document.getElementById(id);
-  if(!items.length){el.innerHTML='<div class="empty">Nothing here yet.</div>';return;}
-  el.innerHTML=items.map(e=>{
-    const t=savInfo(e.savType);
-    let sub='';
-    if(e.savType==='cash')sub=e.cashCur||'';
-    else if(e.savType==='mf')sub=e.mfFund||'';
-    else if(e.savType==='shares')sub=`${e.shComp||''} · ${e.shNum||0} shares`;
-    else if(e.savType==='gold')sub=`${e.goldGrams||0}g`;
-    else if(e.savType==='fd')sub=`${e.fdBank||''} · ${e.fdCur||''}`;
-    else if(e.savType==='other')sub=e.savDesc||'';
-    if(e.note)sub+=(sub?' · ':'')+e.note;
-    return`<li class="erow sav-row"><div class="eicon" style="background:var(--sav-s)">${t.icon}</div><div class="emeta"><div class="ecat">${t.label}</div><div class="enote">${sub}</div></div><div class="eamt sav">+${fmt(e.amount||e.totalVal||0)}</div><button class="edel" onclick="delItem('savings','${e.id}')">×</button></li>`;
-  }).join('');
+// ── TABS ─────────────────────────────────────────────────────────
+function switchTab(t) {
+  document.querySelectorAll("nav.tabs button").forEach(function(b) { b.classList.toggle("active", b.dataset.t === t); });
+  ["income","today","month","breakdown","savings","history"].forEach(function(id) {
+    el("tab-" + id).style.display = id === t ? "" : "none";
+  });
 }
 
-async function delItem(kind,id){const m={expense:'expenses',income:'incomes',savings:'savings'};await dbDel(m[kind],id);renderAll();}
+// ── OVERLAYS ─────────────────────────────────────────────────────
+function openOv(id) {
+  document.querySelectorAll(".ov").forEach(function(o) { o.classList.remove("open"); });
+  el(id).classList.add("open");
+  if (id === "ov-debt")       renderDebtList();
+  if (id === "ov-bank")       renderBankList();
+  if (id === "ov-docs")       { renderPeople(); renderDocs(); }
+  if (id === "ov-appts")      renderAppts();
+  if (id === "ov-savings")    { selSavType = "cash"; initSavingsOv(); }
+  if (id === "ov-payschedule"){ carryForwardPayments().then(function(){renderBills();renderCheques();}); }
+}
+function closeAll() { document.querySelectorAll(".ov").forEach(function(o) { o.classList.remove("open"); }); }
+document.querySelectorAll(".ov").forEach(function(o) { o.addEventListener("click", function(e) { if (e.target === o) closeAll(); }); });
 
-// ══ TABS ═══════════════════════════════════════════
-function switchTab(t){
-  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.t===t));
-  ['income','today','month','breakdown','savings','history'].forEach(id=>{document.getElementById('tab-'+id).style.display=id===t?'':'none';});
+// ── ENTRY SHEET ───────────────────────────────────────────────────
+var mode = "expense", selCat = "rent", selSub = null;
+function openEntry(m) {
+  mode = m; selCat = m === "income" ? "salary" : "rent"; selSub = null;
+  el("entAmt").value = ""; el("entNote").value = ""; el("entDate").value = todayStr();
+  el("subCats").style.display = "none"; el("remF").style.display = "none";
+  el("entTitle").textContent = m === "income" ? "Add Income" : "Add Expense";
+  el("entSaveBtn").className = "btn " + (m === "income" ? "mi" : "me");
+  el("catLbl").textContent = m === "income" ? "Source" : "Category";
+  renderCatGrid(); openOv("ov-entry");
+  setTimeout(function() { el("entAmt").focus(); }, 60);
 }
-
-// ══ OVERLAYS ═══════════════════════════════════════
-function openOv(id){
-  document.querySelectorAll('.ov').forEach(o=>o.classList.remove('open'));
-  document.getElementById(id).classList.add('open');
-  if(id==='ov-debt')renderDebtList();
-  if(id==='ov-bank')renderBankList();
-  if(id==='ov-docs'){renderPeople();renderDocs();}
-  if(id==='ov-appts')renderAppts();if(id==='ov-payschedule'){carryForwardPayments().then(()=>{renderBills();renderCheques();});}
-  if(id==='ov-savings'){selSavType='cash';initSavingsOv();}
+function renderCatGrid() {
+  var cats = mode === "income" ? INC_CATS : EXP_CATS;
+  el("catGrid").innerHTML = cats.map(function(c) {
+    var sel = c.id === selCat ? " sel " + (mode === "income" ? "mi" : "me") : "";
+    return '<button class="cpick' + sel + '" data-cat="' + c.id + '"><span class="ci">' + c.icon + '</span><span>' + c.label + '</span></button>';
+  }).join("");
+  el("catGrid").querySelectorAll(".cpick").forEach(function(btn) {
+    btn.addEventListener("click", function() { pickCat(this.dataset.cat); });
+  });
 }
-function closeAll(){document.querySelectorAll('.ov').forEach(o=>o.classList.remove('open'));}
-document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeAll();}));
-
-// ══ ENTRY ══════════════════════════════════════════
-let mode='expense',selCat='rent',selSub=null,selAType='doctor';
-function openEntry(m){
-  mode=m;selCat=m==='income'?'salary':'rent';selSub=null;
-  document.getElementById('entAmt').value='';document.getElementById('entNote').value='';document.getElementById('entDate').value=todayStr();
-  document.getElementById('subCats').style.display='none';document.getElementById('remF').style.display='none';
-  document.getElementById('entTitle').textContent=m==='income'?'Add Income':'Add Expense';
-  document.getElementById('entSaveBtn').className='btn '+(m==='income'?'mi':'me');
-  document.getElementById('catLbl').textContent=m==='income'?'Source':'Category';
-  renderCatGrid();openOv('ov-entry');setTimeout(()=>document.getElementById('entAmt').focus(),60);
+function pickCat(id) {
+  selCat = id; selSub = null; renderCatGrid();
+  var cat = EXP_CATS.filter(function(c) { return c.id === id; })[0];
+  var sub = el("subCats");
+  if (mode === "expense" && cat && cat.subs) {
+    el("subLbl").textContent = "Select " + cat.label + " type";
+    el("subGrid").innerHTML = cat.subs.map(function(s) {
+      return '<button class="cpick' + (s.id===selSub?" sel me":"") + '" data-sub="' + s.id + '"><span class="ci">' + s.icon + '</span><span>' + s.label + '</span></button>';
+    }).join("");
+    el("subGrid").querySelectorAll(".cpick").forEach(function(btn) {
+      btn.addEventListener("click", function() { pickSub(this.dataset.sub); });
+    });
+    sub.style.display = "block";
+  } else { sub.style.display = "none"; }
+  el("remF").style.display = (mode === "expense" && id === "remittance") ? "block" : "none";
 }
-function renderCatGrid(){
-  const cats=mode==='income'?INC_CATS:EXP_CATS;
-  document.getElementById('catGrid').innerHTML=cats.map(c=>`<button class="cpick${c.id===selCat?' sel '+(mode==='income'?'mi':'me'):''}" onclick="pickCat('${c.id}')""><span class="ci">${c.icon}</span><span>${c.label}</span></button>`).join('');
+function pickSub(id) {
+  selSub = id;
+  el("subGrid").querySelectorAll(".cpick").forEach(function(b) {
+    b.className = "cpick" + (b.dataset.sub === id ? " sel me" : "");
+  });
 }
-function pickCat(id){
-  selCat=id;selSub=null;renderCatGrid();
-  const cat=EXP_CATS.find(c=>c.id===id);
-  const sub=document.getElementById('subCats');
-  if(mode==='expense'&&cat&&cat.subs){
-    document.getElementById('subLbl').textContent='Select '+cat.label+' type';
-    document.getElementById('subGrid').innerHTML=cat.subs.map(s=>`<button class="cpick${s.id===selSub?' sel me':''}" onclick="pickSub('${s.id}')"><span class="ci">${s.icon}</span><span>${s.label}</span></button>`).join('');
-    sub.style.display='block';
-  }else{sub.style.display='none';}
-  document.getElementById('remF').style.display=(mode==='expense'&&id==='remittance')?'block':'none';
-}
-function pickSub(id){selSub=id;document.getElementById('subGrid').querySelectorAll('.cpick').forEach(b=>{const oc=b.getAttribute('onclick')||'';b.className='cpick'+(oc.includes(`'${id}'`)?' sel me':'');});}
-async function saveEntry(){
-  const amt=parseFloat(document.getElementById('entAmt').value);
-  if(!amt||amt<=0){document.getElementById('entAmt').focus();return;}
-  const entry={id:mkid(),amount:amt,cat:selCat,subcat:selSub||null,note:document.getElementById('entNote').value.trim(),date:document.getElementById('entDate').value||todayStr(),ts:Date.now()};
-  if(mode==='expense'&&selCat==='remittance'){entry.remCur=document.getElementById('remCur').value;entry.remDest=document.getElementById('remDest').value.trim();}
-  await dbPut(mode==='income'?'incomes':'expenses',entry);closeAll();renderAll();
-}
-
-// ══ SAVINGS ════════════════════════════════════════
-let selSavType='cash';
-function initSavingsOv(){
-  document.getElementById('savTypeGrid').innerHTML=SAV_TYPES.map(t=>`<button class="cpick${t.id===selSavType?' sel ms':''}" onclick="pickSavType('${t.id}')"><span class="ci">${t.icon}</span><span>${t.label}</span></button>`).join('');
-  document.querySelectorAll('.sav-form').forEach(f=>f.style.display='none');
-  const sf=document.getElementById('sf-'+selSavType);if(sf)sf.style.display='';
-  document.getElementById('savDate').value=todayStr();
-}
-function pickSavType(id){
-  selSavType=id;
-  document.getElementById('savTypeGrid').querySelectorAll('.cpick').forEach(b=>{const oc=b.getAttribute('onclick')||'';b.className='cpick'+(oc.includes(`'${id}'`)?' sel ms':'');});
-  document.querySelectorAll('.sav-form').forEach(f=>f.style.display='none');
-  const sf=document.getElementById('sf-'+id);if(sf)sf.style.display='';
-}
-async function saveSaving(){
-  const date=document.getElementById('savDate').value||todayStr();
-  const note=document.getElementById('savNote').value.trim();
-  let entry={id:mkid(),savType:selSavType,date,note,ts:Date.now()};
-  if(selSavType==='cash'){entry.cashCur=document.getElementById('cashCur').value;entry.amount=parseFloat(document.getElementById('cashAmt').value)||0;}
-  else if(selSavType==='mf'){entry.mfFund=document.getElementById('mfFund').value.trim();entry.amount=parseFloat(document.getElementById('mfAmt').value)||0;}
-  else if(selSavType==='shares'){entry.shComp=document.getElementById('shComp').value.trim();entry.shNum=parseFloat(document.getElementById('shNum').value)||0;entry.shVal=parseFloat(document.getElementById('shVal').value)||0;entry.amount=entry.shNum*entry.shVal;}
-  else if(selSavType==='gold'){entry.goldGrams=parseFloat(document.getElementById('goldGrams').value)||0;entry.amount=parseFloat(document.getElementById('goldAmt').value)||0;}
-  else if(selSavType==='fd'){entry.fdBank=document.getElementById('fdBank').value.trim();entry.fdCur=document.getElementById('fdCur').value;entry.fdRate=parseFloat(document.getElementById('fdRate').value)||0;entry.fdDep=document.getElementById('fdDep').value;entry.fdMat=document.getElementById('fdMat').value;entry.amount=parseFloat(document.getElementById('fdAmt').value)||0;}
-  else if(selSavType==='other'){entry.savDesc=document.getElementById('savOtherDesc').value.trim();entry.amount=parseFloat(document.getElementById('savOtherAmt').value)||0;}
-  if(!entry.amount){alert('Please enter an amount.');return;}
-  await dbPut('savings',entry);closeAll();renderAll();
+async function saveEntry() {
+  try {
+    var amt = parseFloat(el("entAmt").value);
+    if (!amt || amt <= 0) { el("entAmt").focus(); return; }
+    var entry = { id:mkid(), amount:amt, cat:selCat, subcat:selSub||null,
+      note:el("entNote").value.trim(), date:el("entDate").value||todayStr(), ts:Date.now() };
+    if (mode === "expense" && selCat === "remittance") {
+      entry.remCur = el("remCur").value; entry.remDest = el("remDest").value.trim();
+    }
+    await dbPut(mode === "income" ? "incomes" : "expenses", entry);
+    closeAll(); renderAll();
+  } catch(e) { console.error("saveEntry:", e); }
 }
 
-// ══ DEBT ═══════════════════════════════════════════
-function toggleDebtForm(show){document.getElementById('debtForm').style.display=show?'':'none';}
-async function saveDebt(){
-  const total=parseFloat(document.getElementById('dTotal').value),emi=parseFloat(document.getElementById('dEMI').value);
-  if(!total||!emi){alert('Please fill in total amount and EMI.');return;}
-  await dbPut('debts',{id:mkid(),type:document.getElementById('dType').value,lender:document.getElementById('dLender').value.trim()||'Lender',total,emi,currency:document.getElementById('dCur').value,emiDate:document.getElementById('dEmiDate').value,createdAt:todayStr()});
-  document.getElementById('dLender').value='';document.getElementById('dTotal').value='';document.getElementById('dEMI').value='';document.getElementById('dEmiDate').value='';
-  toggleDebtForm(false);renderDebtList();
+// ── SAVINGS ───────────────────────────────────────────────────────
+var selSavType = "cash";
+function initSavingsOv() {
+  el("savTypeGrid").innerHTML = SAV_TYPES.map(function(t) {
+    return '<button class="cpick' + (t.id===selSavType?" sel ms":"") + '" data-sav="' + t.id + '"><span class="ci">' + t.icon + '</span><span>' + t.label + '</span></button>';
+  }).join("");
+  el("savTypeGrid").querySelectorAll(".cpick").forEach(function(btn) {
+    btn.addEventListener("click", function() { pickSavType(this.dataset.sav); });
+  });
+  document.querySelectorAll(".sav-form").forEach(function(f) { f.style.display = "none"; });
+  var sf = el("sf-" + selSavType); if (sf) sf.style.display = "";
+  el("savDate").value = todayStr();
 }
-async function payEMI(id){const d=await dbGet('debts',id);if(!d)return;await dbPut('payments',{id:mkid(),debtId:id,amount:d.emi,date:todayStr(),ts:Date.now()});renderDebtList();}
-async function delDebt(id){if(!confirm('Delete this loan?'))return;await dbDel('debts',id);const pmts=await dbAll('payments');for(const p of pmts.filter(p=>p.debtId===id))await dbDel('payments',p.id);renderDebtList();}
-async function renderDebtList(){
-  const[debts,pmts]=await Promise.all([dbAll('debts'),dbAll('payments')]);
-  const el=document.getElementById('debtList');
-  if(!debts.length){el.innerHTML='<div class="empty" style="margin-bottom:13px">No loans added yet.</div>';return;}
-  el.innerHTML=debts.map(d=>{
-    const paid=pmts.filter(p=>p.debtId===d.id).reduce((s,p)=>s+Number(p.amount||0),0);
-    const rem=Math.max(0,d.total-paid);const pct=Math.min(100,paid/d.total*100);
-    const monthsLeft = Math.ceil(rem/(d.emi||1));
-    const debtHtml = '<div class="dcard">'
-      + '<div class="dhead"><div><div class="dtype">' + (DEBT_LABELS[d.type]||d.type) + '</div><div class="dname">' + d.lender + '</div></div>'
-      + '<button class="ddel" onclick="delDebt(\'' + d.id + '\')">&#128465;</button></div>'
-      + '<div style="display:flex;justify-content:space-between;margin:10px 0 6px;">'
-      + '<div style="text-align:center;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;">Original</div><div style="font-weight:800;font-size:13px;">' + d.currency + ' ' + fmt(d.total) + '</div></div>'
-      + '<div style="text-align:center;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--inc);font-weight:700;">Paid</div><div style="font-weight:800;font-size:13px;color:var(--inc);">' + d.currency + ' ' + fmt(paid) + '</div></div>'
-      + '<div style="text-align:center;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--exp);font-weight:700;">Remaining</div><div style="font-weight:800;font-size:15px;color:var(--exp);">' + d.currency + ' ' + fmt(rem) + '</div></div>'
-      + '</div>'
-      + '<div class="dbar"><div class="dbarf" style="width:' + pct.toFixed(0) + '%"></div></div>'
-      + '<div class="dnums"><span>' + pct.toFixed(0) + '% paid off</span><span>' + monthsLeft + ' EMIs left</span></div>'
-      + '<div class="demi"><div class="demi-info">Monthly EMI: ' + d.currency + ' ' + fmt(d.emi) + '<span>' + (d.emiDate ? 'Next due: ' + d.emiDate : '') + '</span></div>'
-      + (rem > 0 ? '<button class="pay-btn" onclick="payEMI(\'' + d.id + '\')">Pay EMI</button>' : '<span style="color:var(--inc);font-weight:800;font-size:12px">Paid off!</span>')
-      + '</div></div>';
-    return debtHtml;
-
-  }).join('');
+function pickSavType(id) {
+  selSavType = id;
+  el("savTypeGrid").querySelectorAll(".cpick").forEach(function(b) {
+    b.className = "cpick" + (b.dataset.sav === id ? " sel ms" : "");
+  });
+  document.querySelectorAll(".sav-form").forEach(function(f) { f.style.display = "none"; });
+  var sf = el("sf-" + id); if (sf) sf.style.display = "";
 }
-
-// ══ BANK ═══════════════════════════════════════════
-async function saveBank(){
-  const name=document.getElementById('bnName').value.trim(),acc=document.getElementById('bnAcc').value.trim();
-  if(!name||!acc){alert('Please enter bank name and account number.');return;}
-  await dbPut('banks',{id:mkid(),name,accNo:acc,balance:parseFloat(document.getElementById('bnBal').value)||0,currency:document.getElementById('bnCur').value});
-  document.getElementById('bnName').value='';document.getElementById('bnAcc').value='';document.getElementById('bnBal').value='';renderBankList();
-}
-async function delBank(id){await dbDel('banks',id);renderBankList();}
-async function renderBankList(){
-  const banks=await dbAll('banks');
-  document.getElementById('bankList').innerHTML=banks.map(b=>`<div class="bkcard2"><div class="bico">🏦</div><div class="binfo"><div class="bname2">${b.name}</div><div class="bacc">Acc: ${b.accNo}</div><div class="bbal">${b.currency} ${fmt(b.balance)}</div></div><button class="bdel" onclick="delBank('${b.id}')">×</button></div>`).join('');
+async function saveSaving() {
+  try {
+    var date = el("savDate").value || todayStr();
+    var note = el("savNote").value.trim();
+    var entry = { id:mkid(), savType:selSavType, date:date, note:note, ts:Date.now() };
+    if (selSavType==="cash")   { entry.cashCur=el("cashCur").value; entry.amount=parseFloat(el("cashAmt").value)||0; }
+    if (selSavType==="mf")     { entry.mfFund=el("mfFund").value.trim(); entry.amount=parseFloat(el("mfAmt").value)||0; }
+    if (selSavType==="shares") { entry.shComp=el("shComp").value.trim(); entry.shNum=parseFloat(el("shNum").value)||0; entry.shVal=parseFloat(el("shVal").value)||0; entry.amount=entry.shNum*entry.shVal; }
+    if (selSavType==="gold")   { entry.goldGrams=parseFloat(el("goldGrams").value)||0; entry.amount=parseFloat(el("goldAmt").value)||0; }
+    if (selSavType==="fd")     { entry.fdBank=el("fdBank").value.trim(); entry.fdCur=el("fdCur").value; entry.fdRate=parseFloat(el("fdRate").value)||0; entry.fdDep=el("fdDep").value; entry.fdMat=el("fdMat").value; entry.amount=parseFloat(el("fdAmt").value)||0; }
+    if (selSavType==="other")  { entry.savDesc=el("savOtherDesc").value.trim(); entry.amount=parseFloat(el("savOtherAmt").value)||0; }
+    if (!entry.amount) { alert("Please enter an amount."); return; }
+    await dbPut("savings", entry); closeAll(); renderAll();
+  } catch(e) { console.error("saveSaving:", e); }
 }
 
-// ══ PEOPLE ═════════════════════════════════════════
-async function renderPeople(){
-  const people=await dbAll('people');
-  const list=document.getElementById('personList');
-  list.innerHTML=people.map(p=>`<div class="person-row"><div class="person-name">👤 ${p.name}</div><div class="person-actions"><button class="person-edit" onclick="editPerson('${p.id}','${p.name}')">Edit</button><button class="person-del" onclick="deletePerson('${p.id}','${p.name}')">Delete</button></div></div>`).join('');
-  const sel=document.getElementById('personSel');
-  const prev=sel.value;
-  sel.innerHTML='<option value=""> -  Select person  - </option>'+people.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-  if(prev)sel.value=prev;
+// ── WITHDRAWALS ───────────────────────────────────────────────────
+function openWithdrawSavings() {
+  el("wdAmt").value = ""; el("wdNote").value = ""; el("wdDate").value = todayStr();
+  openOv("ov-withdraw");
+  setTimeout(function() { el("wdAmt").focus(); }, 60);
 }
-async function addPerson(){
-  const name=document.getElementById('newPerson').value.trim();if(!name)return;
-  await dbPut('people',{id:mkid(),name});document.getElementById('newPerson').value='';
-  await renderPeople();const people=await dbAll('people');document.getElementById('personSel').value=people[people.length-1].id;renderDocs();
+async function saveWithdrawal() {
+  try {
+    var amt = parseFloat(el("wdAmt").value);
+    if (!amt || amt <= 0) { alert("Please enter an amount."); return; }
+    await dbPut("withdrawals", { id:mkid(), amount:amt, type:el("wdType").value, cat:el("wdCat").value, date:el("wdDate").value||todayStr(), note:el("wdNote").value.trim(), ts:Date.now() });
+    closeAll(); renderAll();
+  } catch(e) { console.error("saveWithdrawal:", e); }
 }
-async function editPerson(id,oldName){
-  const newName=prompt('Enter new name:',oldName);if(!newName||!newName.trim())return;
-  const p=await dbGet('people',id);p.name=newName.trim();await dbPut('people',p);await renderPeople();renderDocs();
-}
-async function deletePerson(id,name){
-  if(!confirm(`Delete "${name}" and all their documents? This cannot be undone.`))return;
-  await dbDel('people',id);
-  const docs=await dbAll('documents');for(const d of docs.filter(d=>d.personId===id))await dbDel('documents',d.id);
-  document.getElementById('personSel').value='';await renderPeople();renderDocs();
+async function delWithdrawal(id) {
+  if (!confirm("Delete this withdrawal record?")) return;
+  try { await dbDel("withdrawals", id); renderAll(); } catch(e) { console.error("delWithdrawal:", e); }
 }
 
-// ══ DOCUMENTS ══════════════════════════════════════
-let selDocT=null,activeTenId=null;
-async function renderDocs(){
-  const pid=document.getElementById('personSel').value;
-  const sec=document.getElementById('docSection');
-  if(!pid){sec.style.display='none';return;}
-  sec.style.display='';selDocT=null;
-  document.querySelectorAll('.dtbtn').forEach(b=>b.classList.remove('sel'));
-  document.getElementById('docForm').style.display='none';
-  document.getElementById('tenForm').style.display='none';
-  closeTenDetail();
-  const docs=(await dbAll('documents')).filter(d=>d.personId===pid);
-  // Tenancy contracts
-  const tenancies=docs.filter(d=>d.type==='tenancy');
-  const tenEl=document.getElementById('tenList');
-  tenEl.innerHTML=tenancies.map(d=>{
-    const exp=d.endDate?new Date(d.endDate+'T00:00:00'):null;
-    const days=exp?Math.round((exp-new Date())/86400000):null;
-    const soon=days!==null&&days<30;
-    return`<div class="ten-card" onclick="openTenDetail('${d.id}')"><div class="tc-tag">Tenancy Contract</div><div class="tc-name">${d.contractNo||'Contract'}  -  ${d.landlord||''}</div><div class="tc-dates">${d.startDate||''} → ${d.endDate||''}</div>${soon?`<div class="tc-exp soon">⚠️ Expires in ${days} days</div>`:''}</div>`;
-  }).join('')||'';
-  // Other docs
-  const otherDocs=docs.filter(d=>d.type!=='tenancy');
-  document.getElementById('docList').innerHTML=otherDocs.map(d=>{
-    const exp=d.expiry?new Date(d.expiry+'T00:00:00'):null;
-    const days=exp?Math.round((exp-new Date())/86400000):null;
-    const soon=days!==null&&days<90;
-    return`<div class="doccard"><div class="dctop"><div><div class="dctag">${DOC_LABELS[d.type]||d.type}${d.docName?'  -  '+d.docName:''}</div><div class="dcnum">${d.docNum||' - '}</div>${d.expiry?`<div class="dcexp ${soon?'soon':''}">${soon?`⚠️ Expires ${d.expiry} (${days} days)`:`Expires ${d.expiry}`}</div>`:''}${d.issuedBy?`<div class="dcexp">Issued by: ${d.issuedBy}</div>`:''}</div><button class="dcdel" onclick="delDoc('${d.id}')">×</button></div>${d.fileData?`<div class="file-actions"><button class="file-btn view" onclick="viewFile('${d.id}')">👁 View</button><button class="file-btn dl" onclick="dlFile('${d.id}')">⬇️ Download</button><button class="file-btn rep" onclick="replaceFile('${d.id}')">🔄 Replace</button><button class="file-btn rm" onclick="removeFile('${d.id}')">🗑 Remove</button></div>`:`<div class="file-actions"><button class="file-btn rep" onclick="replaceFile('${d.id}')">📎 Attach file</button></div>`}</div>`;
-  }).join('')||'<div class="empty">No documents yet. Select a type above to add one.</div>';
+// ── DEBT ─────────────────────────────────────────────────────────
+function toggleDebtForm(show) { el("debtForm").style.display = show ? "" : "none"; }
+async function saveDebt() {
+  try {
+    var total = parseFloat(el("dTotal").value), emi = parseFloat(el("dEMI").value);
+    if (!total || !emi) { alert("Please fill in total amount and EMI."); return; }
+    await dbPut("debts", { id:mkid(), type:el("dType").value, lender:el("dLender").value.trim()||"Lender", total:total, emi:emi, currency:el("dCur").value, emiDate:el("dEmiDate").value, createdAt:todayStr() });
+    ["dLender","dTotal","dEMI","dEmiDate"].forEach(function(id) { el(id).value = ""; });
+    toggleDebtForm(false); renderDebtList();
+  } catch(e) { console.error("saveDebt:", e); }
+}
+async function payEMI(id) {
+  try {
+    var d = await dbGet("debts", id); if (!d) return;
+    await dbPut("payments", { id:mkid(), debtId:id, amount:d.emi, date:todayStr(), ts:Date.now() });
+    renderDebtList();
+  } catch(e) { console.error("payEMI:", e); }
+}
+async function delDebt(id) {
+  if (!confirm("Delete this loan?")) return;
+  try {
+    await dbDel("debts", id);
+    var pmts = await dbAll("payments");
+    for (var i = 0; i < pmts.length; i++) { if (pmts[i].debtId === id) await dbDel("payments", pmts[i].id); }
+    renderDebtList();
+  } catch(e) { console.error("delDebt:", e); }
+}
+async function renderDebtList() {
+  try {
+    var debts = await dbAll("debts"), pmts = await dbAll("payments");
+    var container = el("debtList");
+    if (!debts.length) { container.innerHTML = '<div class="empty" style="margin-bottom:13px">No loans added yet.</div>'; return; }
+    var html = debts.map(function(d) {
+      var paid = pmts.filter(function(p){return p.debtId===d.id;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
+      var rem  = Math.max(0, d.total - paid);
+      var pct  = Math.min(100, paid/d.total*100);
+      var mLeft = Math.ceil(rem / (d.emi || 1));
+      return '<div class="dcard">'
+        + '<div class="dhead"><div><div class="dtype">' + (DEBT_LABELS[d.type]||d.type) + '</div><div class="dname">' + d.lender + '</div></div>'
+        + '<button class="ddel" data-action="del-debt" data-id="' + d.id + '">🗑️</button></div>'
+        + '<div style="display:flex;justify-content:space-between;margin:10px 0 6px;">'
+        + '<div style="text-align:center;"><div style="font-size:9px;text-transform:uppercase;color:var(--muted);font-weight:700;">Original</div><div style="font-weight:800;font-size:13px;">' + d.currency + ' ' + fmt(d.total) + '</div></div>'
+        + '<div style="text-align:center;"><div style="font-size:9px;text-transform:uppercase;color:var(--inc);font-weight:700;">Paid</div><div style="font-weight:800;font-size:13px;color:var(--inc);">' + d.currency + ' ' + fmt(paid) + '</div></div>'
+        + '<div style="text-align:center;"><div style="font-size:9px;text-transform:uppercase;color:var(--exp);font-weight:700;">Remaining</div><div style="font-weight:800;font-size:15px;color:var(--exp);">' + d.currency + ' ' + fmt(rem) + '</div></div>'
+        + '</div>'
+        + '<div class="dbar"><div class="dbarf" style="width:' + pct.toFixed(0) + '%"></div></div>'
+        + '<div class="dnums"><span>' + pct.toFixed(0) + '% paid</span><span>' + mLeft + ' EMIs left</span></div>'
+        + '<div class="demi"><div class="demi-info">EMI: ' + d.currency + ' ' + fmt(d.emi) + '<span>' + (d.emiDate ? "Next: " + d.emiDate : "") + '</span></div>'
+        + (rem > 0 ? '<button class="pay-btn" data-action="pay-emi" data-id="' + d.id + '">Pay EMI</button>' : '<span style="color:var(--inc);font-weight:800;font-size:12px">Paid off!</span>')
+        + '</div></div>';
+    }).join("");
+    container.innerHTML = html;
+    container.querySelectorAll("[data-action]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var action = this.dataset.action, id = this.dataset.id;
+        if (action === "del-debt") delDebt(id);
+        else if (action === "pay-emi") payEMI(id);
+      });
+    });
+  } catch(e) { console.error("renderDebtList:", e); }
 }
 
-async function openTenDetail(id){
-  const d=await dbGet('documents',id);if(!d)return;activeTenId=id;
-  const content=document.getElementById('tenDetailContent');
-  const exp=d.endDate?new Date(d.endDate+'T00:00:00'):null;
-  const days=exp?Math.round((exp-new Date())/86400000):null;
-  const soon=days!==null&&days<30;
-  content.innerHTML=`
-    <div class="doccard" style="margin-bottom:10px">
-      <div class="dctag">Tenancy Contract</div>
-      <div class="dcnum">${d.contractNo||' - '}</div>
-      <div class="dcexp">Landlord: ${d.landlord||' - '}</div>
-      <div class="dcexp">${d.startDate||''} → ${d.endDate||''}</div>
-      ${soon?`<div class="dcexp soon">⚠️ Expires in ${days} days</div>`:''}
-      <div class="dcexp">Total Rent: ${fmt(d.totalRent||0)} · ${(d.cheques||[]).length} cheques</div>
-      ${d.fileData?`<div class="file-actions"><button class="file-btn view" onclick="viewTenFile('${d.id}')">👁 View Contract</button><button class="file-btn dl" onclick="dlTenFile('${d.id}')">⬇️ Download</button><button class="file-btn rep" onclick="replaceTenFile('${d.id}')">🔄 Replace</button><button class="file-btn rm" onclick="removeTenFile('${d.id}')">🗑 Remove</button></div>`:`<div class="file-actions"><button class="file-btn rep" onclick="replaceTenFile('${d.id}')">📎 Attach Contract</button></div>`}
-    </div>
-    <div class="stitle">Cheques</div>
-    ${(d.cheques||[]).map((ch,i)=>`<div class="ch-row"><div class="cr-top">Cheque #${i+1}  -  ${fmt(ch.amount)}</div><div style="font-size:11px;color:var(--muted);font-weight:600">Due: ${ch.date||' - '}</div></div>`).join('')||'<div class="empty">No cheques.</div>'}
-    <div class="sacts" style="margin-top:12px">
-      <button class="btn ghost" onclick="deleteTenancy('${d.id}')">🗑 Delete</button>
-    </div>`;
-  document.getElementById('tenDetail').classList.add('open');
-  document.getElementById('tenList').style.display='none';
-  document.getElementById('tenAddBtn').style.display='none';
+// ── BANK ──────────────────────────────────────────────────────────
+async function saveBank() {
+  try {
+    var name = el("bnName").value.trim(), acc = el("bnAcc").value.trim();
+    if (!name || !acc) { alert("Please enter bank name and account number."); return; }
+    await dbPut("banks", { id:mkid(), name:name, accNo:acc, balance:parseFloat(el("bnBal").value)||0, currency:el("bnCur").value });
+    el("bnName").value = ""; el("bnAcc").value = ""; el("bnBal").value = "";
+    renderBankList();
+  } catch(e) { console.error("saveBank:", e); }
 }
-function closeTenDetail(){
-  document.getElementById('tenDetail').classList.remove('open');
-  document.getElementById('tenList').style.display='';
-  document.getElementById('tenAddBtn').style.display='';
-  activeTenId=null;
+async function delBank(id) {
+  try { await dbDel("banks", id); renderBankList(); } catch(e) { console.error("delBank:", e); }
 }
-async function deleteTenancy(id){
-  if(!confirm('Delete this tenancy contract?'))return;
-  await dbDel('documents',id);closeTenDetail();renderDocs();
-}
-function showTenForm(){document.getElementById('tenForm').style.display='';document.getElementById('tenAddBtn').style.display='none';}
-function hideTenForm(){document.getElementById('tenForm').style.display='none';document.getElementById('tenAddBtn').style.display='';}
-function genCheques(){
-  const n=parseInt(document.getElementById('tcNumCh').value)||0;if(!n||n<1){alert('Enter number of cheques.');return;}
-  document.getElementById('chequeInputs').innerHTML=Array.from({length:n},(_,i)=>`<div class="ch-row"><div class="cr-top">Cheque #${i+1}</div><div class="ci-row"><span>Amount</span><input type="number" inputmode="decimal" class="ch-amt" placeholder="0"></div><div class="ci-row" style="margin-top:6px"><span>Date</span><input type="date" class="ch-date"></div></div>`).join('');
-}
-async function saveTenancy(){
-  const pid=document.getElementById('personSel').value;if(!pid)return;
-  const cheques=[...document.querySelectorAll('.ch-amt')].map((a,i)=>({amount:parseFloat(a.value)||0,date:document.querySelectorAll('.ch-date')[i]?.value||''})).filter(c=>c.amount||c.date);
-  const tcFile=document.getElementById('tcFile').files[0];
-  const doc={id:mkid(),personId:pid,type:'tenancy',contractNo:document.getElementById('tcContract').value.trim(),startDate:document.getElementById('tcStart').value,endDate:document.getElementById('tcEnd').value,landlord:document.getElementById('tcLandlord').value.trim(),totalRent:parseFloat(document.getElementById('tcRent').value)||0,cheques};
-  if(tcFile){doc.fileData=await fileToDataURL(tcFile);doc.fileName=tcFile.name;}
-  await dbPut('documents',doc);hideTenForm();
-  document.getElementById('tcContract').value='';document.getElementById('tcStart').value='';document.getElementById('tcEnd').value='';document.getElementById('tcLandlord').value='';document.getElementById('tcRent').value='';document.getElementById('tcNumCh').value='';document.getElementById('chequeInputs').innerHTML='';document.getElementById('tcFile').value='';
-  renderDocs();
+async function renderBankList() {
+  try {
+    var banks = await dbAll("banks");
+    var container = el("bankList");
+    if (!banks.length) { container.innerHTML = ""; return; }
+    var html = banks.map(function(b) {
+      return '<div class="bkcard2"><div class="bico">🏦</div><div class="binfo"><div class="bname2">' + b.name + '</div><div class="bacc">Acc: ' + b.accNo + '</div><div class="bbal">' + b.currency + ' ' + fmt(b.balance) + '</div></div><button class="bdel" data-action="del-bank" data-id="' + b.id + '">x</button></div>';
+    }).join("");
+    container.innerHTML = html;
+    container.querySelectorAll("[data-action='del-bank']").forEach(function(btn) {
+      btn.addEventListener("click", function() { delBank(this.dataset.id); });
+    });
+  } catch(e) { console.error("renderBankList:", e); }
 }
 
-// Tenancy file operations
-async function viewTenFile(id){const d=await dbGet('documents',id);if(d?.fileData){const w=window.open();w.document.write(`<iframe src="${d.fileData}" style="width:100%;height:100vh;border:none"></iframe>`);}}
-async function dlTenFile(id){const d=await dbGet('documents',id);if(d?.fileData){const a=document.createElement('a');a.href=d.fileData;a.download=d.fileName||'contract';a.click();}}
-async function replaceTenFile(id){const input=document.createElement('input');input.type='file';input.accept='.pdf,.jpg,.jpeg,.png';input.onchange=async e=>{const f=e.target.files[0];if(!f)return;const d=await dbGet('documents',id);d.fileData=await fileToDataURL(f);d.fileName=f.name;await dbPut('documents',d);openTenDetail(id);};input.click();}
-async function removeTenFile(id){if(!confirm('Remove attached file?'))return;const d=await dbGet('documents',id);d.fileData=null;d.fileName=null;await dbPut('documents',d);openTenDetail(id);}
+// ── PEOPLE & DOCUMENTS ────────────────────────────────────────────
+var selDocT = null, activeTenId = null;
+async function renderPeople() {
+  try {
+    var people = await dbAll("people");
+    el("personList").innerHTML = people.map(function(p) {
+      return '<div class="person-row"><div class="person-name">👤 ' + p.name + '</div><div class="person-actions"><button class="person-edit" data-action="edit-person" data-id="' + p.id + '" data-name="' + p.name + '">Edit</button><button class="person-del" data-action="del-person" data-id="' + p.id + '" data-name="' + p.name + '">Delete</button></div></div>';
+    }).join("");
+    el("personList").querySelectorAll("[data-action]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var action = this.dataset.action, id = this.dataset.id, name = this.dataset.name;
+        if (action === "edit-person") editPerson(id, name);
+        else if (action === "del-person") deletePerson(id, name);
+      });
+    });
+    var sel = el("personSel"), prev = sel.value;
+    sel.innerHTML = '<option value=""> -  Select person  - </option>' + people.map(function(p) {
+      return '<option value="' + p.id + '">' + p.name + '</option>';
+    }).join("");
+    if (prev) sel.value = prev;
+  } catch(e) { console.error("renderPeople:", e); }
+}
+async function addPerson() {
+  try {
+    var name = el("newPerson").value.trim(); if (!name) return;
+    await dbPut("people", { id:mkid(), name:name });
+    el("newPerson").value = "";
+    await renderPeople();
+    var people = await dbAll("people");
+    el("personSel").value = people[people.length-1].id;
+    renderDocs();
+  } catch(e) { console.error("addPerson:", e); }
+}
+async function editPerson(id, oldName) {
+  var n = prompt("Enter new name:", oldName); if (!n || !n.trim()) return;
+  try { var p = await dbGet("people", id); p.name = n.trim(); await dbPut("people", p); await renderPeople(); renderDocs(); } catch(e) { console.error("editPerson:", e); }
+}
+async function deletePerson(id, name) {
+  if (!confirm("Delete " + name + " and all their documents?")) return;
+  try {
+    await dbDel("people", id);
+    var docs = await dbAll("documents");
+    for (var i = 0; i < docs.length; i++) { if (docs[i].personId === id) await dbDel("documents", docs[i].id); }
+    el("personSel").value = ""; await renderPeople(); renderDocs();
+  } catch(e) { console.error("deletePerson:", e); }
+}
+async function renderDocs() {
+  try {
+    var pid = el("personSel").value, sec = el("docSection");
+    if (!pid) { sec.style.display = "none"; return; }
+    sec.style.display = "";
+    selDocT = null;
+    document.querySelectorAll(".dtbtn").forEach(function(b){b.classList.remove("sel");});
+    el("docForm").style.display = "none";
+    if (el("tenForm")) el("tenForm").style.display = "none";
+    closeTenDetail();
+    var docs = (await dbAll("documents")).filter(function(d){return d.personId===pid;});
+    var tenancies = docs.filter(function(d){return d.type==="tenancy";});
+    var otherDocs = docs.filter(function(d){return d.type!=="tenancy";});
+    var today = new Date();
+    el("tenList").innerHTML = tenancies.map(function(d) {
+      var exp = d.endDate ? new Date(d.endDate+"T00:00:00") : null;
+      var days = exp ? Math.round((exp-today)/86400000) : null;
+      var soon = days !== null && days < 30;
+      return '<div class="ten-card" data-action="open-ten" data-id="' + d.id + '"><div class="tc-tag">Tenancy Contract</div><div class="tc-name">' + (d.contractNo||"Contract") + "  -  " + (d.landlord||"") + '</div><div class="tc-dates">' + (d.startDate||"") + " to " + (d.endDate||"") + '</div>' + (soon?'<div class="tc-exp soon">Expires in '+days+' days</div>':"") + '</div>';
+    }).join("");
+    el("tenList").querySelectorAll("[data-action='open-ten']").forEach(function(btn) {
+      btn.addEventListener("click", function() { openTenDetail(this.dataset.id); });
+    });
+    el("docList").innerHTML = otherDocs.map(function(d) {
+      var exp = d.expiry ? new Date(d.expiry+"T00:00:00") : null;
+      var days = exp ? Math.round((exp-today)/86400000) : null;
+      var soon = days !== null && days < 90;
+      return '<div class="doccard"><div class="dctop"><div><div class="dctag">' + (DOC_LABELS[d.type]||d.type) + (d.docName?"  -  "+d.docName:"") + '</div><div class="dcnum">' + (d.docNum||" - ") + '</div>' + (d.expiry?'<div class="dcexp'+(soon?" soon":"")+'">'+( soon?"Expires "+d.expiry+" ("+days+" days)":"Expires "+d.expiry)+'</div>':"") + (d.issuedBy?'<div class="dcexp">Issued by: '+d.issuedBy+'</div>':"") + '</div><button class="dcdel" data-action="del-doc" data-id="' + d.id + '">x</button></div>' + (d.fileData?'<div class="file-actions"><button class="file-btn view" data-action="view-file" data-id="'+d.id+'">View</button><button class="file-btn dl" data-action="dl-file" data-id="'+d.id+'">Download</button><button class="file-btn rep" data-action="rep-file" data-id="'+d.id+'">Replace</button><button class="file-btn rm" data-action="rm-file" data-id="'+d.id+'">Remove</button></div>':'<div class="file-actions"><button class="file-btn rep" data-action="rep-file" data-id="'+d.id+'">Attach file</button></div>') + '</div>';
+    }).join("") || '<div class="empty">No documents yet.</div>';
+    el("docList").querySelectorAll("[data-action]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var action = this.dataset.action, id = this.dataset.id;
+        if (action==="del-doc")  delDoc(id);
+        if (action==="view-file")viewFile(id);
+        if (action==="dl-file")  dlFile(id);
+        if (action==="rep-file") replaceFile(id);
+        if (action==="rm-file")  removeFile(id);
+      });
+    });
+  } catch(e) { console.error("renderDocs:", e); }
+}
+async function openTenDetail(id) {
+  try {
+    var d = await dbGet("documents", id); if (!d) return;
+    activeTenId = id;
+    var exp = d.endDate ? new Date(d.endDate+"T00:00:00") : null;
+    var days = exp ? Math.round((exp-new Date())/86400000) : null;
+    var soon = days !== null && days < 30;
+    el("tenDetailContent").innerHTML = '<div class="doccard" style="margin-bottom:10px"><div class="dctag">Tenancy Contract</div><div class="dcnum">' + (d.contractNo||" - ") + '</div><div class="dcexp">Landlord: ' + (d.landlord||" - ") + '</div><div class="dcexp">' + (d.startDate||"") + " to " + (d.endDate||"") + '</div>' + (soon?'<div class="dcexp soon">Expires in '+days+' days</div>':"") + '<div class="dcexp">Total Rent: ' + fmt(d.totalRent||0) + " · " + ((d.cheques||[]).length) + ' cheques</div>' + (d.fileData?'<div class="file-actions"><button class="file-btn view" id="btnViewTen">View Contract</button><button class="file-btn dl" id="btnDlTen">Download</button><button class="file-btn rep" id="btnRepTen">Replace</button><button class="file-btn rm" id="btnRmTen">Remove</button></div>':'<div class="file-actions"><button class="file-btn rep" id="btnRepTen">Attach Contract</button></div>') + '</div><div class="stitle">Cheques</div>' + (d.cheques||[]).map(function(ch,i){return'<div class="ch-row"><div class="cr-top">Cheque #'+(i+1)+'  -  '+fmt(ch.amount)+'</div><div style="font-size:11px;color:var(--muted);">Due: '+(ch.date||" - ")+'</div></div>';}).join("") + '<div class="sacts" style="margin-top:12px"><button class="btn ghost" id="btnDelTen">Delete Contract</button></div>';
+    if (el("btnViewTen")) el("btnViewTen").addEventListener("click", function(){viewTenFile(id);});
+    if (el("btnDlTen"))   el("btnDlTen").addEventListener("click",   function(){dlTenFile(id);});
+    if (el("btnRepTen"))  el("btnRepTen").addEventListener("click",  function(){replaceTenFile(id);});
+    if (el("btnRmTen"))   el("btnRmTen").addEventListener("click",   function(){removeTenFile(id);});
+    if (el("btnDelTen"))  el("btnDelTen").addEventListener("click",  function(){deleteTenancy(id);});
+    el("tenDetail").classList.add("open");
+    el("tenList").style.display = "none";
+    if (el("tenAddBtn")) el("tenAddBtn").style.display = "none";
+  } catch(e) { console.error("openTenDetail:", e); }
+}
+function closeTenDetail() {
+  if (el("tenDetail")) el("tenDetail").classList.remove("open");
+  if (el("tenList"))   el("tenList").style.display = "";
+  if (el("tenAddBtn")) el("tenAddBtn").style.display = "";
+  activeTenId = null;
+}
+async function deleteTenancy(id) {
+  if (!confirm("Delete this tenancy contract?")) return;
+  try { await dbDel("documents", id); closeTenDetail(); renderDocs(); } catch(e) { console.error("deleteTenancy:", e); }
+}
+function showTenForm() { el("tenForm").style.display = ""; if(el("tenAddBtn")) el("tenAddBtn").style.display = "none"; }
+function hideTenForm()  { el("tenForm").style.display = "none"; if(el("tenAddBtn")) el("tenAddBtn").style.display = ""; }
+function genCheques() {
+  var n = parseInt(el("tcNumCh").value) || 0; if (!n || n < 1) { alert("Enter number of cheques."); return; }
+  el("chequeInputs").innerHTML = Array.from({length:n}, function(_, i) {
+    return '<div class="ch-row"><div class="cr-top">Cheque #' + (i+1) + '</div><div class="ci-row"><span>Amount</span><input type="number" inputmode="decimal" class="ch-amt" placeholder="0"></div><div class="ci-row" style="margin-top:6px"><span>Date</span><input type="date" class="ch-date"></div></div>';
+  }).join("");
+}
+async function saveTenancy() {
+  try {
+    var pid = el("personSel").value; if (!pid) return;
+    var cheques = Array.from(document.querySelectorAll(".ch-amt")).map(function(a, i) {
+      return { amount:parseFloat(a.value)||0, date:(document.querySelectorAll(".ch-date")[i]||{}).value||"" };
+    }).filter(function(c){return c.amount||c.date;});
+    var tcFile = el("tcFile").files[0];
+    var doc = { id:mkid(), personId:pid, type:"tenancy", contractNo:el("tcContract").value.trim(), startDate:el("tcStart").value, endDate:el("tcEnd").value, landlord:el("tcLandlord").value.trim(), totalRent:parseFloat(el("tcRent").value)||0, cheques:cheques };
+    if (tcFile) { doc.fileData = await fileToDataURL(tcFile); doc.fileName = tcFile.name; }
+    await dbPut("documents", doc);
+    ["tcContract","tcStart","tcEnd","tcLandlord","tcRent","tcNumCh"].forEach(function(id){el(id).value="";});
+    el("chequeInputs").innerHTML = ""; el("tcFile").value = "";
+    hideTenForm(); renderDocs();
+  } catch(e) { console.error("saveTenancy:", e); }
+}
+function selDocType(btn) {
+  selDocT = btn.dataset.dt;
+  document.querySelectorAll(".dtbtn").forEach(function(b){b.classList.remove("sel");}); btn.classList.add("sel");
+  el("df-other-name").style.display = selDocT==="other" ? "" : "none";
+  el("df-standard").style.display = selDocT==="tenancy" ? "none" : "";
+  el("df-tenancy").style.display   = selDocT==="tenancy" ? "" : "none";
+  el("docNumLbl").textContent = DOC_NUMLBL[selDocT] || "Number";
+  ["docNum","docExpiry","docIssued"].forEach(function(id){el(id).value="";});
+  el("docForm").style.display = "";
+}
+async function saveDoc() {
+  try {
+    var pid = el("personSel").value; if (!pid||!selDocT) return;
+    var doc = { id:mkid(), personId:pid, type:selDocT, docNum:el("docNum").value.trim(), expiry:el("docExpiry").value, issuedBy:el("docIssued").value.trim() };
+    if (selDocT==="other") doc.docName = el("docName").value.trim();
+    var file = el("docFile").files[0];
+    if (file) { doc.fileData = await fileToDataURL(file); doc.fileName = file.name; }
+    await dbPut("documents", doc);
+    el("docForm").style.display = "none";
+    document.querySelectorAll(".dtbtn").forEach(function(b){b.classList.remove("sel");});
+    selDocT = null; renderDocs();
+  } catch(e) { console.error("saveDoc:", e); }
+}
+async function delDoc(id) { if (!confirm("Delete this document?")) return; try { await dbDel("documents",id); renderDocs(); }catch(e){console.error("delDoc:",e);} }
+async function viewFile(id)    { try{var d=await dbGet("documents",id); if(d&&d.fileData){var w=window.open();w.document.write('<iframe src="'+d.fileData+'" style="width:100%;height:100vh;border:none"></iframe>');}}catch(e){console.error(e);} }
+async function dlFile(id)      { try{var d=await dbGet("documents",id); if(d&&d.fileData){var a=document.createElement("a");a.href=d.fileData;a.download=d.fileName||"document";a.click();}}catch(e){console.error(e);} }
+async function replaceFile(id) { var inp=document.createElement("input");inp.type="file";inp.accept=".pdf,.jpg,.jpeg,.png";inp.onchange=async function(e){var f=e.target.files[0];if(!f)return;try{var d=await dbGet("documents",id);d.fileData=await fileToDataURL(f);d.fileName=f.name;await dbPut("documents",d);renderDocs();}catch(err){console.error(err);}};inp.click(); }
+async function removeFile(id)  { if(!confirm("Remove attached file?"))return; try{var d=await dbGet("documents",id);d.fileData=null;d.fileName=null;await dbPut("documents",d);renderDocs();}catch(e){console.error(e);} }
+async function viewTenFile(id)    { viewFile(id); }
+async function dlTenFile(id)      { dlFile(id); }
+async function replaceTenFile(id) { replaceFile(id); }
+async function removeTenFile(id)  { removeFile(id); }
 
-function selDocType(btn){
-  selDocT=btn.dataset.dt;
-  document.querySelectorAll('.dtbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');
-  document.getElementById('df-other-name').style.display=selDocT==='other'?'':'none';
-  document.getElementById('docNumLbl').textContent=DOC_NUMLBL[selDocT]||'Number';
-  document.getElementById('docNum').value='';document.getElementById('docExpiry').value='';document.getElementById('docIssued').value='';
-  document.getElementById('docForm').style.display='';
+// ── APPOINTMENTS ──────────────────────────────────────────────────
+var selAType = "doctor";
+function selAT(btn) {
+  selAType = btn.dataset.at;
+  document.querySelectorAll(".atbtn").forEach(function(b){b.classList.remove("sel");}); btn.classList.add("sel");
+  el("af-service").style.display = selAType==="service" ? "" : "none";
 }
-async function saveDoc(){
-  const pid=document.getElementById('personSel').value;if(!pid||!selDocT)return;
-  const doc={id:mkid(),personId:pid,type:selDocT,docNum:document.getElementById('docNum').value.trim(),expiry:document.getElementById('docExpiry').value,issuedBy:document.getElementById('docIssued').value.trim()};
-  if(selDocT==='other')doc.docName=document.getElementById('docName').value.trim();
-  const file=document.getElementById('docFile').files[0];
-  if(file){doc.fileData=await fileToDataURL(file);doc.fileName=file.name;}
-  await dbPut('documents',doc);
-  document.getElementById('docForm').style.display='none';document.querySelectorAll('.dtbtn').forEach(b=>b.classList.remove('sel'));selDocT=null;renderDocs();
+async function saveAppt() {
+  try {
+    var title = el("apptTitle").value.trim(), dt = el("apptDT").value;
+    if (!title||!dt) { alert("Please enter title and date/time."); return; }
+    var entry = { id:mkid(), type:selAType, title:title, datetime:dt, notes:el("apptNotes").value.trim(), recurring:el("apptRecurring").checked, ts:Date.now() };
+    if (selAType==="service") { entry.car=el("svcCar").value.trim(); entry.svcType=el("svcType").value.trim(); }
+    await dbPut("appointments", entry);
+    ["apptTitle","apptDT","apptNotes","svcCar","svcType"].forEach(function(id){var e=el(id);if(e)e.value="";});
+    el("apptRecurring").checked = false;
+    renderAppts();
+  } catch(e) { console.error("saveAppt:", e); }
 }
-async function delDoc(id){if(!confirm('Delete this document?'))return;await dbDel('documents',id);renderDocs();}
-
-// Document file operations
-async function viewFile(id){const d=await dbGet('documents',id);if(d?.fileData){const w=window.open();w.document.write(`<iframe src="${d.fileData}" style="width:100%;height:100vh;border:none"></iframe>`);}}
-async function dlFile(id){const d=await dbGet('documents',id);if(d?.fileData){const a=document.createElement('a');a.href=d.fileData;a.download=d.fileName||'document';a.click();}}
-async function replaceFile(id){const input=document.createElement('input');input.type='file';input.accept='.pdf,.jpg,.jpeg,.png';input.onchange=async e=>{const f=e.target.files[0];if(!f)return;const d=await dbGet('documents',id);d.fileData=await fileToDataURL(f);d.fileName=f.name;await dbPut('documents',d);renderDocs();};input.click();}
-async function removeFile(id){if(!confirm('Remove attached file?'))return;const d=await dbGet('documents',id);d.fileData=null;d.fileName=null;await dbPut('documents',d);renderDocs();}
-
-// ══ APPOINTMENTS ═══════════════════════════════════
-function selAT(btn){selAType=btn.dataset.at;document.querySelectorAll('.atbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');document.getElementById('af-service').style.display=selAType==='service'?'':'none';}
-async function saveAppt(){
-  const title=document.getElementById('apptTitle').value.trim(),dt=document.getElementById('apptDT').value;
-  if(!title||!dt){alert('Please enter title and date/time.');return;}
-  const entry={id:mkid(),type:selAType,title,datetime:dt,notes:document.getElementById('apptNotes').value.trim(),recurring:document.getElementById('apptRecurring').checked,ts:Date.now()};
-  if(selAType==='service'){entry.car=document.getElementById('svcCar').value.trim();entry.svcType=document.getElementById('svcType').value.trim();}
-  await dbPut('appointments',entry);
-  document.getElementById('apptTitle').value='';document.getElementById('apptDT').value='';document.getElementById('apptNotes').value='';document.getElementById('apptRecurring').checked=false;
-  if(selAType==='service'){document.getElementById('svcCar').value='';document.getElementById('svcType').value='';}
-  renderAppts();
+async function delAppt(id) { try{await dbDel("appointments",id);renderAppts();}catch(e){console.error(e);} }
+async function renderAppts() {
+  try {
+    var appts = (await dbAll("appointments")).sort(function(a,b){return new Date(a.datetime)-new Date(b.datetime);});
+    var container = el("apptList");
+    if (!appts.length) { container.innerHTML = '<div class="empty">No appointments yet.</div>'; return; }
+    var now = new Date();
+    var html = appts.map(function(a) {
+      var d = new Date(a.datetime), past = d < now;
+      var dt = d.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"}) + " at " + d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});
+      var extra = a.type==="service"&&(a.car||a.svcType) ? '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:2px;">'+(a.car||"")+(a.car&&a.svcType?" · ":"")+(a.svcType||"")+'</div>' : "";
+      var recurBadge = a.recurring && !a.carriedForwardFrom ? '<span style="font-size:9px;background:#fff3cf;color:#c07800;font-weight:800;padding:2px 7px;border-radius:10px;margin-top:3px;display:inline-block;">Monthly</span>' : "";
+      var carriedBadge = a.carriedForwardFrom ? '<span style="font-size:9px;background:#ede9ff;color:#4338ca;font-weight:800;padding:2px 7px;border-radius:10px;margin-top:3px;display:inline-block;">Carried forward</span>' : "";
+      return '<div class="acard"><div class="aico" style="background:'+(APPT_COLORS[a.type]||"#f3f0ff")+'">'+(APPT_ICONS[a.type]||"📋")+'</div><div class="ainfo"><div class="atitle" style="'+(past?"opacity:.5;text-decoration:line-through":"")+'">' + a.title + '</div><div class="adt">' + dt + (past?" · past":"") + '</div>' + extra + (a.notes?'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+a.notes+'</div>':"") + recurBadge + carriedBadge + '</div><button class="adel" data-action="del-appt" data-id="' + a.id + '">x</button></div>';
+    }).join("");
+    container.innerHTML = html;
+    container.querySelectorAll("[data-action='del-appt']").forEach(function(btn) {
+      btn.addEventListener("click", function() { delAppt(this.dataset.id); });
+    });
+  } catch(e) { console.error("renderAppts:", e); }
 }
-async function delAppt(id){await dbDel('appointments',id);renderAppts();}
-async function renderAppts(){
-  const appts=(await dbAll('appointments')).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
-  const el=document.getElementById('apptList');
-  if(!appts.length){el.innerHTML='<div class="empty">No appointments yet.</div>';return;}
-  el.innerHTML=appts.map(a=>{
-    const d=new Date(a.datetime),past=d<new Date();
-    const dt=d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})+' at '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
-    const extra=a.type==='service'&&(a.car||a.svcType)?`<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:2px">${[a.car,a.svcType].filter(Boolean).join(' · ')}</div>`:'';
-        const recurringBadge = a.recurring && !a.carriedForwardFrom
-      ? '<span style="font-size:9px;background:#fff3cf;color:#c07800;font-weight:800;padding:2px 7px;border-radius:10px;margin-top:3px;margin-right:4px;display:inline-block;">Monthly</span>'
-      : '';
-    const carriedBadge = a.carriedForwardFrom
-      ? '<span style="font-size:9px;background:#ede9ff;color:#4338ca;font-weight:800;padding:2px 7px;border-radius:10px;margin-top:3px;display:inline-block;">Carried forward</span>'
-      : '';
-    return '<div class="acard">'
-      + '<div class="aico" style="background:' + (APPT_COLORS[a.type]||'#f3f0ff') + '">' + (APPT_ICONS[a.type]||'📋') + '</div>'
-      + '<div class="ainfo">'
-      + '<div class="atitle" style="' + (past?'opacity:.5;text-decoration:line-through':'') + '">' + a.title + '</div>'
-      + '<div class="adt">' + dt + (past?' · past':'') + '</div>'
-      + extra
-      + (a.notes ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + a.notes + '</div>' : '')
-      + recurringBadge + carriedBadge
-      + '</div>'
-      + '<button class="adel" onclick="delAppt(\'' + a.id + '\')">×</button>'
-      + '</div>';
-  }).join('');
+async function checkAppointmentCarryForward() {
+  try {
+    var appts = await dbAll("appointments"), now = new Date();
+    for (var i = 0; i < appts.length; i++) {
+      var a = appts[i];
+      if (!a.datetime || !a.recurring) continue;
+      var d = new Date(a.datetime);
+      if (d >= now) continue;
+      if (a.carriedForwardFrom) continue;
+      var already = appts.some(function(b){ return b.carriedForwardFrom===a.id && new Date(b.datetime)>=now; });
+      if (already) continue;
+      var nm = d.getMonth()===11?0:d.getMonth()+1, ny = d.getMonth()===11?d.getFullYear()+1:d.getFullYear();
+      var lastDay = new Date(ny,nm+1,0).getDate(), td = Math.min(d.getDate(),lastDay);
+      var nd = new Date(ny,nm,td,d.getHours(),d.getMinutes());
+      var pad = function(n){return String(n).padStart(2,"0");};
+      var ndt = nd.getFullYear()+"-"+pad(nd.getMonth()+1)+"-"+pad(nd.getDate())+"T"+pad(nd.getHours())+":"+pad(nd.getMinutes());
+      await dbPut("appointments",{id:mkid(),type:a.type,title:a.title,datetime:ndt,notes:a.notes||"",car:a.car||"",svcType:a.svcType||"",recurring:true,carriedForwardFrom:a.id,ts:Date.now()});
+    }
+  } catch(e) { console.warn("carryForwardAppts:", e); }
 }
 
-// ══ SETTINGS ═══════════════════════════════════════
-async function generatePDF(){
-  const mk=curM(),mName=mLabel(mk);
-  const[exps,incs,savs,debts]=await Promise.all([dbAll('expenses'),dbAll('incomes'),dbAll('savings'),dbAll('debts')]);
-  const mExp=exps.filter(e=>mKey(e.date)===mk),mInc=incs.filter(e=>mKey(e.date)===mk),mSav=savs.filter(e=>mKey(e.date)===mk);
-  const spent=mExp.reduce((s,e)=>s+Number(e.amount||0),0),earned=mInc.reduce((s,e)=>s+Number(e.amount||0),0),saved=mSav.reduce((s,e)=>s+Number(e.amount||e.totalVal||0),0),bal=earned-spent-saved;
-  const sums={};mExp.forEach(e=>{const k=e.subcat||e.cat;sums[k]=(sums[k]||0)+Number(e.amount||0);});
-  const catRows=Object.entries(sums).sort((a,b)=>b[1]-a[1]).map(([id,tot])=>{const c=catInfo(id,false);return`<tr><td>${c.icon} ${c.label}</td><td style="text-align:right;font-weight:700">${fmt(tot)}</td></tr>`;}).join('');
-  const incRows=mInc.sort((a,b)=>b.ts-a.ts).map(e=>{const c=catInfo(e.cat,true);return`<tr><td>${e.date}</td><td>${c.icon} ${c.label}</td><td>${e.note||''}</td><td style="text-align:right;color:#00c48c;font-weight:700">+${fmt(e.amount)}</td></tr>`;}).join('');
-  const expRows=mExp.sort((a,b)=>b.ts-a.ts).map(e=>{const c=catInfo(e.subcat||e.cat,false);return`<tr><td>${e.date}</td><td>${c.icon} ${c.label}</td><td>${e.note||''}</td><td style="text-align:right;color:#ff5e57;font-weight:700">-${fmt(e.amount)}</td></tr>`;}).join('');
-  const html=`<html><head><meta charset="UTF-8"><style>body{font-family:-apple-system,sans-serif;color:#1a1a2e;padding:28px;max-width:700px;margin:0 auto;}h1{font-size:26px;font-weight:800;color:#ff5f8f;margin:0 0 3px;}h2{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#8e8ea8;margin:18px 0 8px;border-bottom:2px solid #eaeaf2;padding-bottom:5px;}.sub{font-size:12px;color:#8e8ea8;margin-bottom:22px;}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}.sc{background:#f7f8fa;border-radius:10px;padding:12px;}.scl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#8e8ea8;font-weight:700;}.scv{font-size:18px;font-weight:800;margin-top:4px;}table{width:100%;border-collapse:collapse;font-size:12.5px;}td{padding:8px 10px;border-bottom:1px solid #eaeaf2;}tr:nth-child(even){background:#f7f8fa;}.ft{margin-top:28px;font-size:10.5px;color:#8e8ea8;text-align:center;border-top:1px solid #eaeaf2;padding-top:12px;}</style></head><body><h1>💰 FinMob</h1><div class="sub">Monthly Report  -  ${mName} · Generated ${new Date().toLocaleDateString()}</div><div class="summary"><div class="sc"><div class="scl">Income</div><div class="scv" style="color:#00c48c">${fmt(earned)}</div></div><div class="sc"><div class="scl">Spent</div><div class="scv" style="color:#ff5e57">${fmt(spent)}</div></div><div class="sc"><div class="scl">Saved</div><div class="scv" style="color:#f5a623">${fmt(saved)}</div></div><div class="sc"><div class="scl">Balance</div><div class="scv" style="color:#7c5cff">${fmt(bal)}</div></div></div><h2>Spending by Category</h2><table><tr style="background:#eaeaf2"><td><b>Category</b></td><td style="text-align:right"><b>Amount</b></td></tr>${catRows}</table><h2>Income</h2><table><tr style="background:#eaeaf2"><td><b>Date</b></td><td><b>Type</b></td><td><b>Note</b></td><td><b>Amount</b></td></tr>${incRows||'<tr><td colspan="4" style="color:#8e8ea8;text-align:center">No income this month</td></tr>'}</table><h2>Expenses</h2><table><tr style="background:#eaeaf2"><td><b>Date</b></td><td><b>Category</b></td><td><b>Note</b></td><td><b>Amount</b></td></tr>${expRows||'<tr><td colspan="4" style="color:#8e8ea8;text-align:center">No expenses</td></tr>'}</table><div class="ft">FinMob  -  Your Personal Finance Manager</div></body></html>`;
-  const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),500);}else{const blob=new Blob([html],{type:'text/html'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`FinMob-${mk}.html`;a.click();URL.revokeObjectURL(url);}
+// ── MONTH ROLLOVER ────────────────────────────────────────────────
+async function checkMonthRollover() {
+  try {
+    var mk = curM();
+    var done = await dbGet("rollover","rollover_"+mk); if (done) return;
+    var savs = await dbAll("savings");
+    var debts = await dbAll("debts"), pmts = await dbAll("payments");
+    var savTotal = savs.reduce(function(s,e){return s+Number(e.amount||e.totalVal||0);},0);
+    var debtSnap = debts.map(function(d){
+      var paid=pmts.filter(function(p){return p.debtId===d.id;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
+      return {id:d.id,lender:d.lender,remaining:Math.max(0,Number(d.total||0)-paid)};
+    });
+    await dbPut("rollover",{id:"rollover_"+mk,month:mk,createdAt:new Date().toISOString(),savingsCarriedForward:savTotal,debtSnapshot:debtSnap});
+  } catch(e) { console.warn("checkMonthRollover:", e); }
 }
 
-// ══ BACKUP ═════════════════════════════════════════
-async function exportBk(){
-  const data={app:'FinMob',version:4,exportedAt:new Date().toISOString()};
-  for(const s of BSTORES)data[s]=await dbAll(s);
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`FinMob-backup-${todayStr()}.json`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+// ── PAYMENT SCHEDULE ─────────────────────────────────────────────
+var activePayTab = "bills";
+function switchPayTab(tab) {
+  activePayTab = tab;
+  ["bills","cheques"].forEach(function(t) {
+    el("paySection-"+t).style.display = t===tab?"":"none";
+    el("payTab-"+t).classList.toggle("active",t===tab);
+  });
+  if (tab==="bills") renderBills(); else renderCheques();
 }
-async function importBk(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=async ev=>{
+function togglePayForm(id) { var e=el(id); if(e) e.style.display = e.style.display==="none"?"":"none"; }
+function toggleCustomBill() { el("customBillRow").style.display = el("billCat").value==="custom"?"":"none"; }
+
+async function saveBill() {
+  try {
+    var cat=el("billCat").value, custom=el("customBillName").value.trim(), dueDate=el("billDueDate").value;
+    if (!dueDate){alert("Please enter a due date.");return;}
+    if (cat==="custom"&&!custom){alert("Please enter a bill name.");return;}
+    await dbPut("bills",{id:mkid(),cat:cat,customName:custom,dueDate:dueDate,amount:parseFloat(el("billAmt").value)||0,notes:el("billNotes").value.trim(),recurring:el("billRecurring").checked,paid:false,carriedForwardFrom:null,ts:Date.now()});
+    ["billDueDate","billAmt","billNotes"].forEach(function(id){el(id).value="";});
+    el("billRecurring").checked=false; el("billCat").value="electricity"; el("customBillRow").style.display="none";
+    togglePayForm("bill-form"); renderBills();
+  } catch(e) { console.error("saveBill:",e); }
+}
+async function toggleBillPaid(id) { try{var b=await dbGet("bills",id);if(!b)return;b.paid=!b.paid;await dbPut("bills",b);renderBills();}catch(e){console.error(e);} }
+async function delBill(id)        { if(!confirm("Delete this bill?"))return; try{await dbDel("bills",id);renderBills();}catch(e){console.error(e);} }
+
+async function renderBills() {
+  try {
+    var mk=curM(), today=new Date(); today.setHours(0,0,0,0);
+    var bills=(await dbAll("bills")).filter(function(b){return mKey(b.dueDate)===mk||b.recurring;}).sort(function(a,b){return a.dueDate.localeCompare(b.dueDate);});
+    var container=el("billList");
+    if (!bills.length){container.innerHTML='<div class="empty">No bills this month.</div>';return;}
+    var html=bills.map(function(b){
+      var info=BILL_CATS[b.cat]||{label:b.customName||"Bill",icon:"🧾"};
+      var label=b.cat==="custom"?(b.customName||"Custom"):info.label;
+      var due=new Date(b.dueDate+"T00:00:00"), days=Math.round((due-today)/86400000);
+      var soonTxt=days>=0&&days<=3?'<span class="pay-soon">Due in '+days+' day(s)</span>':days<0?'<span class="pay-soon">Overdue</span>':"";
+      var ps=b.paid?"opacity:.5;text-decoration:line-through;":"";
+      var rb=b.recurring?'<span style="font-size:9px;background:#ede9ff;color:#6366f1;font-weight:800;padding:2px 7px;border-radius:10px;margin-right:4px;">Monthly</span>':"";
+      var pb=b.paid?'<span style="font-size:9px;background:#edfaf5;color:#00966d;font-weight:800;padding:2px 7px;border-radius:10px;">Paid</span>':"";
+      var bg=b.paid?"#ffe4e3":"#edfaf5", col=b.paid?"#ff5e57":"#00c48c", lbl=b.paid?"Unpay":"Mark Paid";
+      return '<div class="pay-card"><div class="pay-card-head"><div><span class="pay-tag">'+info.icon+" "+label+'</span><div class="pay-name" style="'+ps+'">'+label+'</div><div class="pay-meta">Due: '+due.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})+'</div>'+(b.amount?'<div class="pay-amt">AED '+fmt(b.amount)+'</div>':"")+(b.notes?'<div class="pay-meta">'+b.notes+'</div>':"")+soonTxt+'<div style="margin-top:6px;">'+rb+pb+'</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;"><button class="pay-del" data-action="del-bill" data-id="'+b.id+'">x</button><button data-action="paid-bill" data-id="'+b.id+'" style="font-size:10px;padding:5px 10px;border-radius:20px;border:none;font-weight:800;background:'+bg+';color:'+col+';">'+lbl+'</button></div></div></div>';
+    }).join("");
+    container.innerHTML=html;
+    container.querySelectorAll("[data-action]").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var action=this.dataset.action,id=this.dataset.id;
+        if(action==="del-bill") delBill(id);
+        else if(action==="paid-bill") toggleBillPaid(id);
+      });
+    });
+  } catch(e){console.error("renderBills:",e);}
+}
+
+async function saveCheque() {
+  try {
+    var dueDate=el("chequeDueDate").value, payee=el("chequePayee").value.trim();
+    if(!dueDate||!payee){alert("Please enter cheque date and payee.");return;}
+    await dbPut("cheques",{id:mkid(),num:el("chequeNum").value.trim(),dueDate:dueDate,payee:payee,amount:parseFloat(el("chequeAmt").value)||0,bank:el("chequeBankName").value.trim(),notes:el("chequeNotes").value.trim(),recurring:el("chequeRecurring").checked,paid:false,carriedForwardFrom:null,ts:Date.now()});
+    ["chequeNum","chequeDueDate","chequePayee","chequeAmt","chequeBankName","chequeNotes"].forEach(function(id){var e=el(id);if(e)e.value="";});
+    el("chequeRecurring").checked=false; togglePayForm("cheque-form"); renderCheques();
+  } catch(e){console.error("saveCheque:",e);}
+}
+async function toggleChequePaid(id){try{var c=await dbGet("cheques",id);if(!c)return;c.paid=!c.paid;await dbPut("cheques",c);renderCheques();}catch(e){console.error(e);}}
+async function delCheque(id){if(!confirm("Delete this cheque?"))return;try{await dbDel("cheques",id);renderCheques();}catch(e){console.error(e);}}
+
+async function renderCheques() {
+  try {
+    var mk=curM(),today=new Date();today.setHours(0,0,0,0);
+    var cheqs=(await dbAll("cheques")).filter(function(c){return mKey(c.dueDate)===mk||c.recurring;}).sort(function(a,b){return a.dueDate.localeCompare(b.dueDate);});
+    var container=el("chequeList");
+    if(!cheqs.length){container.innerHTML='<div class="empty">No cheques this month.</div>';return;}
+    var html=cheqs.map(function(c){
+      var due=new Date(c.dueDate+"T00:00:00"),days=Math.round((due-today)/86400000);
+      var soonTxt=days>=0&&days<=3?'<span class="pay-soon">Due in '+days+' day(s)</span>':days<0?'<span class="pay-soon">Overdue</span>':"";
+      var ps=c.paid?"opacity:.5;text-decoration:line-through;":"";
+      var rb=c.recurring?'<span style="font-size:9px;background:#ede9ff;color:#6366f1;font-weight:800;padding:2px 7px;border-radius:10px;margin-right:4px;">Monthly</span>':"";
+      var pb=c.paid?'<span style="font-size:9px;background:#edfaf5;color:#00966d;font-weight:800;padding:2px 7px;border-radius:10px;">Paid</span>':"";
+      var bg=c.paid?"#ffe4e3":"#edfaf5",col=c.paid?"#ff5e57":"#00c48c",lbl=c.paid?"Unpay":"Mark Paid";
+      return '<div class="pay-card"><div class="pay-card-head"><div><span class="pay-tag">Cheque</span><div class="pay-name" style="'+ps+'">'+c.payee+'</div><div class="pay-meta">Cheque #'+(c.num||"-")+" · "+(c.bank||"")+'</div><div class="pay-meta">Due: '+due.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})+'</div>'+(c.amount?'<div class="pay-amt">AED '+fmt(c.amount)+'</div>':"")+soonTxt+'<div style="margin-top:6px;">'+rb+pb+'</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;"><button class="pay-del" data-action="del-cheque" data-id="'+c.id+'">x</button><button data-action="paid-cheque" data-id="'+c.id+'" style="font-size:10px;padding:5px 10px;border-radius:20px;border:none;font-weight:800;background:'+bg+';color:'+col+';">'+lbl+'</button></div></div></div>';
+    }).join("");
+    container.innerHTML=html;
+    container.querySelectorAll("[data-action]").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var action=this.dataset.action,id=this.dataset.id;
+        if(action==="del-cheque") delCheque(id);
+        else if(action==="paid-cheque") toggleChequePaid(id);
+      });
+    });
+  } catch(e){console.error("renderCheques:",e);}
+}
+
+async function carryForwardPayments() {
+  try {
+    var mk=curM(), today=new Date();
+    var pad=function(n){return String(n).padStart(2,"0");};
+    async function carryStore(storeName){
+      var items=await dbAll(storeName);
+      for(var i=0;i<items.length;i++){
+        var item=items[i];
+        if(!item.recurring||!item.dueDate) continue;
+        if(mKey(item.dueDate)===mk) continue;
+        var already=items.some(function(x){return x.carriedForwardFrom===item.id&&mKey(x.dueDate)===mk;});
+        if(already) continue;
+        var orig=new Date(item.dueDate+"T00:00:00");
+        var lastDay=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
+        var day=Math.min(orig.getDate(),lastDay);
+        var newDate=today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(day);
+        var copy=Object.assign({},item,{id:mkid(),dueDate:newDate,paid:false,carriedForwardFrom:item.id,ts:Date.now()});
+        await dbPut(storeName,copy);
+      }
+    }
+    await carryStore("bills"); await carryStore("cheques");
+  } catch(e){console.warn("carryForwardPayments:",e);}
+}
+
+// ── SETTINGS / BACKUP ────────────────────────────────────────────
+async function exportBk() {
+  try {
+    var data={app:"FinMob",version:7,exportedAt:new Date().toISOString()};
+    for(var i=0;i<BSTORES.length;i++){data[BSTORES[i]]=await dbAll(BSTORES[i]);}
+    var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a"); a.href=url; a.download="FinMob-backup-"+todayStr()+".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  } catch(e){console.error("exportBk:",e);}
+}
+async function importBk(input) {
+  var file=input.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=async function(ev){
     try{
-      const bk=JSON.parse(ev.target.result);
-      const merge=confirm('OK = Merge with current data\nCancel = Replace all data');
-      for(const s of BSTORES){if(!Array.isArray(bk[s]))continue;if(merge){const ex=await dbAll(s);const ids=new Set(ex.map(x=>x.id));for(const item of bk[s])if(!ids.has(item.id))await dbPut(s,item);}else{const ex=await dbAll(s);for(const item of ex)await dbDel(s,item.id);for(const item of bk[s])await dbPut(s,item);}}
-      await renderAll();alert('✅ Backup restored!');
-    }catch{alert('Invalid backup file.');}
-    input.value='';
+      var bk=JSON.parse(ev.target.result);
+      var merge=confirm("OK = Merge with current data\nCancel = Replace all data");
+      for(var i=0;i<BSTORES.length;i++){
+        var s=BSTORES[i]; if(!Array.isArray(bk[s])) continue;
+        if(merge){var ex=await dbAll(s);var ids=new Set(ex.map(function(x){return x.id;}));for(var j=0;j<bk[s].length;j++){if(!ids.has(bk[s][j].id))await dbPut(s,bk[s][j]);}}
+        else{var ex=await dbAll(s);for(var j=0;j<ex.length;j++)await dbDel(s,ex[j].id);for(var j=0;j<bk[s].length;j++)await dbPut(s,bk[s][j]);}
+      }
+      await renderAll(); alert("Backup restored!");
+    } catch(err){alert("Invalid backup file.");}
+    input.value="";
   };
   reader.readAsText(file);
 }
-
-// ══ SPLASH ═════════════════════════════════════════
-function hideSplash(){const s=document.getElementById('splash');if(s){s.classList.add('hide');setTimeout(()=>s.remove(),700);}}
-
-// === DAILY LOCAL BACKUP REMINDER (simple, no setup) ===
-function checkDailyBackupReminder(){
-  var lastDate = localStorage.getItem('fm_local_backup_date');
-  if(lastDate === todayStr()) return; // Already backed up today
-  var banner = document.getElementById('backupReminder');
-  if(banner) banner.classList.add('show');
+async function generatePDF() {
+  try {
+    var mk=curM(), mName=mLabel(mk);
+    var exps=await dbAll("expenses"),incs=await dbAll("incomes"),savs=await dbAll("savings");
+    var mExp=exps.filter(function(e){return mKey(e.date)===mk;}), mInc=incs.filter(function(e){return mKey(e.date)===mk;}), mSav=savs.filter(function(e){return mKey(e.date)===mk;});
+    var spent=mExp.reduce(function(s,e){return s+Number(e.amount||0);},0), earned=mInc.reduce(function(s,e){return s+Number(e.amount||0);},0), saved=mSav.reduce(function(s,e){return s+Number(e.amount||e.totalVal||0);},0);
+    function row(l,v,c,a){var bg=a?"background:#fff;":"";return"<tr><td style='padding:12px 16px;font-weight:700;"+bg+"'>"+l+"</td><td style='padding:12px 16px;text-align:right;font-weight:800;color:"+c+";"+bg+"'>"+v+"</td></tr>";}
+    var html="<html><head><meta charset='UTF-8'><style>body{font-family:-apple-system,sans-serif;color:#1a1a2e;padding:28px;}h1{font-size:26px;font-weight:800;color:#ff5f8f;margin:0 0 3px;}table{width:100%;border-collapse:collapse;font-size:12.5px;}td{padding:8px 10px;border-bottom:1px solid #eaeaf2;}tr:nth-child(even){background:#f7f8fa;}</style></head><body><h1>FinMob</h1><p style='color:#888;margin-bottom:22px;'>Monthly Report  -  "+mName+"</p><table>"+row("Income",fmt(earned),"#00c48c",false)+row("Spent",fmt(spent),"#ff5e57",true)+row("Saved",fmt(saved),"#f5a623",false)+row("Balance",fmt(earned-spent-saved),"#7c5cff",true)+"</table></body></html>";
+    var w=window.open("","_blank"); if(w){w.document.write(html);w.document.close();setTimeout(function(){w.print();},500);}
+  } catch(e){console.error("generatePDF:",e);}
 }
 
-async function doDailyBackup(){
-  await exportBk();
-  localStorage.setItem('fm_local_backup_date', todayStr());
-  var banner = document.getElementById('backupReminder');
-  if(banner) banner.classList.remove('show');
+// ── SPLASH ────────────────────────────────────────────────────────
+function hideSplash() {
+  var s=el("splash"); if(s){s.classList.add("hide");setTimeout(function(){s.remove();},700);}
 }
 
-function dismissBackupReminder(){
-  var banner = document.getElementById('backupReminder');
-  if(banner) banner.classList.remove('show');
-  // Will show again tomorrow since we don't set fm_local_backup_date here
-}
-
-
-// ══ MONTH ROLLOVER LOGIC ═══════════════════════════════════════
-// Income & Expenses: reset automatically each month (date-filtered)
-// Savings: carry forward  -  cumulative all-time total always shown
-// Debt: carry forward  -  remaining = original - all payments ever made
-
-async function checkMonthRollover(){
-  const mk = curM();
-  // Check if we already ran rollover for this month
-  const done = await dbGet('rollover', 'rollover_'+mk);
-  if(done) return;
-
-  // Get previous month key
-  const now = new Date();
-  const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
-  const prevMk = mKey(prevDate.toISOString().slice(0,10));
-
-  // Take a snapshot of closing balances from previous month
-  const[savs, debts, pmts, banks] = await Promise.all([
-    dbAll('savings'), dbAll('debts'), dbAll('payments'), dbAll('banks')
-  ]);
-
-  // Savings carry-forward: running total of all savings ever entered
-  const savTotal = savs.reduce((s,e)=>s+Number(e.amount||e.totalVal||0),0);
-
-  // Debt carry-forward: remaining balance per loan
-  const debtSnapshot = debts.map(d=>{
-    const paid=pmts.filter(p=>p.debtId===d.id).reduce((s,p)=>s+Number(p.amount||0),0);
-    return {id:d.id, lender:d.lender, remaining:Math.max(0,Number(d.total||0)-paid)};
-  });
-
-  // Store rollover record for this month
-  await dbPut('rollover', {
-    id: 'rollover_'+mk,
-    month: mk,
-    prevMonth: prevMk,
-    createdAt: new Date().toISOString(),
-    savingsCarriedForward: savTotal,
-    debtSnapshot: debtSnapshot,
-    note: 'Income & expenses reset. Savings and debt carried forward.'
-  });
-
-  console.log('Month rollover recorded for', mk,
-    '| Savings carried:', savTotal,
-    '| Active debts:', debtSnapshot.length
-  );
-}
-
-// ══ DEBT REMAINING BALANCE (for display) ═══════════════════════
-async function getDebtRemainingForLoan(debtId){
-  const debt = await dbGet('debts', debtId);
-  if(!debt) return 0;
-  const pmts = await dbAll('payments');
-  const paid = pmts.filter(p=>p.debtId===debtId).reduce((s,p)=>s+Number(p.amount||0),0);
-  return Math.max(0, Number(debt.total||0) - paid);
-}
-
-// ══ APPOINTMENT CARRY-FORWARD (silent & automatic) ═════════════
-// Runs silently on app open. No prompts. Date is already set correctly.
-
-async function checkAppointmentCarryForward(){
-  const appts = await dbAll('appointments');
-  const now   = new Date();
-
-  // Appointments in the past that have NOT been carried forward yet
-  // i.e. their datetime has passed and they don't have carriedForwardFrom set
-  // We DO NOT create copies  -  appointments already have their correct dates.
-  // Carry-forward means: if a RECURRING appointment's date has passed,
-  // roll it to the equivalent date next month ONCE.
-  // Only applies to appointments explicitly marked recurring (a.recurring===true).
-  // For normal appointments: they stay as-is with their date. No action needed.
-
-  // Find appointments that are past AND marked recurring
-  const toCarry = appts.filter(a => {
-    if(!a.datetime || !a.recurring) return false;
-    const d = new Date(a.datetime);
-    if(d >= now) return false;                // not past yet
-    if(a.carriedForwardFrom) return false;    // already a carried copy
-    // Check no future copy already exists for this source
-    const alreadyCopied = appts.some(b => b.carriedForwardFrom === a.id && new Date(b.datetime) >= now);
-    return !alreadyCopied;
-  });
-
-  for(const a of toCarry){
-    const orig = new Date(a.datetime);
-    // Move to next month, same day & time
-    const nextMonth = orig.getMonth() === 11 ? 0 : orig.getMonth() + 1;
-    const nextYear  = orig.getMonth() === 11 ? orig.getFullYear()+1 : orig.getFullYear();
-    // Clamp day to last day of target month
-    const lastDay   = new Date(nextYear, nextMonth+1, 0).getDate();
-    const targetDay = Math.min(orig.getDate(), lastDay);
-    const newDate   = new Date(nextYear, nextMonth, targetDay, orig.getHours(), orig.getMinutes());
-    const pad = n => String(n).padStart(2,'0');
-    const newDatetime = newDate.getFullYear()+'-'+pad(newDate.getMonth()+1)+'-'+pad(newDate.getDate())
-      +'T'+pad(newDate.getHours())+':'+pad(newDate.getMinutes());
-
-    await dbPut('appointments',{
-      id:                 mkid(),
-      type:               a.type,
-      title:              a.title,
-      datetime:           newDatetime,
-      notes:              a.notes||'',
-      car:                a.car||'',
-      svcType:            a.svcType||'',
-      recurring:          true,
-      carriedForwardFrom: a.id,
-      ts:                 Date.now()
-    });
-  }
-
-  if(toCarry.length > 0) await renderAppts();
-}
-
-
-// ══ PAYMENT SCHEDULE ═══════════════════════════════════════════
-const BILL_CATS = {
-  electricity: {label:'Electricity Bill', icon:'⚡'},
-  phone:       {label:'Phone Bill',       icon:'📱'},
-  internet:    {label:'Internet Bill',    icon:'🌐'},
-  school:      {label:'School Fees',      icon:'🎓'},
-  custom:      {label:'Custom Bill',      icon:'🧾'},
-};
-
-let activePayTab = 'bills';
-
-function switchPayTab(tab){
-  activePayTab = tab;
-  ['bills','cheques'].forEach(t=>{
-    document.getElementById('paySection-'+t).style.display = t===tab ? '' : 'none';
-    document.getElementById('payTab-'+t).classList.toggle('active', t===tab);
-  });
-  if(tab==='bills') renderBills();
-  else renderCheques();
-}
-
-function togglePayForm(id){
-  const el = document.getElementById(id);
-  if(!el) return;
-  el.style.display = el.style.display === 'none' ? '' : 'none';
-}
-
-function toggleCustomBill(){
-  const cat = document.getElementById('billCat').value;
-  document.getElementById('customBillRow').style.display = cat==='custom' ? '' : 'none';
-}
-
-// ── Bills ───────────────────────────────────────────────────────
-async function saveBill(){
-  const cat      = document.getElementById('billCat').value;
-  const custom   = document.getElementById('customBillName').value.trim();
-  const dueDate  = document.getElementById('billDueDate').value;
-  const amt      = parseFloat(document.getElementById('billAmt').value)||0;
-  const notes    = document.getElementById('billNotes').value.trim();
-  const recurring= document.getElementById('billRecurring').checked;
-
-  if(!dueDate){ alert('Please enter a due date.'); return; }
-  if(cat==='custom' && !custom){ alert('Please enter a bill name.'); return; }
-
-  const bill = {
-    id:        mkid(),
-    cat,
-    customName: custom,
-    dueDate,
-    amount:    amt,
-    notes,
-    recurring,
-    paid:      false,
-    carriedForwardFrom: null,
-    ts:        Date.now()
-  };
-
-  await dbPut('bills', bill);
-  document.getElementById('billDueDate').value='';
-  document.getElementById('billAmt').value='';
-  document.getElementById('billNotes').value='';
-  document.getElementById('billRecurring').checked=false;
-  document.getElementById('billCat').value='electricity';
-  document.getElementById('customBillRow').style.display='none';
-  togglePayForm('bill-form');
-  renderBills();
-}
-
-async function toggleBillPaid(id){
-  const bill = await dbGet('bills', id);
-  if(!bill) return;
-  bill.paid = !bill.paid;
-  await dbPut('bills', bill);
-  renderBills();
-}
-
-async function delBill(id){
-  if(!confirm('Delete this bill?')) return;
-  await dbDel('bills', id);
-  renderBills();
-}
-
-async function renderBills(){
-  var mk    = curM();
-  var today = new Date(); today.setHours(0,0,0,0);
-  var bills = await dbAll('bills');
-  var shown = bills.filter(function(b){
-    return mKey(b.dueDate)===mk || b.recurring;
-  }).sort(function(a,b){return a.dueDate.localeCompare(b.dueDate);});
-  var el = document.getElementById('billList');
-  if(!shown.length){el.innerHTML='<div class="empty">No bills this month. Tap + Add Bill.</div>';return;}
-  el.innerHTML = shown.map(function(b){
-    var info = BILL_CATS[b.cat] || {label:b.customName||'Bill',icon:'🧾'};
-    var label = b.cat==='custom' ? (b.customName||'Custom') : info.label;
-    var due  = new Date(b.dueDate+'T00:00:00');
-    var days = Math.round((due-today)/86400000);
-    var soonTxt = days>=0&&days<=3 ? '<span class="pay-soon">Due in '+days+' day(s)!</span>'
-                : days<0 ? '<span class="pay-soon">Overdue by '+Math.abs(days)+' day(s)</span>' : '';
-    var paidStyle = b.paid ? 'opacity:.5;text-decoration:line-through;' : '';
-    var recurBadge = b.recurring ? '<span style="font-size:9px;background:#ede9ff;color:#6366f1;font-weight:800;padding:2px 7px;border-radius:10px;margin-right:4px;">Monthly</span>' : '';
-    var paidBadge = b.paid ? '<span style="font-size:9px;background:#edfaf5;color:#00966d;font-weight:800;padding:2px 7px;border-radius:10px;">Paid</span>' : '';
-    var bg  = b.paid ? '#ffe4e3' : '#edfaf5';
-    var col = b.paid ? '#ff5e57' : '#00c48c';
-    var lbl = b.paid ? 'Unpay' : 'Mark Paid';
-    return '<div class="pay-card" id="bc-'+b.id+'">'
-      +'<div class="pay-card-head"><div>'
-      +'<span class="pay-tag">'+info.icon+' '+label+'</span>'
-      +'<div class="pay-name" style="'+paidStyle+'">'+label+'</div>'
-      +'<div class="pay-meta">Due: '+due.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})+'</div>'
-      +(b.amount?'<div class="pay-amt">AED '+fmt(b.amount)+'</div>':'')
-      +(b.notes?'<div class="pay-meta" style="margin-top:2px;">'+b.notes+'</div>':'')
-      +soonTxt+'<div style="margin-top:6px;">'+recurBadge+paidBadge+'</div></div>'
-      +'<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">'
-      +'<button class="pay-del" data-id="'+b.id+'" data-action="delbill">×</button>'
-      +'<button data-id="'+b.id+'" data-action="paidbill" style="font-size:10px;padding:5px 10px;border-radius:20px;border:none;font-weight:800;background:'+bg+';color:'+col+';">'+lbl+'</button>'
-      +'</div></div></div>';
-  }).join('');
-  el.querySelectorAll('button[data-action]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var id = this.getAttribute('data-id');
-      var action = this.getAttribute('data-action');
-      if(action==='delbill') delBill(id);
-      else if(action==='paidbill') toggleBillPaid(id);
-    });
-  });
-}
-
-// ── Cheques ─────────────────────────────────────────────────────
-async function saveCheque(){
-  const num      = document.getElementById('chequeNum').value.trim();
-  const dueDate  = document.getElementById('chequeDueDate').value;
-  const payee    = document.getElementById('chequePayee').value.trim();
-  const amt      = parseFloat(document.getElementById('chequeAmt').value)||0;
-  const bank     = document.getElementById('chequeBankName').value.trim();
-  const notes    = document.getElementById('chequeNotes').value.trim();
-  const recurring= document.getElementById('chequeRecurring').checked;
-
-  if(!dueDate||!payee){ alert('Please enter cheque date and payee.'); return; }
-
-  await dbPut('cheques',{id:mkid(),num,dueDate,payee,amount:amt,bank,notes,recurring,paid:false,carriedForwardFrom:null,ts:Date.now()});
-  ['chequeNum','chequeDueDate','chequePayee','chequeAmt','chequeBankName','chequeNotes'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value='';
-  });
-  document.getElementById('chequeRecurring').checked=false;
-  togglePayForm('cheque-form');
-  renderCheques();
-}
-
-async function toggleChequePaid(id){
-  const ch = await dbGet('cheques',id);
-  if(!ch) return;
-  ch.paid = !ch.paid;
-  await dbPut('cheques',ch);
-  renderCheques();
-}
-
-async function delCheque(id){
-  if(!confirm('Delete this cheque?')) return;
-  await dbDel('cheques',id);
-  renderCheques();
-}
-
-async function renderCheques(){
-  var mk    = curM();
-  var today = new Date(); today.setHours(0,0,0,0);
-  var cheqs = await dbAll('cheques');
-  var shown = cheqs.filter(function(c){
-    return mKey(c.dueDate)===mk || c.recurring;
-  }).sort(function(a,b){return a.dueDate.localeCompare(b.dueDate);});
-  var el = document.getElementById('chequeList');
-  if(!shown.length){el.innerHTML='<div class="empty">No cheques this month. Tap + Add Cheque.</div>';return;}
-  el.innerHTML = shown.map(function(c){
-    var due  = new Date(c.dueDate+'T00:00:00');
-    var days = Math.round((due-today)/86400000);
-    var soonTxt = days>=0&&days<=3 ? '<span class="pay-soon">Due in '+days+' day(s)!</span>'
-                : days<0 ? '<span class="pay-soon">Overdue</span>' : '';
-    var paidStyle = c.paid ? 'opacity:.5;text-decoration:line-through;' : '';
-    var recurBadge = c.recurring ? '<span style="font-size:9px;background:#ede9ff;color:#6366f1;font-weight:800;padding:2px 7px;border-radius:10px;margin-right:4px;">Monthly</span>' : '';
-    var paidBadge = c.paid ? '<span style="font-size:9px;background:#edfaf5;color:#00966d;font-weight:800;padding:2px 7px;border-radius:10px;">Paid</span>' : '';
-    var bg  = c.paid ? '#ffe4e3' : '#edfaf5';
-    var col = c.paid ? '#ff5e57' : '#00c48c';
-    var lbl = c.paid ? 'Unpay' : 'Mark Paid';
-    return '<div class="pay-card" id="cc-'+c.id+'">'
-      +'<div class="pay-card-head"><div>'
-      +'<span class="pay-tag">💳 Cheque</span>'
-      +'<div class="pay-name" style="'+paidStyle+'">'+c.payee+'</div>'
-      +'<div class="pay-meta">Cheque #'+(c.num||'-')+' · '+(c.bank||'')+'</div>'
-      +'<div class="pay-meta">Due: '+due.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})+'</div>'
-      +(c.amount?'<div class="pay-amt">AED '+fmt(c.amount)+'</div>':'')
-      +(c.notes?'<div class="pay-meta" style="margin-top:2px;">'+c.notes+'</div>':'')
-      +soonTxt+'<div style="margin-top:6px;">'+recurBadge+paidBadge+'</div></div>'
-      +'<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">'
-      +'<button class="pay-del" data-id="'+c.id+'" data-action="delcheque">×</button>'
-      +'<button data-id="'+c.id+'" data-action="paidcheque" style="font-size:10px;padding:5px 10px;border-radius:20px;border:none;font-weight:800;background:'+bg+';color:'+col+';">'+lbl+'</button>'
-      +'</div></div></div>';
-  }).join('');
-  el.querySelectorAll('button[data-action]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var id = this.getAttribute('data-id');
-      var action = this.getAttribute('data-action');
-      if(action==='delcheque') delCheque(id);
-      else if(action==='paidcheque') toggleChequePaid(id);
-    });
-  });
-}
-
-// ── Recurring carry-forward for bills & cheques ─────────────────
-async function carryForwardPayments(){
-  const mk    = curM();
-  const today = new Date();
-  const pad   = n=>String(n).padStart(2,'0');
-
-  async function carryStore(storeName){
-    const items = await dbAll(storeName);
-    for(const item of items){
-      if(!item.recurring || !item.dueDate) continue;
-      // Only carry forward if original is from a past month
-      if(mKey(item.dueDate)===mk) continue;
-      // Check if a carried copy already exists for this month
-      const already = items.some(x=>x.carriedForwardFrom===item.id && mKey(x.dueDate)===mk);
-      if(already) continue;
-      // Create copy with date moved to same day this month
-      const orig    = new Date(item.dueDate+'T00:00:00');
-      const lastDay = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
-      const day     = Math.min(orig.getDate(), lastDay);
-      const newDate = today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(day);
-      const copy    = Object.assign({}, item, {
-        id: mkid(),
-        dueDate: newDate,
-        paid: false,
-        carriedForwardFrom: item.id,
-        ts: Date.now()
-      });
-      await dbPut(storeName, copy);
-    }
-  }
-
-  await carryStore('bills');
-  await carryStore('cheques');
-}
-
-// ── Payment notifications (3 days before) ──────────────────────
-async function checkPaymentNotifications(){
-  if(!('Notification' in window)||Notification.permission!=='granted') return;
-  const today = new Date(); today.setHours(0,0,0,0);
-  const d3    = new Date(today); d3.setDate(d3.getDate()+3);
-  const d3s   = fmtDate(d3);
-  const sent  = new Set((await dbAll('notifLog')).map(n=>n.id));
-
-  async function notifyItem(storeName, items, labelFn){
-    for(const item of items){
-      if(item.dueDate !== d3s) continue;
-      const key = 'pay_'+storeName+'_'+item.id+'_'+d3s;
-      if(sent.has(key)) continue;
-      const label = labelFn(item);
-      try{ new Notification('Payment Due in 3 Days', {body: label}); }catch(e){}
-      await dbPut('notifLog', {id:key});
-    }
-  }
-
-  const [bills,cheques] = await Promise.all([dbAll('bills'),dbAll('cheques')]);
-  await notifyItem('bills',   bills,   b=>(BILL_CATS[b.cat]?.label||b.customName||'Bill')+' due on '+b.dueDate+(b.amount?' - AED '+fmt(b.amount):''));
-  await notifyItem('cheques', cheques, c=>'Cheque #'+(c.num||'-')+' to '+c.payee+' due on '+c.dueDate+(c.amount?' - AED '+fmt(c.amount):''));
-}
-
-
-// ══ WITHDRAWAL / SAVINGS ADJUSTMENT ═══════════════════════════
-function openWithdrawSavings(){
-  document.getElementById('wdAmt').value='';
-  document.getElementById('wdNote').value='';
-  document.getElementById('wdDate').value=todayStr();
-  openOv('ov-withdraw');
-  setTimeout(()=>document.getElementById('wdAmt').focus(),60);
-}
-
-async function saveWithdrawal(){
-  var amt  = parseFloat(document.getElementById('wdAmt').value);
-  if(!amt||amt<=0){alert('Please enter an amount.');return;}
-  var entry = {
-    id:     mkid(),
-    amount: amt,
-    type:   document.getElementById('wdType').value,
-    cat:    document.getElementById('wdCat').value,
-    date:   document.getElementById('wdDate').value||todayStr(),
-    note:   document.getElementById('wdNote').value.trim(),
-    ts:     Date.now()
-  };
-  await dbPut('withdrawals', entry);
-  closeAll();
-  renderAll();
-}
-
-function renderWithdrawalList(wds){
-  var el = document.getElementById('lWithdrawals');
-  if(!el) return;
-  if(!wds||!wds.length){
-    el.innerHTML='<div class="empty">No withdrawals recorded.</div>';
-    return;
-  }
-  var sorted = wds.slice().sort(function(a,b){return b.ts-a.ts;});
-  var SAV_INFO = {cash:{icon:'💵'},mf:{icon:'📈'},shares:{icon:'📊'},gold:{icon:'🪙'},fd:{icon:'🏦'},other:{icon:'📌'}};
-  el.innerHTML = sorted.map(function(w){
-    var icon = SAV_INFO[w.cat]?SAV_INFO[w.cat].icon:'💸';
-    var typeLabel = w.type==='withdrawal'?'Withdrawal':'Adjustment';
-    var note = w.note || new Date(w.date+'T00:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
-    return '<li class="erow exp-row">'
-      +'<div class="eicon" style="background:#fff0ef">'+icon+'</div>'
-      +'<div class="emeta"><div class="ecat">'+typeLabel+'</div><div class="enote">'+note+'</div></div>'
-      +'<div class="eamt exp">-'+fmt(w.amount)+'</div>'
-      +'<button class="edel" data-wid="'+w.id+'" data-action="delwd">x</button>'
-      +'</li>';
-  }).join('');
-}
-
-async function delWithdrawal(id){
-  if(!confirm('Delete this withdrawal record?')) return;
-  await dbDel('withdrawals',id);
-  renderAll();
-}
-
-// ══ INIT ═══════════════════════════════════════════
-document.getElementById('hdate').textContent=new Date().toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+// ── INIT ──────────────────────────────────────────────────────────
+el("hdate").textContent = new Date().toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",year:"numeric"});
 initDarkMode();
-openDB().then(async()=>{
+openDB().then(async function() {
   await restoreFromAutoBackup();
-  setTimeout(hideSplash,2200);
-  setTimeout(initPin,500);
+  setTimeout(hideSplash, 2200);
+  setTimeout(initPin, 500);
 });
 </script>
 </body>
