@@ -633,9 +633,9 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
     <button onclick="openWithdrawSavings()" style="width:100%;padding:11px;border-radius:var(--r1);border:1.5px dashed #e17055;background:transparent;color:#e17055;font-weight:800;font-size:13px;margin-bottom:14px;">
       - Record Withdrawal / Adjustment
     </button>
-    <div class="stitle">This month's savings</div>
-    <ul class="elist" id="lSavings"></ul>
-    <div class="stitle" style="margin-top:14px;">Withdrawal history</div>
+    <div class="stitle">Savings by Month</div>
+    <div id="lSavingsGrouped"></div>
+    <div class="stitle" style="margin-top:14px;">Withdrawal History</div>
     <ul class="elist" id="lWithdrawals"></ul>
   </section>
   <section id="tab-history" style="display:none">
@@ -971,6 +971,169 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
   </div>
 </div>
 
+<!-- BANK ACTION SHEET -->
+<div class="ov" id="ov-bank-action">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2 id="bankActionTitle">Bank Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="bankActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+
+<!-- BANK EDIT SHEET -->
+<div class="ov" id="ov-bank-edit">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Bank</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Bank Name</label><input type="text" id="editBnName" placeholder="e.g. Emirates NBD"></div>
+    <div class="field"><label>Account Number</label><input type="text" id="editBnAcc" placeholder="e.g. 1234 5678"></div>
+    <div class="two">
+      <div class="field"><label>Balance</label><input type="number" inputmode="decimal" id="editBnBal" placeholder="0"></div>
+      <div class="field"><label>Currency</label>
+        <select id="editBnCur">
+          <option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option>
+        </select>
+      </div>
+    </div>
+    <input type="hidden" id="editBnId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn mb" onclick="saveEditBank()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- INCOME ACTION SHEET -->
+<div class="ov" id="ov-income-action">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2 id="incomeActionTitle">Income Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="incomeActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+
+<!-- INCOME EDIT SHEET -->
+<div class="ov" id="ov-income-edit">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Income</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editIncAmt" placeholder="0"></div>
+    <div class="field"><label>Source</label><div class="cgrid" id="editIncCatGrid"></div></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="editIncNote" placeholder="Add a note"></div>
+    <div class="field"><label>Date</label><input type="date" id="editIncDate"></div>
+    <input type="hidden" id="editIncId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn mi" onclick="saveEditIncome()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPENSE ACTION SHEET -->
+<div class="ov" id="ov-expense-action">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2 id="expenseActionTitle">Entry Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="expenseActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+
+<!-- EXPENSE EDIT SHEET -->
+<div class="ov" id="ov-expense-edit">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Expense</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editExpAmt" placeholder="0"></div>
+    <div class="field">
+      <label>Category</label>
+      <div class="cgrid" id="editExpCatGrid"></div>
+      <div class="subcats" id="editExpSubCats" style="display:none;">
+        <div class="sublbl" id="editExpSubLbl"></div>
+        <div class="cgrid five" id="editExpSubGrid"></div>
+      </div>
+    </div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="editExpNote" placeholder="Add a note"></div>
+    <div class="field"><label>Date</label><input type="date" id="editExpDate"></div>
+    <input type="hidden" id="editExpId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn me" onclick="saveEditExpense()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVINGS ACTION SHEET -->
+<div class="ov" id="ov-savings-action">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2 id="savingsActionTitle">Savings Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="savingsActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+
+<!-- SAVINGS EDIT SHEET -->
+<div class="ov" id="ov-savings-edit">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Savings</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Type</label><div class="cgrid" id="editSavTypeGrid"></div></div>
+    <div id="edit-sf-cash"   class="edit-sav-form" style="display:none"><div class="two"><div class="field"><label>Currency</label><select id="editCashCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div><div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editCashAmt" placeholder="0"></div></div></div>
+    <div id="edit-sf-mf"     class="edit-sav-form" style="display:none"><div class="field"><label>Fund Name</label><input type="text" id="editMfFund" placeholder="e.g. Axis Bluechip Fund"></div><div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editMfAmt" placeholder="0"></div></div>
+    <div id="edit-sf-shares" class="edit-sav-form" style="display:none"><div class="field"><label>Company</label><input type="text" id="editShComp" placeholder="e.g. Reliance"></div><div class="two"><div class="field"><label>Shares</label><input type="number" inputmode="decimal" id="editShNum" placeholder="0"></div><div class="field"><label>Value/share</label><input type="number" inputmode="decimal" id="editShVal" placeholder="0"></div></div></div>
+    <div id="edit-sf-gold"   class="edit-sav-form" style="display:none"><div class="two"><div class="field"><label>Grams</label><input type="number" inputmode="decimal" id="editGoldGrams" placeholder="0"></div><div class="field"><label>Amount Paid</label><input type="number" inputmode="decimal" id="editGoldAmt" placeholder="0"></div></div></div>
+    <div id="edit-sf-fd"     class="edit-sav-form" style="display:none"><div class="field"><label>Bank</label><input type="text" id="editFdBank" placeholder="e.g. Emirates NBD"></div><div class="three"><div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editFdAmt" placeholder="0"></div><div class="field"><label>Currency</label><select id="editFdCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div><div class="field"><label>Interest %</label><input type="number" inputmode="decimal" id="editFdRate" placeholder="0"></div></div></div>
+    <div id="edit-sf-other"  class="edit-sav-form" style="display:none"><div class="field"><label>Description</label><input type="text" id="editSavDesc" placeholder="Describe this saving"></div><div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editSavOtherAmt" placeholder="0"></div></div>
+    <div class="field"><label>Date</label><input type="date" id="editSavDate"></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="editSavNote" placeholder=""></div>
+    <input type="hidden" id="editSavId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn ms" onclick="saveEditSavings()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- WITHDRAWAL ACTION SHEET -->
+<div class="ov" id="ov-withdrawal-action">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2 id="wdActionTitle">Withdrawal Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="wdActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+
+<!-- WITHDRAWAL EDIT SHEET -->
+<div class="ov" id="ov-withdrawal-edit">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Withdrawal</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editWdAmt" placeholder="0"></div>
+    <div class="field"><label>Type</label>
+      <select id="editWdType">
+        <option value="withdrawal">Withdrawal (taken out)</option>
+        <option value="adjustment">Manual Adjustment (correction)</option>
+      </select>
+    </div>
+    <div class="field"><label>Savings Type</label>
+      <select id="editWdCat">
+        <option value="cash">Cash</option>
+        <option value="mf">Mutual Funds</option>
+        <option value="shares">Shares</option>
+        <option value="gold">Gold</option>
+        <option value="fd">Fixed Deposit</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Date</label><input type="date" id="editWdDate"></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="editWdNote" placeholder="e.g. Emergency withdrawal"></div>
+    <input type="hidden" id="editWdId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn" style="background:linear-gradient(135deg,#e17055,#d63031);color:#fff;" onclick="saveEditWithdrawal()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 </div>
 <script>
 "use strict";
@@ -1077,7 +1240,7 @@ function updateDots() {
 }
 function pp(d) {
   if (pinBuf.length >= 4) return;
-  pinBuf += d; updateDots();
+  pinBuf += String(d); updateDots();
   if (pinBuf.length === 4) setTimeout(handlePin, 280);
 }
 function ppDel() { if (pinBuf.length > 0) { pinBuf = pinBuf.slice(0, -1); updateDots(); } }
@@ -1344,6 +1507,14 @@ var BILL_CATS    = {
 
 // ── UTILS ────────────────────────────────────────────────────────
 function el(id) { return document.getElementById(id); }
+function elSet(id, prop, val) { var e = document.getElementById(id); if (e) e[prop] = val; }
+function elStyle(id, val) { var e = document.getElementById(id); if (e) e.style.display = val; }
+function sanitize(str) {
+  var m = {'<':'&lt;', '>':'&gt;', '"':'&quot;', '&':'&amp;'};
+  return (str || '').replace(/[<>"&]/g, function(c) { return m[c]; });
+}
+function numVal(id, def) { var e = el(id); return e ? (parseFloat(e.value) || def || 0) : (def || 0); }
+function strVal(id) { var e = el(id); return e ? e.value.trim() : ""; }
 function fmt(n) { return Number(n || 0).toLocaleString(undefined, { minimumFractionDigits:0, maximumFractionDigits:2 }); }
 function mkid() { return Date.now() + "-" + Math.random().toString(36).slice(2, 6); }
 function todayStr() { return fmtDate(new Date()); }
@@ -1375,6 +1546,7 @@ async function fileToDataURL(file) {
 // ── RENDER ALL ───────────────────────────────────────────────────
 async function renderAll() {
   try {
+    if (!db) { console.warn("DB not ready"); return; }
     await checkMonthRollover();
     var mk = curM(), today = todayStr();
     var results = await Promise.all([dbAll("expenses"), dbAll("incomes"), dbAll("savings"), dbAll("payments"), dbAll("debts"), dbAll("withdrawals")]);
@@ -1406,7 +1578,7 @@ async function renderAll() {
     renderList("lIncome",  mInc.slice().sort(function(a,b){return b.ts-a.ts;}), "income");
     renderList("lToday",   exps.filter(function(e){return e.date===today;}).sort(function(a,b){return b.ts-a.ts;}), "expense");
     renderList("lMonth",   mExp.slice().sort(function(a,b){return b.ts-a.ts;}), "expense");
-    renderSavList("lSavings", mSav.slice().sort(function(a,b){return b.ts-a.ts;}));
+    await renderSavingsGrouped();
     renderWithdrawalList(wds);
     var sums = {};
     mExp.forEach(function(e) { var k = e.subcat || e.cat; sums[k] = (sums[k] || 0) + Number(e.amount || 0); });
@@ -1431,25 +1603,29 @@ async function renderAll() {
 function renderList(id, items, kind) {
   var container = el(id);
   if (!items.length) { container.innerHTML = '<div class="empty">Nothing here yet.</div>'; return; }
+  var isIncome = kind === "income";
   var html = items.map(function(e) {
     var isInc = kind === "income", isSav = kind === "savings";
     var c = catInfo(e.subcat || e.cat, isInc);
     var bg = isInc ? "var(--inc-s)" : isSav ? "var(--sav-s)" : "var(--exp-s)";
-    var note = e.note || (e.remDest ? "→ " + e.remDest + " (" + e.remCur + ")" : new Date(e.date + "T00:00:00").toLocaleDateString(undefined, { day:"numeric", month:"short" }));
+    var note = e.note || (e.remDest ? "to " + e.remDest + " (" + e.remCur + ")" : new Date(e.date + "T00:00:00").toLocaleDateString(undefined, { day:"numeric", month:"short" }));
     var cls = isInc ? "inc-row" : isSav ? "sav-row" : "exp-row";
     var amt = isInc ? "+" + fmt(e.amount) : "-" + fmt(e.amount);
     var amtCls = isInc ? "inc" : isSav ? "sav" : "exp";
-    return '<li class="erow ' + cls + '" data-id="' + e.id + '" data-kind="' + kind + '">'
-      + '<div class="eicon' + (isInc?" big":"") + '" style="background:' + bg + '">' + c.icon + '</div>'
+    // All entry types: tappable row, no X button
+    return '<li class="erow ' + cls + '" style="cursor:pointer;" data-id="' + e.id + '" data-kind="' + kind + '" data-label="' + c.label + '">'
+      + '<div class="eicon' + (isInc ? " big" : "") + '" style="background:' + bg + '">' + c.icon + '</div>'
       + '<div class="emeta"><div class="ecat">' + c.label + '</div><div class="enote">' + note + '</div></div>'
       + '<div class="eamt ' + amtCls + '">' + amt + '</div>'
-      + '<button class="edel" data-action="del-entry">x</button></li>';
+      + '<div style="color:var(--muted);font-size:18px;padding-left:4px;">›</div>'
+      + '</li>';
   }).join("");
   container.innerHTML = html;
-  container.querySelectorAll("[data-action='del-entry']").forEach(function(btn) {
-    btn.addEventListener("click", function() {
-      var row = this.closest("[data-id]");
-      delItem(row.dataset.kind, row.dataset.id);
+  container.querySelectorAll("li[data-kind]").forEach(function(row) {
+    row.addEventListener("click", function() {
+      var kind = this.dataset.kind, id = this.dataset.id, label = this.dataset.label;
+      if (kind === "income")  openIncomeActionMenu(id, label);
+      if (kind === "expense") openExpenseActionMenu(id, label);
     });
   });
 }
@@ -1465,17 +1641,17 @@ function renderSavList(id, items) {
     else if (e.savType==="fd") sub = (e.fdBank||"") + " · " + (e.fdCur||"");
     else if (e.savType==="other") sub = e.savDesc||"";
     if (e.note) sub += (sub ? " · " : "") + e.note;
-    return '<li class="erow sav-row" data-id="' + e.id + '" data-kind="savings">'
+    return '<li class="erow sav-row" style="cursor:pointer;" data-id="' + e.id + '" data-label="' + t.label + '">'
       + '<div class="eicon" style="background:var(--sav-s)">' + t.icon + '</div>'
       + '<div class="emeta"><div class="ecat">' + t.label + '</div><div class="enote">' + sub + '</div></div>'
       + '<div class="eamt sav">+' + fmt(e.amount || e.totalVal || 0) + '</div>'
-      + '<button class="edel" data-action="del-entry">x</button></li>';
+      + '<div style="color:var(--muted);font-size:18px;padding-left:4px;">›</div>'
+      + '</li>';
   }).join("");
   container.innerHTML = html;
-  container.querySelectorAll("[data-action='del-entry']").forEach(function(btn) {
-    btn.addEventListener("click", function() {
-      var row = this.closest("[data-id]");
-      delItem("savings", row.dataset.id);
+  container.querySelectorAll("li[data-id]").forEach(function(row) {
+    row.addEventListener("click", function() {
+      openSavingsActionMenu(this.dataset.id, this.dataset.label);
     });
   });
 }
@@ -1489,16 +1665,17 @@ function renderWithdrawalList(wds) {
     var icon = SAV_ICONS[w.cat] || "💸";
     var label = w.type === "withdrawal" ? "Withdrawal" : "Adjustment";
     var note = w.note || new Date(w.date+"T00:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
-    return '<li class="erow exp-row" data-id="' + w.id + '">'
+    return '<li class="erow exp-row" style="cursor:pointer;" data-id="' + w.id + '" data-label="' + label + '">'
       + '<div class="eicon" style="background:#fff0ef">' + icon + '</div>'
       + '<div class="emeta"><div class="ecat">' + label + '</div><div class="enote">' + note + '</div></div>'
       + '<div class="eamt exp">-' + fmt(w.amount) + '</div>'
-      + '<button class="edel" data-action="del-wd">x</button></li>';
+      + '<div style="color:var(--muted);font-size:18px;padding-left:4px;">›</div>'
+      + '</li>';
   }).join("");
   container.innerHTML = html;
-  container.querySelectorAll("[data-action='del-wd']").forEach(function(btn) {
-    btn.addEventListener("click", function() {
-      delWithdrawal(this.closest("[data-id]").dataset.id);
+  container.querySelectorAll("li[data-id]").forEach(function(row) {
+    row.addEventListener("click", function() {
+      openWithdrawalActionMenu(this.dataset.id, this.dataset.label);
     });
   });
 }
@@ -1510,18 +1687,427 @@ async function delItem(kind, id) {
   } catch(e) { console.error("delItem:", e); }
 }
 
+
+
+
+
+
+// ── WITHDRAWAL ACTION MENU ───────────────────────────────────────
+function openWithdrawalActionMenu(id, label) {
+  var btns = el("wdActionButtons");
+  btns.innerHTML = "";
+  var editBtn = document.createElement("button");
+  editBtn.className = "btn"; editBtn.textContent = "Edit Withdrawal";
+  editBtn.style.cssText = "padding:14px;font-size:15px;background:linear-gradient(135deg,#e17055,#d63031);color:#fff;";
+  editBtn.addEventListener("click", function() { closeAll(); openEditWithdrawal(id); });
+  var delBtn = document.createElement("button");
+  delBtn.className = "btn ghost"; delBtn.textContent = "Delete Entry";
+  delBtn.style.cssText = "padding:14px;font-size:15px;border:1.5px solid var(--exp);color:var(--exp);";
+  delBtn.addEventListener("click", function() { confirmDelWithdrawal(id, label); });
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
+  cancelBtn.style.cssText = "padding:14px;font-size:15px;";
+  cancelBtn.addEventListener("click", function() { closeAll(); });
+  btns.appendChild(editBtn); btns.appendChild(delBtn); btns.appendChild(cancelBtn);
+  el("wdActionTitle").textContent = label;
+  openOv("ov-withdrawal-action");
+}
+
+function confirmDelWithdrawal(id, label) {
+  var btns = el("wdActionButtons");
+  btns.innerHTML = '<p style="text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;">Delete <b style="color:var(--ink);">' + label + '</b>?<br><span style="font-size:11px;">This cannot be undone.</span></p>';
+  var delBtn = document.createElement("button");
+  delBtn.className = "btn me"; delBtn.textContent = "Delete Entry";
+  delBtn.style.cssText = "padding:14px;font-size:15px;";
+  delBtn.addEventListener("click", async function() {
+    try { await dbDel("withdrawals", id); closeAll(); renderAll(); } catch(e) { console.error(e); }
+  });
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
+  cancelBtn.style.cssText = "padding:14px;font-size:15px;";
+  cancelBtn.addEventListener("click", function() { closeAll(); });
+  btns.appendChild(delBtn); btns.appendChild(cancelBtn);
+  el("wdActionTitle").textContent = "Delete Entry";
+}
+
+async function openEditWithdrawal(id) {
+  try {
+    var w = await dbGet("withdrawals", id); if (!w) return;
+    el("editWdId").value   = id;
+    el("editWdAmt").value  = w.amount || 0;
+    el("editWdType").value = w.type || "withdrawal";
+    el("editWdCat").value  = w.cat || "cash";
+    el("editWdDate").value = w.date || todayStr();
+    el("editWdNote").value = w.note || "";
+    openOv("ov-withdrawal-edit");
+    setTimeout(function() { el("editWdAmt").focus(); }, 60);
+  } catch(e) { console.error("openEditWithdrawal:", e); }
+}
+
+async function saveEditWithdrawal() {
+  try {
+    var id = el("editWdId").value;
+    var amt = parseFloat(el("editWdAmt").value);
+    if (!amt || amt <= 0) { el("editWdAmt").focus(); return; }
+    var w = await dbGet("withdrawals", id); if (!w) return;
+    w.amount = amt;
+    w.type   = el("editWdType").value;
+    w.cat    = el("editWdCat").value;
+    w.date   = el("editWdDate").value || todayStr();
+    w.note   = el("editWdNote").value.trim();
+    await dbPut("withdrawals", w);
+    closeAll(); renderAll();
+  } catch(e) { console.error("saveEditWithdrawal:", e); }
+}
+// ── SAVINGS GROUPED BY MONTH ─────────────────────────────────────
+async function renderSavingsGrouped() {
+  try {
+    var container = el("lSavingsGrouped");
+    if (!container) return;
+    var allSavs = await dbAll("savings");
+    if (!allSavs.length) {
+      container.innerHTML = '<div class="empty">No savings entries yet.</div>';
+      return;
+    }
+    // Group by month key, sorted newest first
+    var groups = {};
+    allSavs.forEach(function(e) {
+      var mk = mKey(e.date);
+      if (!groups[mk]) groups[mk] = [];
+      groups[mk].push(e);
+    });
+    var sortedKeys = Object.keys(groups).sort().reverse();
+    var html = sortedKeys.map(function(mk) {
+      var items = groups[mk].sort(function(a,b){ return b.ts - a.ts; });
+      var monthTotal = items.reduce(function(s,e){ return s + Number(e.amount||e.totalVal||0); }, 0);
+      var rows = items.map(function(e) {
+        var t = savInfo(e.savType), sub = "";
+        if (e.savType==="cash")   sub = e.cashCur||"";
+        if (e.savType==="mf")     sub = e.mfFund||"";
+        if (e.savType==="shares") sub = (e.shComp||"") + (e.shNum ? " · " + e.shNum + " shares" : "");
+        if (e.savType==="gold")   sub = (e.goldGrams||0) + "g";
+        if (e.savType==="fd")     sub = (e.fdBank||"") + (e.fdCur ? " · " + e.fdCur : "");
+        if (e.savType==="other")  sub = e.savDesc||"";
+        if (e.note) sub += (sub ? " · " : "") + e.note;
+        return '<li class="erow sav-row" style="cursor:pointer;" data-id="' + e.id + '" data-label="' + t.label + '">'
+          + '<div class="eicon" style="background:var(--sav-s)">' + t.icon + '</div>'
+          + '<div class="emeta"><div class="ecat">' + t.label + '</div><div class="enote">' + sub + '</div></div>'
+          + '<div class="eamt sav">+' + fmt(e.amount||e.totalVal||0) + '</div>'
+          + '<div style="color:var(--muted);font-size:18px;padding-left:4px;">›</div>'
+          + '</li>';
+      }).join("");
+      return '<div style="margin-bottom:18px;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+        + '<div style="font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800;">' + mLabel(mk) + '</div>'
+        + '<div style="font-size:12px;font-weight:800;color:#b07800;">+' + fmt(monthTotal) + '</div>'
+        + '</div>'
+        + '<ul class="elist">' + rows + '</ul>'
+        + '</div>';
+    }).join("");
+    container.innerHTML = html;
+    // Wire up tap events
+    container.querySelectorAll("li[data-id]").forEach(function(row) {
+      row.addEventListener("click", function() {
+        openSavingsActionMenu(this.dataset.id, this.dataset.label);
+      });
+    });
+  } catch(e) { console.error("renderSavingsGrouped:", e); }
+}
+// ── SAVINGS ACTION MENU ──────────────────────────────────────────
+var editSavSelType = "cash";
+
+function openSavingsActionMenu(id, label) {
+  var btns = el("savingsActionButtons");
+  btns.innerHTML = "";
+  var editBtn = document.createElement("button");
+  editBtn.className = "btn ms"; editBtn.textContent = "Edit Savings";
+  editBtn.style.cssText = "padding:14px;font-size:15px;";
+  editBtn.addEventListener("click", function() { closeAll(); openEditSavings(id); });
+  var delBtn = document.createElement("button");
+  delBtn.className = "btn ghost"; delBtn.textContent = "Delete Entry";
+  delBtn.style.cssText = "padding:14px;font-size:15px;border:1.5px solid var(--exp);color:var(--exp);";
+  delBtn.addEventListener("click", function() { confirmDelSavings(id, label); });
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
+  cancelBtn.style.cssText = "padding:14px;font-size:15px;";
+  cancelBtn.addEventListener("click", function() { closeAll(); });
+  btns.appendChild(editBtn); btns.appendChild(delBtn); btns.appendChild(cancelBtn);
+  el("savingsActionTitle").textContent = label;
+  openOv("ov-savings-action");
+}
+
+function confirmDelSavings(id, label) {
+  var btns = el("savingsActionButtons");
+  btns.innerHTML = '<p style="text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;">Delete <b style="color:var(--ink);">' + label + '</b>?<br><span style="font-size:11px;">This cannot be undone.</span></p>';
+  var delBtn = document.createElement("button");
+  delBtn.className = "btn me"; delBtn.textContent = "Delete Entry";
+  delBtn.style.cssText = "padding:14px;font-size:15px;";
+  delBtn.addEventListener("click", async function() {
+    try { await dbDel("savings", id); closeAll(); renderAll(); } catch(e) { console.error(e); }
+  });
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
+  cancelBtn.style.cssText = "padding:14px;font-size:15px;";
+  cancelBtn.addEventListener("click", function() { closeAll(); });
+  btns.appendChild(delBtn); btns.appendChild(cancelBtn);
+  el("savingsActionTitle").textContent = "Delete Entry";
+}
+
+async function openEditSavings(id) {
+  try {
+    var e = await dbGet("savings", id); if (!e) return;
+    editSavSelType = e.savType || "cash";
+    el("editSavId").value   = id;
+    el("editSavDate").value = e.date || todayStr();
+    el("editSavNote").value = e.note || "";
+    // Populate type grid
+    var grid = el("editSavTypeGrid");
+    grid.innerHTML = SAV_TYPES.map(function(t) {
+      return '<button class="cpick' + (t.id === editSavSelType ? " sel ms" : "") + '" data-sav="' + t.id + '"><span class="ci">' + t.icon + '</span><span>' + t.label + '</span></button>';
+    }).join("");
+    grid.querySelectorAll(".cpick").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        editSavSelType = this.dataset.sav;
+        grid.querySelectorAll(".cpick").forEach(function(b) {
+          b.className = "cpick" + (b.dataset.sav === editSavSelType ? " sel ms" : "");
+        });
+        document.querySelectorAll(".edit-sav-form").forEach(function(f) { f.style.display = "none"; });
+        var sf = el("edit-sf-" + editSavSelType); if (sf) sf.style.display = "";
+      });
+    });
+    // Show correct form and pre-fill
+    document.querySelectorAll(".edit-sav-form").forEach(function(f) { f.style.display = "none"; });
+    var sf = el("edit-sf-" + editSavSelType); if (sf) sf.style.display = "";
+    if (e.savType==="cash")   { el("editCashCur").value=e.cashCur||"AED"; el("editCashAmt").value=e.amount||0; }
+    if (e.savType==="mf")     { el("editMfFund").value=e.mfFund||""; el("editMfAmt").value=e.amount||0; }
+    if (e.savType==="shares") { el("editShComp").value=e.shComp||""; el("editShNum").value=e.shNum||0; el("editShVal").value=e.shVal||0; }
+    if (e.savType==="gold")   { el("editGoldGrams").value=e.goldGrams||0; el("editGoldAmt").value=e.amount||0; }
+    if (e.savType==="fd")     { el("editFdBank").value=e.fdBank||""; el("editFdAmt").value=e.amount||0; el("editFdCur").value=e.fdCur||"AED"; el("editFdRate").value=e.fdRate||0; }
+    if (e.savType==="other")  { el("editSavDesc").value=e.savDesc||""; el("editSavOtherAmt").value=e.amount||0; }
+    openOv("ov-savings-edit");
+  } catch(err) { console.error("openEditSavings:", err); }
+}
+
+async function saveEditSavings() {
+  try {
+    var id = el("editSavId").value;
+    var entry = await dbGet("savings", id); if (!entry) return;
+    entry.savType = editSavSelType;
+    entry.date    = el("editSavDate").value || todayStr();
+    entry.note    = el("editSavNote").value.trim();
+    if (editSavSelType==="cash")   { entry.cashCur=el("editCashCur").value; entry.amount=parseFloat(el("editCashAmt").value)||0; }
+    if (editSavSelType==="mf")     { entry.mfFund=el("editMfFund").value.trim(); entry.amount=parseFloat(el("editMfAmt").value)||0; }
+    if (editSavSelType==="shares") { entry.shComp=el("editShComp").value.trim(); entry.shNum=parseFloat(el("editShNum").value)||0; entry.shVal=parseFloat(el("editShVal").value)||0; entry.amount=entry.shNum*entry.shVal; }
+    if (editSavSelType==="gold")   { entry.goldGrams=parseFloat(el("editGoldGrams").value)||0; entry.amount=parseFloat(el("editGoldAmt").value)||0; }
+    if (editSavSelType==="fd")     { entry.fdBank=el("editFdBank").value.trim(); entry.fdCur=el("editFdCur").value; entry.fdRate=parseFloat(el("editFdRate").value)||0; entry.amount=parseFloat(el("editFdAmt").value)||0; }
+    if (editSavSelType==="other")  { entry.savDesc=el("editSavDesc").value.trim(); entry.amount=parseFloat(el("editSavOtherAmt").value)||0; }
+    if (!entry.amount) { alert("Please enter an amount."); return; }
+    await dbPut("savings", entry);
+    closeAll(); renderAll();
+  } catch(e) { console.error("saveEditSavings:", e); }
+}
+// ── EXPENSE ACTION MENU ──────────────────────────────────────────
+var editExpSelCat = "rent", editExpSelSub = null;
+
+function openExpenseActionMenu(id, label) {
+  var btns = el("expenseActionButtons");
+  btns.innerHTML = "";
+  var editBtn = document.createElement("button");
+  editBtn.className = "btn me"; editBtn.textContent = "Edit Entry";
+  editBtn.style.cssText = "padding:14px;font-size:15px;";
+  editBtn.addEventListener("click", function() { closeAll(); openEditExpense(id); });
+  var delBtn = document.createElement("button");
+  delBtn.className = "btn ghost"; delBtn.textContent = "Delete Entry";
+  delBtn.style.cssText = "padding:14px;font-size:15px;border:1.5px solid var(--exp);color:var(--exp);";
+  delBtn.addEventListener("click", function() { confirmDelExpense(id, label); });
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
+  cancelBtn.style.cssText = "padding:14px;font-size:15px;";
+  cancelBtn.addEventListener("click", function() { closeAll(); });
+  btns.appendChild(editBtn); btns.appendChild(delBtn); btns.appendChild(cancelBtn);
+  el("expenseActionTitle").textContent = label;
+  openOv("ov-expense-action");
+}
+
+function confirmDelExpense(id, label) {
+  var btns = el("expenseActionButtons");
+  btns.innerHTML = '<p style="text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;">Delete <b style="color:var(--ink);">' + label + '</b>?<br><span style="font-size:11px;">This cannot be undone.</span></p>';
+  var delBtn = document.createElement("button");
+  delBtn.className = "btn me"; delBtn.textContent = "Delete Entry";
+  delBtn.style.cssText = "padding:14px;font-size:15px;";
+  delBtn.addEventListener("click", async function() {
+    try { await dbDel("expenses", id); closeAll(); renderAll(); } catch(e) { console.error(e); }
+  });
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
+  cancelBtn.style.cssText = "padding:14px;font-size:15px;";
+  cancelBtn.addEventListener("click", function() { closeAll(); });
+  btns.appendChild(delBtn); btns.appendChild(cancelBtn);
+  el("expenseActionTitle").textContent = "Delete Entry";
+}
+
+async function openEditExpense(id) {
+  try {
+    var e = await dbGet("expenses", id); if (!e) return;
+    editExpSelCat = e.cat || "rent";
+    editExpSelSub = e.subcat || null;
+    el("editExpId").value   = id;
+    el("editExpAmt").value  = e.amount;
+    el("editExpNote").value = e.note || "";
+    el("editExpDate").value = e.date || todayStr();
+    renderEditExpCatGrid();
+    openOv("ov-expense-edit");
+    setTimeout(function() { el("editExpAmt").focus(); }, 60);
+  } catch(err) { console.error("openEditExpense:", err); }
+}
+
+function renderEditExpCatGrid() {
+  var grid = el("editExpCatGrid"); if (!grid) return;
+  grid.innerHTML = EXP_CATS.map(function(c) {
+    return '<button class="cpick' + (c.id === editExpSelCat ? " sel me" : "") + '" data-cat="' + c.id + '"><span class="ci">' + c.icon + '</span><span>' + c.label + '</span></button>';
+  }).join("");
+  grid.querySelectorAll(".cpick").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      editExpSelCat = this.dataset.cat;
+      editExpSelSub = null;
+      grid.querySelectorAll(".cpick").forEach(function(b) {
+        b.className = "cpick" + (b.dataset.cat === editExpSelCat ? " sel me" : "");
+      });
+      var cat = EXP_CATS.filter(function(c) { return c.id === editExpSelCat; })[0];
+      var subEl = el("editExpSubCats");
+      if (cat && cat.subs) {
+        el("editExpSubLbl").textContent = "Select " + cat.label + " type";
+        el("editExpSubGrid").innerHTML = cat.subs.map(function(s) {
+          return '<button class="cpick' + (s.id === editExpSelSub ? " sel me" : "") + '" data-sub="' + s.id + '"><span class="ci">' + s.icon + '</span><span>' + s.label + '</span></button>';
+        }).join("");
+        el("editExpSubGrid").querySelectorAll(".cpick").forEach(function(b) {
+          b.addEventListener("click", function() {
+            editExpSelSub = this.dataset.sub;
+            el("editExpSubGrid").querySelectorAll(".cpick").forEach(function(x) {
+              x.className = "cpick" + (x.dataset.sub === editExpSelSub ? " sel me" : "");
+            });
+          });
+        });
+        subEl.style.display = "block";
+      } else {
+        subEl.style.display = "none";
+      }
+    });
+  });
+}
+
+async function saveEditExpense() {
+  try {
+    var id  = el("editExpId").value;
+    var amt = parseFloat(el("editExpAmt").value);
+    if (!amt || amt <= 0) { el("editExpAmt").focus(); return; }
+    var entry = await dbGet("expenses", id); if (!entry) return;
+    entry.amount = amt;
+    entry.cat    = editExpSelCat;
+    entry.subcat = editExpSelSub || null;
+    entry.note   = el("editExpNote").value.trim();
+    entry.date   = el("editExpDate").value || todayStr();
+    await dbPut("expenses", entry);
+    closeAll(); renderAll();
+  } catch(e) { console.error("saveEditExpense:", e); }
+}
+// ── INCOME ACTION MENU ────────────────────────────────────────────
+var editIncSelCat = "salary";
+
+function openIncomeActionMenu(id, label) {
+  var btns = el("incomeActionButtons");
+  btns.innerHTML = "";
+  var editBtn = document.createElement("button");
+  editBtn.className = "btn mi"; editBtn.textContent = "Edit Income";
+  editBtn.style.cssText = "padding:14px;font-size:15px;";
+  editBtn.addEventListener("click", function() { closeAll(); openEditIncome(id); });
+  var delBtn = document.createElement("button");
+  delBtn.className = "btn me"; delBtn.textContent = "Delete Income";
+  delBtn.style.cssText = "padding:14px;font-size:15px;";
+  delBtn.addEventListener("click", function() { confirmDelIncome(id, label); });
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
+  cancelBtn.style.cssText = "padding:14px;font-size:15px;";
+  cancelBtn.addEventListener("click", function() { closeAll(); });
+  btns.appendChild(editBtn); btns.appendChild(delBtn); btns.appendChild(cancelBtn);
+  el("incomeActionTitle").textContent = label;
+  openOv("ov-income-action");
+}
+
+function confirmDelIncome(id, label) {
+  var btns = el("incomeActionButtons");
+  btns.innerHTML = '<p style="text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;">Delete <b style="color:var(--ink);">' + label + '</b>?<br><span style="font-size:11px;">This cannot be undone.</span></p>';
+  var delBtn = document.createElement("button");
+  delBtn.className = "btn me"; delBtn.textContent = "Delete Income";
+  delBtn.style.cssText = "padding:14px;font-size:15px;";
+  delBtn.addEventListener("click", async function() {
+    try { await dbDel("incomes", id); closeAll(); renderAll(); } catch(e) { console.error(e); }
+  });
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
+  cancelBtn.style.cssText = "padding:14px;font-size:15px;";
+  cancelBtn.addEventListener("click", function() { closeAll(); });
+  btns.appendChild(delBtn); btns.appendChild(cancelBtn);
+  el("incomeActionTitle").textContent = "Delete Income";
+}
+
+async function openEditIncome(id) {
+  try {
+    var e = await dbGet("incomes", id); if (!e) return;
+    editIncSelCat = e.cat || "salary";
+    el("editIncId").value   = id;
+    el("editIncAmt").value  = e.amount;
+    el("editIncNote").value = e.note || "";
+    el("editIncDate").value = e.date || todayStr();
+    renderEditIncCatGrid();
+    openOv("ov-income-edit");
+    setTimeout(function() { el("editIncAmt").focus(); }, 60);
+  } catch(err) { console.error("openEditIncome:", err); }
+}
+
+function renderEditIncCatGrid() {
+  var grid = el("editIncCatGrid"); if (!grid) return;
+  grid.innerHTML = INC_CATS.map(function(c) {
+    return '<button class="cpick' + (c.id === editIncSelCat ? " sel mi" : "") + '" data-cat="' + c.id + '"><span class="ci">' + c.icon + '</span><span>' + c.label + '</span></button>';
+  }).join("");
+  grid.querySelectorAll(".cpick").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      editIncSelCat = this.dataset.cat;
+      grid.querySelectorAll(".cpick").forEach(function(b) {
+        b.className = "cpick" + (b.dataset.cat === editIncSelCat ? " sel mi" : "");
+      });
+    });
+  });
+}
+
+async function saveEditIncome() {
+  try {
+    var id  = el("editIncId").value;
+    var amt = parseFloat(el("editIncAmt").value);
+    if (!amt || amt <= 0) { el("editIncAmt").focus(); return; }
+    var entry = await dbGet("incomes", id); if (!entry) return;
+    entry.amount = amt;
+    entry.cat    = editIncSelCat;
+    entry.note   = el("editIncNote").value.trim();
+    entry.date   = el("editIncDate").value || todayStr();
+    await dbPut("incomes", entry);
+    closeAll(); renderAll();
+  } catch(e) { console.error("saveEditIncome:", e); }
+}
 // ── TABS ─────────────────────────────────────────────────────────
 function switchTab(t) {
   document.querySelectorAll("nav.tabs button").forEach(function(b) { b.classList.toggle("active", b.dataset.t === t); });
   ["income","today","month","breakdown","savings","history"].forEach(function(id) {
-    el("tab-" + id).style.display = id === t ? "" : "none";
+    elStyle("tab-" + id, id === t ? "" : "none");
   });
 }
 
 // ── OVERLAYS ─────────────────────────────────────────────────────
 function openOv(id) {
   document.querySelectorAll(".ov").forEach(function(o) { o.classList.remove("open"); });
-  el(id).classList.add("open");
+  var target = el(id);
+  if (!target) { console.warn("openOv: element not found:", id); return; }
+  target.classList.add("open");
   if (id === "ov-debt")       renderDebtList();
   if (id === "ov-bank")       renderBankList();
   if (id === "ov-docs")       { renderPeople(); renderDocs(); }
@@ -1529,7 +2115,11 @@ function openOv(id) {
   if (id === "ov-savings")    { selSavType = "cash"; initSavingsOv(); }
   if (id === "ov-payschedule"){ carryForwardPayments().then(function(){renderBills();renderCheques();}); }
 }
-function closeAll() { document.querySelectorAll(".ov").forEach(function(o) { o.classList.remove("open"); }); }
+function closeAll() {
+  document.querySelectorAll(".ov").forEach(function(o) { o.classList.remove("open"); });
+  // Re-show bank list when closing bank overlay
+  var bankList = el("bankList"); if (bankList) {}
+}
 document.querySelectorAll(".ov").forEach(function(o) { o.addEventListener("click", function(e) { if (e.target === o) closeAll(); }); });
 
 // ── ENTRY SHEET ───────────────────────────────────────────────────
@@ -1537,7 +2127,7 @@ var mode = "expense", selCat = "rent", selSub = null;
 function openEntry(m) {
   mode = m; selCat = m === "income" ? "salary" : "rent"; selSub = null;
   el("entAmt").value = ""; el("entNote").value = ""; el("entDate").value = todayStr();
-  el("subCats").style.display = "none"; el("remF").style.display = "none";
+  elStyle("subCats", "none"); elStyle("remF", "none");
   el("entTitle").textContent = m === "income" ? "Add Income" : "Add Expense";
   el("entSaveBtn").className = "btn " + (m === "income" ? "mi" : "me");
   el("catLbl").textContent = m === "income" ? "Source" : "Category";
@@ -1577,17 +2167,20 @@ function pickSub(id) {
   });
 }
 async function saveEntry() {
+  var btn = el("entSaveBtn"); if (btn) btn.disabled = true;
   try {
     var amt = parseFloat(el("entAmt").value);
-    if (!amt || amt <= 0) { el("entAmt").focus(); return; }
+    if (!amt || amt <= 0) { el("entAmt").focus(); if (btn) btn.disabled = false; return; }
+    var dateVal = el("entDate").value || todayStr();
     var entry = { id:mkid(), amount:amt, cat:selCat, subcat:selSub||null,
-      note:el("entNote").value.trim(), date:el("entDate").value||todayStr(), ts:Date.now() };
+      note:el("entNote").value.trim(), date:dateVal, ts:Date.now() };
     if (mode === "expense" && selCat === "remittance") {
       entry.remCur = el("remCur").value; entry.remDest = el("remDest").value.trim();
     }
     await dbPut(mode === "income" ? "incomes" : "expenses", entry);
     closeAll(); renderAll();
   } catch(e) { console.error("saveEntry:", e); }
+  finally { if (btn) btn.disabled = false; }
 }
 
 // ── SAVINGS ───────────────────────────────────────────────────────
@@ -1647,7 +2240,7 @@ async function delWithdrawal(id) {
 }
 
 // ── DEBT ─────────────────────────────────────────────────────────
-function toggleDebtForm(show) { el("debtForm").style.display = show ? "" : "none"; }
+function toggleDebtForm(show) { elStyle("debtForm", show ? "" : "none"); }
 async function saveDebt() {
   try {
     var total = parseFloat(el("dTotal").value), emi = parseFloat(el("dEMI").value);
@@ -1719,19 +2312,89 @@ async function saveBank() {
   } catch(e) { console.error("saveBank:", e); }
 }
 async function delBank(id) {
-  try { await dbDel("banks", id); renderBankList(); } catch(e) { console.error("delBank:", e); }
+  try { await dbDel("banks", id); closeAll(); renderBankList(); } catch(e) { console.error("delBank:", e); }
+}
+function confirmDelBank(id, name) {
+  // Show confirm sheet
+  var btns = el("bankActionButtons");
+  btns.innerHTML = '<p style="text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;">Delete <b style="color:var(--ink);">' + name + '</b>?<br><span style="font-size:11px;">This cannot be undone.</span></p>';
+  var delBtn = document.createElement("button");
+  delBtn.className = "btn me"; delBtn.textContent = "Delete Bank";
+  delBtn.style.cssText = "padding:14px;font-size:15px;";
+  delBtn.addEventListener("click", function() { delBank(id); });
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
+  cancelBtn.style.cssText = "padding:14px;font-size:15px;";
+  cancelBtn.addEventListener("click", function() { closeAll(); openOv("ov-bank"); });
+  btns.appendChild(delBtn); btns.appendChild(cancelBtn);
+  el("bankActionTitle").textContent = "Delete Bank";
+  openOv("ov-bank-action");
+}
+function openBankActionMenu(id, name) {
+  var btns = el("bankActionButtons");
+  btns.innerHTML = "";
+  // Edit button
+  var editBtn = document.createElement("button");
+  editBtn.className = "btn mb"; editBtn.textContent = "Edit Bank";
+  editBtn.style.cssText = "padding:14px;font-size:15px;";
+  editBtn.addEventListener("click", function() { closeAll(); openEditBank(id); });
+  // Delete button
+  var delBtn = document.createElement("button");
+  delBtn.className = "btn me"; delBtn.textContent = "Delete Bank";
+  delBtn.style.cssText = "padding:14px;font-size:15px;";
+  delBtn.addEventListener("click", function() { confirmDelBank(id, name); });
+  // Cancel
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
+  cancelBtn.style.cssText = "padding:14px;font-size:15px;";
+  cancelBtn.addEventListener("click", function() { closeAll(); openOv("ov-bank"); });
+  btns.appendChild(editBtn); btns.appendChild(delBtn); btns.appendChild(cancelBtn);
+  el("bankActionTitle").textContent = name;
+  openOv("ov-bank-action");
+}
+async function openEditBank(id) {
+  try {
+    var b = await dbGet("banks", id); if (!b) return;
+    el("editBnId").value  = b.id;
+    el("editBnName").value = b.name;
+    el("editBnAcc").value  = b.accNo;
+    el("editBnBal").value  = b.balance;
+    el("editBnCur").value  = b.currency;
+    openOv("ov-bank-edit");
+  } catch(e) { console.error("openEditBank:", e); }
+}
+async function saveEditBank() {
+  try {
+    var id = el("editBnId").value;
+    var name = el("editBnName").value.trim();
+    var acc  = el("editBnAcc").value.trim();
+    if (!name || !acc) { alert("Please enter bank name and account number."); return; }
+    var b = await dbGet("banks", id); if (!b) return;
+    b.name     = name;
+    b.accNo    = acc;
+    b.balance  = parseFloat(el("editBnBal").value) || 0;
+    b.currency = el("editBnCur").value;
+    await dbPut("banks", b);
+    closeAll(); renderBankList();
+  } catch(e) { console.error("saveEditBank:", e); }
 }
 async function renderBankList() {
   try {
     var banks = await dbAll("banks");
     var container = el("bankList");
-    if (!banks.length) { container.innerHTML = ""; return; }
+    if (!banks.length) { container.innerHTML = '<div class="empty" style="margin-bottom:13px;">No bank accounts added yet.</div>'; return; }
     var html = banks.map(function(b) {
-      return '<div class="bkcard2"><div class="bico">🏦</div><div class="binfo"><div class="bname2">' + b.name + '</div><div class="bacc">Acc: ' + b.accNo + '</div><div class="bbal">' + b.currency + ' ' + fmt(b.balance) + '</div></div><button class="bdel" data-action="del-bank" data-id="' + b.id + '">x</button></div>';
+      return '<div class="bkcard2" style="cursor:pointer;" data-action="bank-menu" data-id="' + b.id + '" data-name="' + b.name + '">'
+        + '<div class="bico">🏦</div>'
+        + '<div class="binfo"><div class="bname2">' + b.name + '</div><div class="bacc">Acc: ' + b.accNo + '</div><div class="bbal">' + b.currency + ' ' + fmt(b.balance) + '</div></div>'
+        + '<div style="color:var(--muted);font-size:20px;padding-right:2px;">›</div>'
+        + '</div>';
     }).join("");
     container.innerHTML = html;
-    container.querySelectorAll("[data-action='del-bank']").forEach(function(btn) {
-      btn.addEventListener("click", function() { delBank(this.dataset.id); });
+    container.querySelectorAll("[data-action='bank-menu']").forEach(function(card) {
+      card.addEventListener("click", function() {
+        openBankActionMenu(this.dataset.id, this.dataset.name);
+      });
     });
   } catch(e) { console.error("renderBankList:", e); }
 }
@@ -1761,6 +2424,10 @@ async function renderPeople() {
 async function addPerson() {
   try {
     var name = el("newPerson").value.trim(); if (!name) return;
+    var existing = await dbAll("people");
+    if (existing.some(function(p) { return p.name.toLowerCase() === name.toLowerCase(); })) {
+      alert("A person with this name already exists."); return;
+    }
     await dbPut("people", { id:mkid(), name:name });
     el("newPerson").value = "";
     await renderPeople();
@@ -1837,13 +2504,13 @@ async function openTenDetail(id) {
     if (el("btnRmTen"))   el("btnRmTen").addEventListener("click",   function(){removeTenFile(id);});
     if (el("btnDelTen"))  el("btnDelTen").addEventListener("click",  function(){deleteTenancy(id);});
     el("tenDetail").classList.add("open");
-    el("tenList").style.display = "none";
+    elStyle("tenList", "none");
     if (el("tenAddBtn")) el("tenAddBtn").style.display = "none";
   } catch(e) { console.error("openTenDetail:", e); }
 }
 function closeTenDetail() {
   if (el("tenDetail")) el("tenDetail").classList.remove("open");
-  if (el("tenList"))   el("tenList").style.display = "";
+  if (el("tenList"))   elStyle("tenList", "");
   if (el("tenAddBtn")) el("tenAddBtn").style.display = "";
   activeTenId = null;
 }
@@ -1878,8 +2545,6 @@ function selDocType(btn) {
   selDocT = btn.dataset.dt;
   document.querySelectorAll(".dtbtn").forEach(function(b){b.classList.remove("sel");}); btn.classList.add("sel");
   el("df-other-name").style.display = selDocT==="other" ? "" : "none";
-  el("df-standard").style.display = selDocT==="tenancy" ? "none" : "";
-  el("df-tenancy").style.display   = selDocT==="tenancy" ? "" : "none";
   el("docNumLbl").textContent = DOC_NUMLBL[selDocT] || "Number";
   ["docNum","docExpiry","docIssued"].forEach(function(id){el(id).value="";});
   el("docForm").style.display = "";
@@ -1912,7 +2577,7 @@ var selAType = "doctor";
 function selAT(btn) {
   selAType = btn.dataset.at;
   document.querySelectorAll(".atbtn").forEach(function(b){b.classList.remove("sel");}); btn.classList.add("sel");
-  el("af-service").style.display = selAType==="service" ? "" : "none";
+  elStyle("af-service", selAType==="service" ? "" : "none");
 }
 async function saveAppt() {
   try {
@@ -1989,8 +2654,8 @@ var activePayTab = "bills";
 function switchPayTab(tab) {
   activePayTab = tab;
   ["bills","cheques"].forEach(function(t) {
-    el("paySection-"+t).style.display = t===tab?"":"none";
-    el("payTab-"+t).classList.toggle("active",t===tab);
+    elStyle("paySection-"+t, t===tab?"":"none");
+    var tb = el("payTab-"+t); if (tb) tb.classList.toggle("active",t===tab);
   });
   if (tab==="bills") renderBills(); else renderCheques();
 }
@@ -2001,10 +2666,11 @@ async function saveBill() {
   try {
     var cat=el("billCat").value, custom=el("customBillName").value.trim(), dueDate=el("billDueDate").value;
     if (!dueDate){alert("Please enter a due date.");return;}
+    if (dueDate < "2000-01-01" || dueDate > "2100-12-31"){alert("Please enter a valid date.");return;}
     if (cat==="custom"&&!custom){alert("Please enter a bill name.");return;}
     await dbPut("bills",{id:mkid(),cat:cat,customName:custom,dueDate:dueDate,amount:parseFloat(el("billAmt").value)||0,notes:el("billNotes").value.trim(),recurring:el("billRecurring").checked,paid:false,carriedForwardFrom:null,ts:Date.now()});
     ["billDueDate","billAmt","billNotes"].forEach(function(id){el(id).value="";});
-    el("billRecurring").checked=false; el("billCat").value="electricity"; el("customBillRow").style.display="none";
+    el("billRecurring").checked=false; el("billCat").value="electricity"; elStyle("customBillRow","none");
     togglePayForm("bill-form"); renderBills();
   } catch(e) { console.error("saveBill:",e); }
 }
