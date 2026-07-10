@@ -617,26 +617,16 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
       <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:6px;">Accumulated across all months</div>
     </div>
     <!-- Monthly savings card -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-      <div style="background:var(--card);border-radius:var(--r2);padding:14px;box-shadow:var(--sh2);border-top:3px solid var(--sav);">
-        <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;">This Month</div>
-        <div style="font-size:20px;font-weight:800;margin-top:4px;color:#c07800;" id="savMonthV">0</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px;">Saved so far</div>
-      </div>
-      <div style="background:var(--card);border-radius:var(--r2);padding:14px;box-shadow:var(--sh2);border-top:3px solid #e17055;">
-        <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;">Withdrawals</div>
-        <div style="font-size:20px;font-weight:800;margin-top:4px;color:#e17055;" id="savWithdrawV">0</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px;">Total withdrawn</div>
-      </div>
+    <div style="background:var(--card);border-radius:var(--r2);padding:14px;box-shadow:var(--sh2);border-top:3px solid var(--sav);margin-bottom:14px;">
+      <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;">This Month</div>
+      <div style="font-size:24px;font-weight:800;margin-top:4px;color:#c07800;" id="savMonthV">0</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;">Saved so far this month</div>
     </div>
-    <!-- Withdraw / adjust button -->
-    <button onclick="openWithdrawSavings()" style="width:100%;padding:11px;border-radius:var(--r1);border:1.5px dashed #e17055;background:transparent;color:#e17055;font-weight:800;font-size:13px;margin-bottom:14px;">
-      - Record Withdrawal / Adjustment
-    </button>
     <div class="stitle">Savings by Month</div>
     <div id="lSavingsGrouped"></div>
-    <div class="stitle" style="margin-top:14px;">Withdrawal History</div>
-    <ul class="elist" id="lWithdrawals"></ul>
+    <!-- Hidden withdrawal list still needed for renderAll -->
+    <ul class="elist" id="lWithdrawals" style="display:none;"></ul>
+    <span id="savWithdrawV" style="display:none;">0</span>
   </section>
   <section id="tab-history" style="display:none">
     <div class="stitle">Previous months</div><div id="histList"></div>
@@ -720,15 +710,20 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
   <div class="sheet">
     <div class="drag-bar"></div>
     <div class="sh2"><h2>💸 Debt Tracker</h2><button class="sclose" onclick="closeAll()">✕</button></div>
-    <button class="addbtn" onclick="toggleDebtForm(true)">+ Add New Loan</button>
-    <div id="debtList"></div>
+    <!-- Loan list view (default) -->
+    <div id="debtListView">
+      <button class="addbtn" onclick="showDebtForm()">+ Add New Loan</button>
+      <div id="debtList"></div>
+    </div>
+    <!-- Add loan form view (hidden by default) -->
     <div id="debtForm" style="display:none">
-      <div class="stitle">New Loan</div>
+      <div class="sh2" style="margin-bottom:14px;"><h2>New Loan</h2><button class="sclose" onclick="hideDebtForm()">✕</button></div>
       <div class="field"><label>Loan Type</label><select id="dType"><option value="mortgage">🏠 Mortgage</option><option value="gold">🪙 Gold Loan</option><option value="personal">👤 Personal Loan</option><option value="car">🚗 Car Loan</option><option value="other">📌 Others</option></select></div>
       <div class="field"><label>Lender / Bank Name</label><input type="text" id="dLender" placeholder="e.g. Emirates NBD"></div>
       <div class="two"><div class="field"><label>Total Amount</label><input type="number" inputmode="decimal" id="dTotal" placeholder="0"></div><div class="field"><label>Monthly EMI</label><input type="number" inputmode="decimal" id="dEMI" placeholder="0"></div></div>
-      <div class="two"><div class="field"><label>Currency</label><select id="dCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div><div class="field"><label>Next EMI Date</label><input type="date" id="dEmiDate"></div></div>
-      <div class="sacts"><button class="btn ghost" onclick="toggleDebtForm(false)">Cancel</button><button class="btn md" onclick="saveDebt()">Add Loan</button></div>
+      <div class="two"><div class="field"><label>Rate of Interest (%)</label><input type="number" inputmode="decimal" id="dRate" placeholder="e.g. 5.5"></div><div class="field"><label>Currency</label><select id="dCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div></div>
+      <div class="field"><label>Next EMI Date</label><input type="date" id="dEmiDate"></div>
+      <div class="sacts"><button class="btn ghost" onclick="hideDebtForm()">Cancel</button><button class="btn md" onclick="saveDebt()">Add Loan</button></div>
     </div>
   </div>
 </div>
@@ -752,53 +747,71 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
   <div class="sheet">
     <div class="drag-bar"></div>
     <div class="sh2"><h2>📄 Documents</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+
+    <!-- Step 1: Add person -->
     <div class="addprow"><input type="text" id="newPerson" placeholder="Add person name (e.g. Sreejith)"><button onclick="addPerson()">+ Add</button></div>
     <div class="person-list" id="personList"></div>
+
+    <!-- Step 2: Select person -->
     <div class="pbar"><select id="personSel" onchange="renderDocs()"><option value="">— Select person —</option></select></div>
+
+    <!-- Step 3: Document section (shown only after person selected) -->
     <div id="docSection" style="display:none">
-      <!-- Tenancy list / detail toggle -->
-      <div id="tenancySection">
-        <div class="stitle">Tenancy Contracts</div>
-        <div class="ten-list" id="tenList"></div>
-        <button class="addbtn" onclick="showTenForm()" id="tenAddBtn">+ Add Tenancy Contract</button>
-        <!-- Tenancy detail view -->
-        <div class="ten-detail" id="tenDetail">
-          <button class="ten-back" onclick="closeTenDetail()">← Back to Contracts</button>
-          <div id="tenDetailContent"></div>
-        </div>
-        <!-- Tenancy form -->
-        <div id="tenForm" style="display:none">
-          <div class="field"><label>Contract No</label><input type="text" id="tcContract" placeholder="e.g. TN-2024-001"></div>
-          <div class="two"><div class="field"><label>Start Date</label><input type="date" id="tcStart"></div><div class="field"><label>End Date</label><input type="date" id="tcEnd"></div></div>
-          <div class="field"><label>Landlord Name</label><input type="text" id="tcLandlord" placeholder="e.g. Ahmed Al Mansouri"></div>
-          <div class="stitle">Cheque Details</div>
-          <div class="two"><div class="field"><label>Total Rent</label><input type="number" inputmode="decimal" id="tcRent" placeholder="0"></div><div class="field"><label>No of Cheques</label><input type="number" id="tcNumCh" placeholder="e.g. 4" min="1" max="12"></div></div>
-          <button class="addbtn" onclick="genCheques()">Generate Cheque Fields</button>
-          <div id="chequeInputs"></div>
-          <div class="field"><label>Attach Contract (PDF/Image)</label><input type="file" id="tcFile" accept=".pdf,.jpg,.jpeg,.png"></div>
-          <div class="sacts">
-            <button class="btn ghost" onclick="hideTenForm()">Cancel</button>
-            <button class="btn md" onclick="saveTenancy()">Save Contract</button>
-          </div>
-        </div>
+
+      <!-- 5 Document Categories -->
+      <div class="stitle">Select Document Type</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <button class="dtbtn" data-dt="govt_id"  onclick="selDocType(this)">🪪 Government ID</button>
+        <button class="dtbtn" data-dt="passport"  onclick="selDocType(this)">🛂 Passport</button>
+        <button class="dtbtn" data-dt="driving"   onclick="selDocType(this)">🚗 Driving License</button>
+        <button class="dtbtn" data-dt="tenancy"   onclick="selDocType(this)">🏠 Tenancy Contract</button>
+        <button class="dtbtn" data-dt="other"     onclick="selDocType(this)" style="grid-column:1/-1;">📁 Others</button>
       </div>
-      <!-- Other documents -->
-      <div class="stitle" style="margin-top:14px">Other Documents</div>
-      <div class="dtgrid">
-        <button class="dtbtn" data-dt="govt_id" onclick="selDocType(this)">🪪 Government ID</button>
-        <button class="dtbtn" data-dt="passport" onclick="selDocType(this)">🛂 Passport</button>
-        <button class="dtbtn" data-dt="driving" onclick="selDocType(this)">🚗 Driving License</button>
-        <button class="dtbtn" data-dt="other" onclick="selDocType(this)">📁 Others</button>
-      </div>
+
+      <!-- Standard doc form (govt_id, passport, driving, other) -->
       <div id="docForm" style="display:none">
-        <div id="df-other-name" style="display:none"><div class="field"><label>Document Name</label><input type="text" id="docName" placeholder="e.g. NOC Letter"></div></div>
+        <div id="df-other-name" style="display:none">
+          <div class="field"><label>Document Name</label><input type="text" id="docName" placeholder="e.g. NOC Letter"></div>
+        </div>
         <div class="field"><label id="docNumLbl">ID Number</label><input type="text" id="docNum" placeholder="Enter number"></div>
-        <div class="two"><div class="field"><label>Expiry Date</label><input type="date" id="docExpiry"></div><div class="field"><label>Issued By</label><input type="text" id="docIssued" placeholder="e.g. ICA Dubai"></div></div>
+        <div class="two">
+          <div class="field"><label>Expiry Date</label><input type="date" id="docExpiry"></div>
+          <div class="field"><label>Issued By</label><input type="text" id="docIssued" placeholder="e.g. ICA Dubai"></div>
+        </div>
         <div class="field"><label>Attach Document (PDF/Image)</label><input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png"></div>
-        <button class="addbtn" onclick="saveDoc()">Save Document</button>
+        <div class="sacts">
+          <button class="btn ghost" onclick="cancelDocForm()">Cancel</button>
+          <button class="addbtn" style="flex:1;margin:0;" onclick="saveDoc()">Save Document</button>
+        </div>
       </div>
-      <div class="stitle">Saved Documents</div>
-      <div id="docList"></div>
+
+      <!-- Tenancy form (shown when tenancy type selected) -->
+      <div id="tenForm" style="display:none">
+        <div class="field"><label>Contract No</label><input type="text" id="tcContract" placeholder="e.g. TN-2024-001"></div>
+        <div class="two"><div class="field"><label>Start Date</label><input type="date" id="tcStart"></div><div class="field"><label>End Date</label><input type="date" id="tcEnd"></div></div>
+        <div class="field"><label>Landlord Name</label><input type="text" id="tcLandlord" placeholder="e.g. Ahmed Al Mansouri"></div>
+        <div class="stitle">Cheque Details</div>
+        <div class="two"><div class="field"><label>Total Rent</label><input type="number" inputmode="decimal" id="tcRent" placeholder="0"></div><div class="field"><label>No of Cheques</label><input type="number" id="tcNumCh" placeholder="e.g. 4" min="1" max="12"></div></div>
+        <button class="addbtn" onclick="genCheques()">Generate Cheque Fields</button>
+        <div id="chequeInputs"></div>
+        <div class="field"><label>Attach Contract (PDF/Image)</label><input type="file" id="tcFile" accept=".pdf,.jpg,.jpeg,.png"></div>
+        <div class="sacts">
+          <button class="btn ghost" onclick="cancelDocForm()">Cancel</button>
+          <button class="btn md" onclick="saveTenancy()">Save Contract</button>
+        </div>
+      </div>
+
+      <!-- Tenancy detail view -->
+      <div class="ten-detail" id="tenDetail" style="display:none">
+        <button class="ten-back" onclick="closeTenDetail()">← Back</button>
+        <div id="tenDetailContent"></div>
+      </div>
+
+      <!-- Saved documents list -->
+      <div id="docListSection" style="display:none">
+        <div class="stitle" id="docListTitle">Saved Documents</div>
+        <div id="docList"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1131,6 +1144,152 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
       <button class="btn ghost" onclick="closeAll()">Cancel</button>
       <button class="btn" style="background:linear-gradient(135deg,#e17055,#d63031);color:#fff;" onclick="saveEditWithdrawal()">Save Changes</button>
     </div>
+  </div>
+</div>
+
+<!-- APPOINTMENT ACTION SHEET -->
+<div class="ov" id="ov-appt-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="apptActionTitle">Appointment</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="apptActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- APPOINTMENT EDIT SHEET -->
+<div class="ov" id="ov-appt-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Appointment</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="atype-row" id="editApptTypes">
+      <button class="atbtn" data-at="doctor" onclick="selEditAT(this)">🩺 Doctor</button>
+      <button class="atbtn" data-at="service" onclick="selEditAT(this)">🔧 Service</button>
+      <button class="atbtn" data-at="spa" onclick="selEditAT(this)">💆 Spa</button>
+      <button class="atbtn" data-at="other" onclick="selEditAT(this)">📋 Others</button>
+    </div>
+    <div id="edit-af-service" style="display:none">
+      <div class="two"><div class="field"><label>Vehicle</label><input type="text" id="editSvcCar" placeholder="e.g. Toyota Camry"></div><div class="field"><label>Service Type</label><input type="text" id="editSvcType" placeholder="e.g. Oil Change"></div></div>
+    </div>
+    <div class="field"><label>Title / Description</label><input type="text" id="editApptTitle" placeholder="e.g. Dr. Ahmed — Dental"></div>
+    <div class="field"><label>Date &amp; Time</label><input type="datetime-local" id="editApptDT"></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="editApptNotes" placeholder="Any extra notes..."></textarea></div>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--sh1);margin-bottom:8px;">
+      <input type="checkbox" id="editApptRecurring" style="width:18px;height:18px;accent-color:var(--pri);">
+      <div><div style="font-weight:700;font-size:13.5px;">Repeat monthly</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Auto-carry forward to same date next month</div></div>
+    </div>
+    <input type="hidden" id="editApptId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn ma" onclick="saveEditAppt()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- BILL ACTION SHEET -->
+<div class="ov" id="ov-bill-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="billActionTitle">Bill Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="billActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- BILL EDIT SHEET -->
+<div class="ov" id="ov-bill-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Bill</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Bill Category</label>
+      <select id="editBillCat" onchange="toggleEditCustomBill()">
+        <option value="electricity">⚡ Electricity Bill</option>
+        <option value="phone">📱 Phone Bill</option>
+        <option value="internet">🌐 Internet Bill</option>
+        <option value="school">🎓 School Fees</option>
+        <option value="custom">✏️ Custom Bill</option>
+      </select>
+    </div>
+    <div class="field" id="editCustomBillRow" style="display:none"><label>Bill Name</label><input type="text" id="editCustomBillName" placeholder="e.g. Water Bill"></div>
+    <div class="two">
+      <div class="field"><label>Due Date</label><input type="date" id="editBillDueDate"></div>
+      <div class="field"><label>Amount (optional)</label><input type="number" inputmode="decimal" id="editBillAmt" placeholder="0"></div>
+    </div>
+    <div class="field"><label>Notes (optional)</label><input type="text" id="editBillNotes" placeholder="Any notes..."></div>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--sh1);margin-bottom:8px;">
+      <input type="checkbox" id="editBillRecurring" style="width:18px;height:18px;accent-color:#6366f1;">
+      <div><div style="font-weight:700;font-size:13.5px;">Repeat Monthly</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Auto-add every month on same date</div></div>
+    </div>
+    <input type="hidden" id="editBillId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;" onclick="saveEditBill()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- CHEQUE ACTION SHEET -->
+<div class="ov" id="ov-cheque-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="chequeActionTitle">Cheque Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="chequeActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- CHEQUE EDIT SHEET -->
+<div class="ov" id="ov-cheque-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Cheque</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="two">
+      <div class="field"><label>Cheque Number</label><input type="text" id="editChequeNum" placeholder="e.g. 001234"></div>
+      <div class="field"><label>Cheque Date</label><input type="date" id="editChequeDueDate"></div>
+    </div>
+    <div class="field"><label>Payee (To Whom)</label><input type="text" id="editChequePayee" placeholder="e.g. Al Futtaim Properties"></div>
+    <div class="two">
+      <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editChequeAmt" placeholder="0"></div>
+      <div class="field"><label>Bank (optional)</label><input type="text" id="editChequeBankName" placeholder="e.g. Emirates NBD"></div>
+    </div>
+    <div class="field"><label>Notes (optional)</label><input type="text" id="editChequeNotes" placeholder="Any notes..."></div>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--sh1);margin-bottom:8px;">
+      <input type="checkbox" id="editChequeRecurring" style="width:18px;height:18px;accent-color:#6366f1;">
+      <div><div style="font-weight:700;font-size:13.5px;">Repeat Monthly</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Auto-add every month on same date</div></div>
+    </div>
+    <input type="hidden" id="editChequeId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;" onclick="saveEditCheque()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEBT ACTION SHEET -->
+<div class="ov" id="ov-debt-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="debtActionTitle">Loan Details</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="debtActionInfo" style="background:var(--dbt-s);border-radius:var(--r2);padding:14px;margin-bottom:14px;border-left:3px solid var(--dbt);"></div>
+    <div id="debtActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- DEBT EDIT SHEET -->
+<div class="ov" id="ov-debt-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Loan</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Loan Type</label><select id="editDType"><option value="mortgage">🏠 Mortgage</option><option value="gold">🪙 Gold Loan</option><option value="personal">👤 Personal Loan</option><option value="car">🚗 Car Loan</option><option value="other">📌 Others</option></select></div>
+    <div class="field"><label>Lender / Bank Name</label><input type="text" id="editDLender" placeholder="e.g. Emirates NBD"></div>
+    <div class="two"><div class="field"><label>Total Amount</label><input type="number" inputmode="decimal" id="editDTotal" placeholder="0"></div><div class="field"><label>Monthly EMI</label><input type="number" inputmode="decimal" id="editDEMI" placeholder="0"></div></div>
+    <div class="two"><div class="field"><label>Rate of Interest (%)</label><input type="number" inputmode="decimal" id="editDRate" placeholder="e.g. 5.5"></div><div class="field"><label>Currency</label><select id="editDCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div></div>
+    <div class="field"><label>Next EMI Date</label><input type="date" id="editDEmiDate"></div>
+    <input type="hidden" id="editDId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn md" onclick="saveEditDebt()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- DOCUMENT ACTION SHEET -->
+<div class="ov" id="ov-doc-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="docActionTitle">Document Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="docActionInfo" style="background:var(--exp-s);border-radius:var(--r2);padding:14px;margin-bottom:14px;border-left:3px solid var(--pri);display:none;"></div>
+    <div id="docActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- TENANCY ACTION SHEET -->
+<div class="ov" id="ov-ten-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="tenActionTitle">Contract Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="tenActionInfo" style="background:var(--dbt-s);border-radius:var(--r2);padding:14px;margin-bottom:14px;border-left:3px solid var(--dbt);"></div>
+    <div id="tenActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
   </div>
 </div>
 
@@ -1485,12 +1644,13 @@ var INC_CATS = [
   { id:"other_i",   label:"Others",   icon:"➕" }
 ];
 var SAV_TYPES = [
-  { id:"cash",  label:"Cash",          icon:"💵" },
-  { id:"mf",    label:"Mutual Funds",  icon:"📈" },
-  { id:"shares",label:"Shares",        icon:"📊" },
-  { id:"gold",  label:"Gold",          icon:"🪙" },
-  { id:"fd",    label:"Fixed Deposit", icon:"🏦" },
-  { id:"other", label:"Others",        icon:"➕" }
+  { id:"cash",       label:"Cash",          icon:"💵" },
+  { id:"mf",         label:"Mutual Funds",  icon:"📈" },
+  { id:"shares",     label:"Shares",        icon:"📊" },
+  { id:"gold",       label:"Gold",          icon:"🪙" },
+  { id:"fd",         label:"Fixed Deposit", icon:"🏦" },
+  { id:"other",      label:"Others",        icon:"➕" },
+  { id:"withdrawal", label:"Withdrawal",    icon:"💸" }
 ];
 var DEBT_LABELS  = { mortgage:"Mortgage", gold:"Gold Loan", personal:"Personal Loan", car:"Car Loan", other:"Others" };
 var DOC_LABELS   = { govt_id:"Government ID", passport:"Passport", driving:"Driving License", other:"Others", tenancy:"Tenancy Contract" };
@@ -1655,6 +1815,34 @@ function renderSavList(id, items) {
     });
   });
 }
+async function renderWithdrawalInOverlay() {
+  try {
+    var wds = await dbAll("withdrawals");
+    var wdContainer = el("wdListContainer");
+    if (!wdContainer) return;
+    if (!wds.length) { wdContainer.innerHTML = "<div class='empty'>No withdrawals recorded.</div>"; return; }
+    var sorted = wds.slice().sort(function(a,b){return b.ts-a.ts;});
+    var SAV_ICONS = { cash:"💵", mf:"📈", shares:"📊", gold:"🪙", fd:"🏦", other:"📌" };
+    var html = sorted.map(function(w) {
+      var icon = SAV_ICONS[w.cat] || "💸";
+      var label = w.type === "withdrawal" ? "Withdrawal" : "Adjustment";
+      var note = w.note || new Date(w.date+"T00:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
+      return "<li class='erow exp-row' style='cursor:pointer;' data-id='" + w.id + "' data-label='" + label + "'>"
+        + "<div class='eicon' style='background:#fff0ef'>" + icon + "</div>"
+        + "<div class='emeta'><div class='ecat'>" + label + "</div><div class='enote'>" + note + "</div></div>"
+        + "<div class='eamt exp'>-" + fmt(w.amount) + "</div>"
+        + "<div style='color:var(--muted);font-size:18px;padding-left:4px;'>›</div>"
+        + "</li>";
+    }).join("");
+    wdContainer.innerHTML = "<ul class='elist'>" + html + "</ul>";
+    wdContainer.querySelectorAll("li[data-id]").forEach(function(row) {
+      row.addEventListener("click", function() {
+        openWithdrawalActionMenu(this.dataset.id, this.dataset.label);
+      });
+    });
+  } catch(e) { console.error("renderWithdrawalInOverlay:", e); }
+}
+
 function renderWithdrawalList(wds) {
   var container = el("lWithdrawals");
   if (!container) return;
@@ -2108,11 +2296,12 @@ function openOv(id) {
   var target = el(id);
   if (!target) { console.warn("openOv: element not found:", id); return; }
   target.classList.add("open");
-  if (id === "ov-debt")       renderDebtList();
+  if (id === "ov-debt") { elStyle("debtForm","none"); elStyle("debtListView",""); renderDebtList(); }
   if (id === "ov-bank")       renderBankList();
-  if (id === "ov-docs")       { renderPeople(); renderDocs(); }
+  if (id === "ov-docs") { selDocT=null; renderPeople(); renderDocs(); }
   if (id === "ov-appts")      renderAppts();
   if (id === "ov-savings")    { selSavType = "cash"; initSavingsOv(); }
+  if (id === "ov-withdraw")   { renderWithdrawalInOverlay(); }
   if (id === "ov-payschedule"){ carryForwardPayments().then(function(){renderBills();renderCheques();}); }
 }
 function closeAll() {
@@ -2197,6 +2386,12 @@ function initSavingsOv() {
   el("savDate").value = todayStr();
 }
 function pickSavType(id) {
+  if (id === "withdrawal") {
+    // Open the withdrawal overlay directly
+    closeAll();
+    openWithdrawSavings();
+    return;
+  }
   selSavType = id;
   el("savTypeGrid").querySelectorAll(".cpick").forEach(function(b) {
     b.className = "cpick" + (b.dataset.sav === id ? " sel ms" : "");
@@ -2206,6 +2401,7 @@ function pickSavType(id) {
 }
 async function saveSaving() {
   try {
+    if (selSavType === "withdrawal") { openWithdrawSavings(); return; }
     var date = el("savDate").value || todayStr();
     var note = el("savNote").value.trim();
     var entry = { id:mkid(), savType:selSavType, date:date, note:note, ts:Date.now() };
@@ -2239,15 +2435,108 @@ async function delWithdrawal(id) {
   try { await dbDel("withdrawals", id); renderAll(); } catch(e) { console.error("delWithdrawal:", e); }
 }
 
+
+// ── DEBT ACTION MENU ──────────────────────────────────────────────
+async function openDebtActionMenu(id) {
+  try {
+    var d = await dbGet("debts", id); if (!d) return;
+    var pmts = await dbAll("payments");
+    var paid = pmts.filter(function(p){return p.debtId===id;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
+    var rem  = Math.max(0, Number(d.total||0) - paid);
+    var pct  = d.total > 0 ? Math.min(100, paid/d.total*100).toFixed(0) : 0;
+    var info = el("debtActionInfo");
+    info.innerHTML =
+      '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--dbt);font-weight:800;">' + (DEBT_LABELS[d.type]||d.type) + '</div>'
+      + '<div style="font-weight:800;font-size:16px;margin:4px 0 10px;">' + d.lender + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">'
+      + '<div style="text-align:center;"><div style="font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;">Original</div><div style="font-weight:800;font-size:13px;">' + d.currency + ' ' + fmt(d.total) + '</div></div>'
+      + '<div style="text-align:center;"><div style="font-size:9px;color:var(--inc);font-weight:700;text-transform:uppercase;">Paid</div><div style="font-weight:800;font-size:13px;color:var(--inc);">' + d.currency + ' ' + fmt(paid) + '</div></div>'
+      + '<div style="text-align:center;"><div style="font-size:9px;color:var(--exp);font-weight:700;text-transform:uppercase;">Remaining</div><div style="font-weight:800;font-size:13px;color:var(--exp);">' + d.currency + ' ' + fmt(rem) + '</div></div>'
+      + '</div>'
+      + '<div style="font-size:11.5px;color:var(--muted);font-weight:600;">EMI: ' + d.currency + ' ' + fmt(d.emi) + (d.rate ? ' · ' + d.rate + '% p.a.' : '') + (d.emiDate ? ' · Next: ' + d.emiDate : '') + '</div>'
+      + '<div style="height:6px;background:var(--line);border-radius:6px;margin-top:10px;overflow:hidden;"><div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,var(--dbt),#a78bff);border-radius:6px;"></div></div>'
+      + '<div style="font-size:10px;color:var(--muted);margin-top:4px;font-weight:600;">' + pct + '% paid off</div>';
+    var btns = el("debtActionButtons"); btns.innerHTML = "";
+    function mkB(cls, txt, fn) { var b = document.createElement("button"); b.className = cls; b.textContent = txt; b.style.cssText = "padding:14px;font-size:15px;"; b.addEventListener("click", fn); return b; }
+    if (rem > 0) btns.appendChild(mkB("btn md",    "Pay EMI",    async function() { try { await dbPut("payments",{id:mkid(),debtId:id,amount:d.emi,date:todayStr(),ts:Date.now()}); closeAll(); renderDebtList(); } catch(e){console.error(e);} }));
+    btns.appendChild(mkB("btn mb",    "Edit Loan",   function() { closeAll(); openEditDebt(id); }));
+    btns.appendChild(mkB("btn ghost", "Delete Loan", function() { confirmDelDebt(id, d.lender); }));
+    btns.appendChild(mkB("btn ghost", "Cancel",      function() { closeAll(); }));
+    el("debtActionTitle").textContent = d.lender;
+    openOv("ov-debt-action");
+  } catch(e) { console.error("openDebtActionMenu:", e); }
+}
+
+function confirmDelDebt(id, lender) {
+  var btns = el("debtActionButtons"); btns.innerHTML = "<p style='text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;'>Delete loan from <b style='color:var(--ink);'>" + lender + "</b>?<br><span style='font-size:11px;'>All payment history will also be deleted.</span></p>";
+  function mkB(cls, txt, fn) { var b = document.createElement("button"); b.className = cls; b.textContent = txt; b.style.cssText = "padding:14px;font-size:15px;"; b.addEventListener("click", fn); return b; }
+  btns.appendChild(mkB("btn me",    "Delete Loan", async function() { try { await dbDel("debts", id); var pm = await dbAll("payments"); for(var i=0;i<pm.length;i++){if(pm[i].debtId===id)await dbDel("payments",pm[i].id);} closeAll(); renderDebtList(); } catch(e){console.error(e);} }));
+  btns.appendChild(mkB("btn ghost", "Cancel",      function() { closeAll(); }));
+  el("debtActionTitle").textContent = "Delete Loan";
+}
+
+async function openEditDebt(id) {
+  try {
+    var d = await dbGet("debts", id); if (!d) return;
+    el("editDId").value      = id;
+    el("editDType").value    = d.type || "personal";
+    el("editDLender").value  = d.lender || "";
+    el("editDTotal").value   = d.total || "";
+    el("editDEMI").value     = d.emi || "";
+    el("editDRate").value    = d.rate || "";
+    el("editDCur").value     = d.currency || "AED";
+    el("editDEmiDate").value = d.emiDate || "";
+    openOv("ov-debt-edit");
+  } catch(e) { console.error("openEditDebt:", e); }
+}
+
+async function saveEditDebt() {
+  try {
+    var id    = el("editDId").value;
+    var total = parseFloat(el("editDTotal").value);
+    var emi   = parseFloat(el("editDEMI").value);
+    if (!total || !emi) { alert("Please fill in total amount and EMI."); return; }
+    var d = await dbGet("debts", id); if (!d) return;
+    d.type    = el("editDType").value;
+    d.lender  = el("editDLender").value.trim() || "Lender";
+    d.total   = total;
+    d.emi     = emi;
+    d.rate    = parseFloat(el("editDRate").value) || 0;
+    d.currency= el("editDCur").value;
+    d.emiDate = el("editDEmiDate").value;
+    await dbPut("debts", d);
+    closeAll(); renderDebtList();
+  } catch(e) { console.error("saveEditDebt:", e); }
+}
 // ── DEBT ─────────────────────────────────────────────────────────
-function toggleDebtForm(show) { elStyle("debtForm", show ? "" : "none"); }
+function showDebtForm() {
+  elStyle("debtListView", "none");
+  elStyle("debtForm", "");
+  el("dLender").value = ""; el("dTotal").value = ""; el("dEMI").value = "";
+  el("dRate").value = ""; el("dEmiDate").value = "";
+  el("dType").value = "mortgage"; el("dCur").value = "AED";
+}
+function hideDebtForm() {
+  elStyle("debtForm", "none");
+  elStyle("debtListView", "");
+}
 async function saveDebt() {
   try {
     var total = parseFloat(el("dTotal").value), emi = parseFloat(el("dEMI").value);
     if (!total || !emi) { alert("Please fill in total amount and EMI."); return; }
-    await dbPut("debts", { id:mkid(), type:el("dType").value, lender:el("dLender").value.trim()||"Lender", total:total, emi:emi, currency:el("dCur").value, emiDate:el("dEmiDate").value, createdAt:todayStr() });
-    ["dLender","dTotal","dEMI","dEmiDate"].forEach(function(id) { el(id).value = ""; });
-    toggleDebtForm(false); renderDebtList();
+    await dbPut("debts", {
+      id: mkid(),
+      type: el("dType").value,
+      lender: el("dLender").value.trim() || "Lender",
+      total: total,
+      emi: emi,
+      rate: parseFloat(el("dRate").value) || 0,
+      currency: el("dCur").value,
+      emiDate: el("dEmiDate").value,
+      createdAt: todayStr()
+    });
+    hideDebtForm();
+    renderDebtList();
   } catch(e) { console.error("saveDebt:", e); }
 }
 async function payEMI(id) {
@@ -2270,33 +2559,29 @@ async function renderDebtList() {
   try {
     var debts = await dbAll("debts"), pmts = await dbAll("payments");
     var container = el("debtList");
-    if (!debts.length) { container.innerHTML = '<div class="empty" style="margin-bottom:13px">No loans added yet.</div>'; return; }
+    if (!debts.length) { container.innerHTML = '<div class="empty" style="margin-bottom:13px">No loans yet. Tap + Add New Loan.</div>'; return; }
     var html = debts.map(function(d) {
-      var paid = pmts.filter(function(p){return p.debtId===d.id;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
-      var rem  = Math.max(0, d.total - paid);
-      var pct  = Math.min(100, paid/d.total*100);
-      var mLeft = Math.ceil(rem / (d.emi || 1));
-      return '<div class="dcard">'
+      var paid  = pmts.filter(function(p){return p.debtId===d.id;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
+      var rem   = Math.max(0, Number(d.total||0) - paid);
+      var pct   = d.total > 0 ? Math.min(100, paid/d.total*100) : 0;
+      var mLeft = rem > 0 ? Math.ceil(rem/(d.emi||1)) : 0;
+      return '<div class="dcard" style="cursor:pointer;" data-id="' + d.id + '">'
         + '<div class="dhead"><div><div class="dtype">' + (DEBT_LABELS[d.type]||d.type) + '</div><div class="dname">' + d.lender + '</div></div>'
-        + '<button class="ddel" data-action="del-debt" data-id="' + d.id + '">🗑️</button></div>'
+        + '<div style="color:var(--muted);font-size:18px;">›</div></div>'
+        + (d.rate ? '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:2px;">' + d.rate + '% p.a.</div>' : '')
         + '<div style="display:flex;justify-content:space-between;margin:10px 0 6px;">'
         + '<div style="text-align:center;"><div style="font-size:9px;text-transform:uppercase;color:var(--muted);font-weight:700;">Original</div><div style="font-weight:800;font-size:13px;">' + d.currency + ' ' + fmt(d.total) + '</div></div>'
         + '<div style="text-align:center;"><div style="font-size:9px;text-transform:uppercase;color:var(--inc);font-weight:700;">Paid</div><div style="font-weight:800;font-size:13px;color:var(--inc);">' + d.currency + ' ' + fmt(paid) + '</div></div>'
         + '<div style="text-align:center;"><div style="font-size:9px;text-transform:uppercase;color:var(--exp);font-weight:700;">Remaining</div><div style="font-weight:800;font-size:15px;color:var(--exp);">' + d.currency + ' ' + fmt(rem) + '</div></div>'
         + '</div>'
         + '<div class="dbar"><div class="dbarf" style="width:' + pct.toFixed(0) + '%"></div></div>'
-        + '<div class="dnums"><span>' + pct.toFixed(0) + '% paid</span><span>' + mLeft + ' EMIs left</span></div>'
-        + '<div class="demi"><div class="demi-info">EMI: ' + d.currency + ' ' + fmt(d.emi) + '<span>' + (d.emiDate ? "Next: " + d.emiDate : "") + '</span></div>'
-        + (rem > 0 ? '<button class="pay-btn" data-action="pay-emi" data-id="' + d.id + '">Pay EMI</button>' : '<span style="color:var(--inc);font-weight:800;font-size:12px">Paid off!</span>')
-        + '</div></div>';
+        + '<div class="dnums"><span>' + pct.toFixed(0) + '% paid</span><span>' + (rem > 0 ? mLeft + ' EMIs left' : 'Paid off!') + '</span></div>'
+        + '<div style="font-size:11.5px;color:var(--muted);font-weight:600;margin-top:6px;">EMI: ' + d.currency + ' ' + fmt(d.emi) + (d.emiDate ? ' · Next: ' + d.emiDate : '') + '</div>'
+        + '</div>';
     }).join("");
     container.innerHTML = html;
-    container.querySelectorAll("[data-action]").forEach(function(btn) {
-      btn.addEventListener("click", function() {
-        var action = this.dataset.action, id = this.dataset.id;
-        if (action === "del-debt") delDebt(id);
-        else if (action === "pay-emi") payEMI(id);
-      });
+    container.querySelectorAll(".dcard[data-id]").forEach(function(card) {
+      card.addEventListener("click", function() { openDebtActionMenu(this.dataset.id); });
     });
   } catch(e) { console.error("renderDebtList:", e); }
 }
@@ -2538,16 +2823,23 @@ async function saveTenancy() {
     await dbPut("documents", doc);
     ["tcContract","tcStart","tcEnd","tcLandlord","tcRent","tcNumCh"].forEach(function(id){el(id).value="";});
     el("chequeInputs").innerHTML = ""; el("tcFile").value = "";
-    hideTenForm(); renderDocs();
+    cancelDocForm(); renderDocs();
   } catch(e) { console.error("saveTenancy:", e); }
 }
 function selDocType(btn) {
   selDocT = btn.dataset.dt;
   document.querySelectorAll(".dtbtn").forEach(function(b){b.classList.remove("sel");}); btn.classList.add("sel");
-  el("df-other-name").style.display = selDocT==="other" ? "" : "none";
-  el("docNumLbl").textContent = DOC_NUMLBL[selDocT] || "Number";
-  ["docNum","docExpiry","docIssued"].forEach(function(id){el(id).value="";});
-  el("docForm").style.display = "";
+  elStyle("docForm","none"); elStyle("tenForm","none");
+  if (selDocT === "tenancy") {
+    var ci = el("chequeInputs"); if(ci) ci.innerHTML = "";
+    ["tcContract","tcStart","tcEnd","tcLandlord","tcRent","tcNumCh"].forEach(function(id){var e=el(id);if(e)e.value="";});
+    elStyle("tenForm","");
+  } else {
+    elStyle("df-other-name", selDocT==="other" ? "" : "none");
+    el("docNumLbl").textContent = DOC_NUMLBL[selDocT] || "Number";
+    ["docNum","docExpiry","docIssued","docName"].forEach(function(id){var e=el(id);if(e)e.value="";});
+    elStyle("docForm","");
+  }
 }
 async function saveDoc() {
   try {
@@ -2557,9 +2849,7 @@ async function saveDoc() {
     var file = el("docFile").files[0];
     if (file) { doc.fileData = await fileToDataURL(file); doc.fileName = file.name; }
     await dbPut("documents", doc);
-    el("docForm").style.display = "none";
-    document.querySelectorAll(".dtbtn").forEach(function(b){b.classList.remove("sel");});
-    selDocT = null; renderDocs();
+    cancelDocForm(); renderDocs();
   } catch(e) { console.error("saveDoc:", e); }
 }
 async function delDoc(id) { if (!confirm("Delete this document?")) return; try { await dbDel("documents",id); renderDocs(); }catch(e){console.error("delDoc:",e);} }
@@ -2604,11 +2894,13 @@ async function renderAppts() {
       var extra = a.type==="service"&&(a.car||a.svcType) ? '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:2px;">'+(a.car||"")+(a.car&&a.svcType?" · ":"")+(a.svcType||"")+'</div>' : "";
       var recurBadge = a.recurring && !a.carriedForwardFrom ? '<span style="font-size:9px;background:#fff3cf;color:#c07800;font-weight:800;padding:2px 7px;border-radius:10px;margin-top:3px;display:inline-block;">Monthly</span>' : "";
       var carriedBadge = a.carriedForwardFrom ? '<span style="font-size:9px;background:#ede9ff;color:#4338ca;font-weight:800;padding:2px 7px;border-radius:10px;margin-top:3px;display:inline-block;">Carried forward</span>' : "";
-      return '<div class="acard"><div class="aico" style="background:'+(APPT_COLORS[a.type]||"#f3f0ff")+'">'+(APPT_ICONS[a.type]||"📋")+'</div><div class="ainfo"><div class="atitle" style="'+(past?"opacity:.5;text-decoration:line-through":"")+'">' + a.title + '</div><div class="adt">' + dt + (past?" · past":"") + '</div>' + extra + (a.notes?'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+a.notes+'</div>':"") + recurBadge + carriedBadge + '</div><button class="adel" data-action="del-appt" data-id="' + a.id + '">x</button></div>';
+      return '<div class="acard" style="cursor:pointer;" data-id="'+a.id+'" data-title="'+a.title+'"><div class="aico" style="background:'+(APPT_COLORS[a.type]||"#f3f0ff")+'">'+(APPT_ICONS[a.type]||"📋")+'</div><div class="ainfo"><div class="atitle" style="'+(past?"opacity:.5;text-decoration:line-through":"")+'">' + a.title + '</div><div class="adt">' + dt + (past?" · past":"") + '</div>' + extra + (a.notes?'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+a.notes+'</div>':"") + recurBadge + carriedBadge + '</div><button style="color:var(--muted);font-size:18px;padding-left:4px;">›</div>';
     }).join("");
     container.innerHTML = html;
-    container.querySelectorAll("[data-action='del-appt']").forEach(function(btn) {
-      btn.addEventListener("click", function() { delAppt(this.dataset.id); });
+    container.querySelectorAll(".acard[data-id]").forEach(function(card) {
+      card.addEventListener("click", function() {
+        openApptActionMenu(this.dataset.id, this.dataset.title);
+      });
     });
   } catch(e) { console.error("renderAppts:", e); }
 }
@@ -2698,7 +2990,7 @@ async function renderBills() {
     container.querySelectorAll("[data-action]").forEach(function(btn){
       btn.addEventListener("click",function(){
         var action=this.dataset.action,id=this.dataset.id;
-        if(action==="del-bill") delBill(id);
+        if(action==="info-bill") openBillActionMenu(id, this.dataset.label);
         else if(action==="paid-bill") toggleBillPaid(id);
       });
     });
@@ -2736,7 +3028,7 @@ async function renderCheques() {
     container.querySelectorAll("[data-action]").forEach(function(btn){
       btn.addEventListener("click",function(){
         var action=this.dataset.action,id=this.dataset.id;
-        if(action==="del-cheque") delCheque(id);
+        if(action==="info-cheque") openChequeActionMenu(id, this.dataset.payee);
         else if(action==="paid-cheque") toggleChequePaid(id);
       });
     });
