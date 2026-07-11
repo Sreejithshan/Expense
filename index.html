@@ -2841,7 +2841,7 @@ function confirmDelDocEntry(id, label) {
   var btns = el("docActionButtons");
   btns.innerHTML = "<p style='text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;'>Delete <b style='color:var(--ink);'>"+label+"</b>?<br><span style='font-size:11px;'>This cannot be undone.</span></p>";
   function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
-  btns.appendChild(mkB("btn me","Delete Document",async function(){try{await dbDel("documents",id);closeAll();renderDocs();}catch(e){console.error(e);}}));
+  btns.appendChild(mkB("btn me","Delete Document",async function(){try{await dbDel("documents",id); document.querySelectorAll(".ov").forEach(function(o){o.classList.remove("open");}); el("ov-docs").classList.add("open"); renderDocs();}catch(e){console.error(e);}}));
   btns.appendChild(mkB("btn ghost","Cancel",function(){closeAll();}));
   el("docActionTitle").textContent = "Delete Document";
 }
@@ -2884,7 +2884,7 @@ function confirmDelTenancyEntry(id, label) {
   var btns = el("tenActionButtons");
   btns.innerHTML = "<p style='text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;'>Delete contract <b style='color:var(--ink);'>"+label+"</b>?</p>";
   function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
-  btns.appendChild(mkB("btn me","Delete Contract",async function(){try{await dbDel("documents",id);closeAll();renderDocs();}catch(e){console.error(e);}}));
+  btns.appendChild(mkB("btn me","Delete Contract",async function(){try{await dbDel("documents",id); document.querySelectorAll(".ov").forEach(function(o){o.classList.remove("open");}); el("ov-docs").classList.add("open"); renderDocs();}catch(e){console.error(e);}}));
   btns.appendChild(mkB("btn ghost","Cancel",function(){closeAll();}));
   el("tenActionTitle").textContent = "Delete Contract";
 }
