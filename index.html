@@ -2737,43 +2737,156 @@ async function deletePerson(id, name) {
 async function renderDocs() {
   try {
     var pid = el("personSel").value, sec = el("docSection");
-    if (!pid) { sec.style.display = "none"; return; }
+    if (!pid) { if (sec) sec.style.display = "none"; return; }
     sec.style.display = "";
     selDocT = null;
     document.querySelectorAll(".dtbtn").forEach(function(b){b.classList.remove("sel");});
-    el("docForm").style.display = "none";
-    if (el("tenForm")) el("tenForm").style.display = "none";
-    closeTenDetail();
+    elStyle("docForm","none"); elStyle("tenForm","none"); elStyle("tenDetail","none");
+
     var docs = (await dbAll("documents")).filter(function(d){return d.personId===pid;});
+    var today = new Date();
+    var docListSec = el("docListSection");
+    var docListEl  = el("docList");
+
+    if (!docs.length) {
+      if (docListSec) docListSec.style.display = "none";
+      return;
+    }
+    if (docListSec) docListSec.style.display = "";
+
     var tenancies = docs.filter(function(d){return d.type==="tenancy";});
     var otherDocs = docs.filter(function(d){return d.type!=="tenancy";});
-    var today = new Date();
-    el("tenList").innerHTML = tenancies.map(function(d) {
-      var exp = d.endDate ? new Date(d.endDate+"T00:00:00") : null;
+
+    var tenHTML = tenancies.map(function(d) {
+      var exp  = d.endDate ? new Date(d.endDate+"T00:00:00") : null;
       var days = exp ? Math.round((exp-today)/86400000) : null;
       var soon = days !== null && days < 30;
-      return '<div class="ten-card" data-action="open-ten" data-id="' + d.id + '"><div class="tc-tag">Tenancy Contract</div><div class="tc-name">' + (d.contractNo||"Contract") + "  -  " + (d.landlord||"") + '</div><div class="tc-dates">' + (d.startDate||"") + " to " + (d.endDate||"") + '</div>' + (soon?'<div class="tc-exp soon">Expires in '+days+' days</div>':"") + '</div>';
+      return '<div class="doccard" style="cursor:pointer;border-left:3px solid var(--dbt);" data-id="'+d.id+'" data-type="tenancy">'
+        + '<div class="dctop"><div>'
+        + '<div class="dctag" style="color:var(--dbt);">Tenancy Contract</div>'
+        + '<div class="dcnum">' + (d.contractNo||"—") + '</div>'
+        + '<div class="dcexp">Landlord: ' + (d.landlord||"—") + '</div>'
+        + '<div class="dcexp">' + (d.startDate||"") + ' to ' + (d.endDate||"") + '</div>'
+        + (soon ? '<div class="dcexp soon">Expires in '+days+' days</div>' : '')
+        + '</div><div style="color:var(--muted);font-size:18px;">›</div></div></div>';
     }).join("");
-    el("tenList").querySelectorAll("[data-action='open-ten']").forEach(function(btn) {
-      btn.addEventListener("click", function() { openTenDetail(this.dataset.id); });
-    });
-    el("docList").innerHTML = otherDocs.map(function(d) {
-      var exp = d.expiry ? new Date(d.expiry+"T00:00:00") : null;
+
+    var otherHTML = otherDocs.map(function(d) {
+      var exp  = d.expiry ? new Date(d.expiry+"T00:00:00") : null;
       var days = exp ? Math.round((exp-today)/86400000) : null;
       var soon = days !== null && days < 90;
-      return '<div class="doccard"><div class="dctop"><div><div class="dctag">' + (DOC_LABELS[d.type]||d.type) + (d.docName?"  -  "+d.docName:"") + '</div><div class="dcnum">' + (d.docNum||" - ") + '</div>' + (d.expiry?'<div class="dcexp'+(soon?" soon":"")+'">'+( soon?"Expires "+d.expiry+" ("+days+" days)":"Expires "+d.expiry)+'</div>':"") + (d.issuedBy?'<div class="dcexp">Issued by: '+d.issuedBy+'</div>':"") + '</div><button class="dcdel" data-action="del-doc" data-id="' + d.id + '">x</button></div>' + (d.fileData?'<div class="file-actions"><button class="file-btn view" data-action="view-file" data-id="'+d.id+'">View</button><button class="file-btn dl" data-action="dl-file" data-id="'+d.id+'">Download</button><button class="file-btn rep" data-action="rep-file" data-id="'+d.id+'">Replace</button><button class="file-btn rm" data-action="rm-file" data-id="'+d.id+'">Remove</button></div>':'<div class="file-actions"><button class="file-btn rep" data-action="rep-file" data-id="'+d.id+'">Attach file</button></div>') + '</div>';
-    }).join("") || '<div class="empty">No documents yet.</div>';
-    el("docList").querySelectorAll("[data-action]").forEach(function(btn) {
-      btn.addEventListener("click", function() {
-        var action = this.dataset.action, id = this.dataset.id;
-        if (action==="del-doc")  delDoc(id);
-        if (action==="view-file")viewFile(id);
-        if (action==="dl-file")  dlFile(id);
-        if (action==="rep-file") replaceFile(id);
-        if (action==="rm-file")  removeFile(id);
-      });
+      return '<div class="doccard" style="cursor:pointer;" data-id="'+d.id+'" data-type="doc">'
+        + '<div class="dctop"><div>'
+        + '<div class="dctag">' + (DOC_LABELS[d.type]||d.type) + (d.docName?" — "+d.docName:"") + '</div>'
+        + '<div class="dcnum">' + (d.docNum||"—") + '</div>'
+        + (d.expiry ? '<div class="dcexp'+(soon?' soon':'')+'">'  + (soon?"Expires "+d.expiry+" ("+days+" days)":"Expires "+d.expiry) + '</div>' : '')
+        + (d.issuedBy ? '<div class="dcexp">Issued by: '+d.issuedBy+'</div>' : '')
+        + (d.fileData ? '<div class="dcexp" style="color:var(--pri);">File attached</div>' : '')
+        + '</div><div style="color:var(--muted);font-size:18px;">›</div></div></div>';
+    }).join("");
+
+    docListEl.innerHTML = tenHTML + otherHTML || '<div class="empty">No documents saved yet.</div>';
+
+    docListEl.querySelectorAll("[data-type='tenancy']").forEach(function(card) {
+      card.addEventListener("click", function() { openTenancyActionMenu(this.dataset.id); });
+    });
+    docListEl.querySelectorAll("[data-type='doc']").forEach(function(card) {
+      card.addEventListener("click", function() { openDocActionMenu(this.dataset.id); });
     });
   } catch(e) { console.error("renderDocs:", e); }
+}
+
+function cancelDocForm() {
+  selDocT = null;
+  document.querySelectorAll(".dtbtn").forEach(function(b){b.classList.remove("sel");});
+  elStyle("docForm","none"); elStyle("tenForm","none");
+  var ci = el("chequeInputs"); if(ci) ci.innerHTML = "";
+}
+
+// ── DOC ACTION MENU ───────────────────────────────────────────────
+async function openDocActionMenu(id) {
+  try {
+    var d = await dbGet("documents", id); if (!d) return;
+    var label = (DOC_LABELS[d.type]||d.type) + (d.docName?" — "+d.docName:"");
+    var info = el("docActionInfo");
+    if (info) {
+      info.style.display = "";
+      info.innerHTML = '<div class="dctag">'+label+'</div>'
+        + '<div class="dcnum">'+(d.docNum||"—")+'</div>'
+        + (d.expiry ? '<div class="dcexp">Expires: '+d.expiry+'</div>' : '')
+        + (d.issuedBy ? '<div class="dcexp">Issued by: '+d.issuedBy+'</div>' : '')
+        + (d.fileData
+          ? '<div class="file-actions" style="margin-top:8px;">'
+            + '<button class="file-btn view" id="daBtnView">View</button>'
+            + '<button class="file-btn dl" id="daBtnDl">Download</button>'
+            + '<button class="file-btn rep" id="daBtnRep">Replace</button>'
+            + '<button class="file-btn rm" id="daBtnRm">Remove</button></div>'
+          : '<div class="file-actions" style="margin-top:8px;">'
+            + '<button class="file-btn rep" id="daBtnRep">Attach File</button></div>');
+      if(el("daBtnView")) el("daBtnView").addEventListener("click",function(){viewFile(id);});
+      if(el("daBtnDl"))   el("daBtnDl").addEventListener("click",function(){dlFile(id);});
+      if(el("daBtnRep"))  el("daBtnRep").addEventListener("click",function(){replaceFile(id);});
+      if(el("daBtnRm"))   el("daBtnRm").addEventListener("click",function(){removeFile(id);});
+    }
+    var btns = el("docActionButtons"); btns.innerHTML = "";
+    function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
+    btns.appendChild(mkB("btn ghost","Delete Document",function(){confirmDelDocEntry(id,label);}));
+    btns.appendChild(mkB("btn ghost","Cancel",function(){closeAll();}));
+    el("docActionTitle").textContent = label;
+    openOv("ov-doc-action");
+  } catch(e){console.error("openDocActionMenu:",e);}
+}
+
+function confirmDelDocEntry(id, label) {
+  var btns = el("docActionButtons");
+  btns.innerHTML = "<p style='text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;'>Delete <b style='color:var(--ink);'>"+label+"</b>?<br><span style='font-size:11px;'>This cannot be undone.</span></p>";
+  function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
+  btns.appendChild(mkB("btn me","Delete Document",async function(){try{await dbDel("documents",id);closeAll();renderDocs();}catch(e){console.error(e);}}));
+  btns.appendChild(mkB("btn ghost","Cancel",function(){closeAll();}));
+  el("docActionTitle").textContent = "Delete Document";
+}
+
+// ── TENANCY ACTION MENU ───────────────────────────────────────────
+async function openTenancyActionMenu(id) {
+  try {
+    var d = await dbGet("documents", id); if (!d) return;
+    var exp  = d.endDate ? new Date(d.endDate+"T00:00:00") : null;
+    var days = exp ? Math.round((exp-new Date())/86400000) : null;
+    var soon = days !== null && days < 30;
+    var info = el("tenActionInfo");
+    info.innerHTML = '<div style="font-size:9px;color:var(--dbt);font-weight:800;text-transform:uppercase;letter-spacing:.08em;">Tenancy Contract</div>'
+      + '<div style="font-weight:800;font-size:15px;margin:4px 0;">'+(d.contractNo||"—")+'</div>'
+      + '<div style="font-size:11.5px;color:var(--muted);">Landlord: '+(d.landlord||"—")+'</div>'
+      + '<div style="font-size:11.5px;color:var(--muted);">'+(d.startDate||"")+' to '+(d.endDate||"")+'</div>'
+      + (soon ? '<div style="font-size:11px;color:#e17055;font-weight:700;margin-top:4px;">Expires in '+days+' days</div>' : '')
+      + '<div style="font-size:11.5px;color:var(--muted);margin-top:4px;">Total Rent: '+fmt(d.totalRent||0)+' · '+(d.cheques||[]).length+' cheques</div>'
+      + (d.fileData
+        ? '<div class="file-actions" style="margin-top:8px;"><button class="file-btn view" id="taBtnView">View</button><button class="file-btn dl" id="taBtnDl">Download</button><button class="file-btn rep" id="taBtnRep">Replace</button><button class="file-btn rm" id="taBtnRm">Remove</button></div>'
+        : '<div class="file-actions" style="margin-top:8px;"><button class="file-btn rep" id="taBtnRep">Attach Contract</button></div>')
+      + (d.cheques&&d.cheques.length
+        ? '<div style="margin-top:10px;"><div class="stitle" style="margin:8px 0 6px;">Cheques</div>'
+          + d.cheques.map(function(ch,i){return '<div class="ch-row" style="margin-bottom:6px;"><div class="cr-top">Cheque #'+(i+1)+' — AED '+fmt(ch.amount)+'</div><div style="font-size:11px;color:var(--muted);">Due: '+(ch.date||"—")+'</div></div>';}).join("")
+          + '</div>' : '');
+    if(el("taBtnView")) el("taBtnView").addEventListener("click",function(){viewTenFile(id);});
+    if(el("taBtnDl"))   el("taBtnDl").addEventListener("click",function(){dlTenFile(id);});
+    if(el("taBtnRep"))  el("taBtnRep").addEventListener("click",function(){replaceTenFile(id);});
+    if(el("taBtnRm"))   el("taBtnRm").addEventListener("click",function(){removeTenFile(id);});
+    var btns = el("tenActionButtons"); btns.innerHTML = "";
+    function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
+    btns.appendChild(mkB("btn ghost","Delete Contract",function(){confirmDelTenancyEntry(id,d.contractNo||"this contract");}));
+    btns.appendChild(mkB("btn ghost","Cancel",function(){closeAll();}));
+    el("tenActionTitle").textContent = d.contractNo || "Tenancy Contract";
+    openOv("ov-ten-action");
+  } catch(e){console.error("openTenancyActionMenu:",e);}
+}
+
+function confirmDelTenancyEntry(id, label) {
+  var btns = el("tenActionButtons");
+  btns.innerHTML = "<p style='text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;'>Delete contract <b style='color:var(--ink);'>"+label+"</b>?</p>";
+  function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
+  btns.appendChild(mkB("btn me","Delete Contract",async function(){try{await dbDel("documents",id);closeAll();renderDocs();}catch(e){console.error(e);}}));
+  btns.appendChild(mkB("btn ghost","Cancel",function(){closeAll();}));
+  el("tenActionTitle").textContent = "Delete Contract";
 }
 async function openTenDetail(id) {
   try {
