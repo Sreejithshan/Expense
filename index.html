@@ -762,7 +762,7 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
     <div id="docSection" style="display:none">
 
       <!-- Saved Documents — large prominent button -->
-      <button id="savedDocsBtn" onclick="openOv('ov-saved-docs')" style="width:100%;background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(99,102,241,.45);cursor:pointer;">
+      <button id="savedDocsBtn" onclick="openSavedDocsOverlay()" style="width:100%;background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(99,102,241,.45);cursor:pointer;">
         <div style="text-align:left;">
           <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Saved Documents</div>
           <div style="font-size:12px;opacity:.85;margin-top:2px;" id="savedDocsCount">Tap to view all documents</div>
@@ -770,16 +770,25 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
         <div style="font-size:28px;">📂</div>
       </button>
 
-      <!-- Document category buttons -->
-      <div class="stitle">Add New Document</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-        <button class="dtbtn" data-dt="govt_id"  onclick="selDocType(this)">🪪 Government ID</button>
-        <button class="dtbtn" data-dt="visa"     onclick="selDocType(this)">🛂 Visa</button>
-        <button class="dtbtn" data-dt="passport" onclick="selDocType(this)">📘 Passport</button>
-        <button class="dtbtn" data-dt="driving"  onclick="selDocType(this)">🚗 Driving License</button>
-        <button class="dtbtn" data-dt="tenancy"  onclick="selDocType(this)">🏠 Tenancy Contract</button>
-        <button class="dtbtn" data-dt="other"    onclick="selDocType(this)">📁 Others</button>
-      </div>
+      <!-- Add Documents — second large button -->
+      <button onclick="toggleAddDocSection()" style="width:100%;background:linear-gradient(135deg,#ff6348,#ff9f43);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(255,99,72,.4);cursor:pointer;">
+        <div style="text-align:left;">
+          <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Add Documents</div>
+          <div style="font-size:12px;opacity:.85;margin-top:2px;">Select a category to add a new document</div>
+        </div>
+        <div style="font-size:28px;" id="addDocArrow">➕</div>
+      </button>
+
+      <!-- Document categories (hidden by default, shown on tap) -->
+      <div id="addDocSection" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <button class="dtbtn" data-dt="govt_id"  onclick="selDocType(this)">🪪 Government ID</button>
+          <button class="dtbtn" data-dt="visa"     onclick="selDocType(this)">🛂 Visa</button>
+          <button class="dtbtn" data-dt="passport" onclick="selDocType(this)">📘 Passport</button>
+          <button class="dtbtn" data-dt="driving"  onclick="selDocType(this)">🚗 Driving License</button>
+          <button class="dtbtn" data-dt="tenancy"  onclick="selDocType(this)">🏠 Tenancy Contract</button>
+          <button class="dtbtn" data-dt="other"    onclick="selDocType(this)">📁 Others</button>
+        </div>
 
       <!-- Standard doc form -->
       <div id="docForm" style="display:none">
@@ -813,6 +822,8 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
           <button class="btn md" onclick="saveTenancy()">Save Contract</button>
         </div>
       </div>
+
+      </div><!-- end addDocSection -->
 
       <div class="ten-detail" id="tenDetail" style="display:none">
         <button class="ten-back" onclick="closeTenDetail()">← Back</button>
@@ -979,6 +990,176 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
   </div>
 </div>
 
+
+<!-- OVERLAY: APPOINTMENTS -->
+<div class="ov" id="ov-appts">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📅 Appointments</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="stitle" style="margin-top:0">Add Appointment</div>
+    <div class="atype-row" id="apptTypes">
+      <button class="atbtn sel" data-at="doctor" onclick="selAT(this)">🩺 Doctor</button>
+      <button class="atbtn" data-at="service" onclick="selAT(this)">🔧 Service</button>
+      <button class="atbtn" data-at="spa" onclick="selAT(this)">💆 Spa</button>
+      <button class="atbtn" data-at="other" onclick="selAT(this)">📋 Others</button>
+    </div>
+    <div id="af-service" style="display:none">
+      <div class="two"><div class="field"><label>Vehicle</label><input type="text" id="svcCar" placeholder="e.g. Toyota Camry"></div><div class="field"><label>Service Type</label><input type="text" id="svcType" placeholder="e.g. Oil Change"></div></div>
+    </div>
+    <div class="field"><label>Title</label><input type="text" id="apptTitle" placeholder="e.g. Dr. Ahmed"></div>
+    <div class="field"><label>Date &amp; Time</label><input type="datetime-local" id="apptDT"></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="apptNotes" placeholder="Any extra notes..."></textarea></div>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--sh1);margin-bottom:8px;">
+      <input type="checkbox" id="apptRecurring" style="width:18px;height:18px;accent-color:var(--pri);">
+      <div><div style="font-weight:700;font-size:13.5px;">Repeat monthly</div><div style="font-size:11px;color:var(--muted);">Auto-carry forward each month</div></div>
+    </div>
+    <button class="addbtn" onclick="saveAppt()">+ Save Appointment</button>
+    <div class="stitle">Upcoming &amp; Recent</div>
+    <div id="apptList"></div>
+  </div>
+</div>
+
+<!-- OVERLAY: PAYMENT SCHEDULE -->
+<div class="ov" id="ov-payschedule">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📆 Payment Schedule</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="pay-section-tabs">
+      <button class="pay-tab active" id="payTab-bills" onclick="switchPayTab('bills')">🧾 Utility Bills</button>
+      <button class="pay-tab" id="payTab-cheques" onclick="switchPayTab('cheques')">💳 Cheques</button>
+      <button class="pay-tab" id="payTab-others" onclick="switchPayTab('others')">📋 Others</button>
+    </div>
+    <div id="paySection-bills">
+      <button class="addbtn" onclick="togglePayForm('bill-form')">+ Add Bill</button>
+      <div id="bill-form" style="display:none">
+        <div class="field"><label>Category</label>
+          <select id="billCat" onchange="toggleCustomBill()">
+            <option value="electricity">⚡ Electricity Bill</option>
+            <option value="phone">📱 Phone Bill</option>
+            <option value="internet">🌐 Internet Bill</option>
+            <option value="school">🎓 School Fees</option>
+            <option value="custom">✏️ Custom Bill</option>
+          </select>
+        </div>
+        <div class="field" id="customBillRow" style="display:none"><label>Bill Name</label><input type="text" id="customBillName" placeholder="e.g. Water Bill"></div>
+        <div class="two">
+          <div class="field"><label>Due Date</label><input type="date" id="billDueDate"></div>
+          <div class="field"><label>Amount (optional)</label><input type="number" inputmode="decimal" id="billAmt" placeholder="0"></div>
+        </div>
+        <div class="field"><label>Notes (optional)</label><input type="text" id="billNotes" placeholder=""></div>
+        <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+          <input type="checkbox" id="billRecurring" style="width:18px;height:18px;accent-color:#6366f1;">
+          <div><div style="font-weight:700;font-size:13.5px;">Repeat Monthly</div></div>
+        </div>
+        <div class="sacts">
+          <button class="btn ghost" onclick="togglePayForm('bill-form')">Cancel</button>
+          <button class="btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;" onclick="saveBill()">Save Bill</button>
+        </div>
+      </div>
+      <div class="stitle">This Month</div>
+      <div id="billList"></div>
+    </div>
+    <div id="paySection-cheques" style="display:none">
+      <button class="addbtn" onclick="togglePayForm('cheque-form')">+ Add Cheque</button>
+      <div id="cheque-form" style="display:none">
+        <div class="two">
+          <div class="field"><label>Cheque No</label><input type="text" id="chequeNum" placeholder="e.g. 001234"></div>
+          <div class="field"><label>Cheque Date</label><input type="date" id="chequeDueDate"></div>
+        </div>
+        <div class="field"><label>Payee</label><input type="text" id="chequePayee" placeholder="e.g. Al Futtaim Properties"></div>
+        <div class="two">
+          <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="chequeAmt" placeholder="0"></div>
+          <div class="field"><label>Bank (optional)</label><input type="text" id="chequeBankName" placeholder="e.g. Emirates NBD"></div>
+        </div>
+        <div class="field"><label>Notes (optional)</label><input type="text" id="chequeNotes" placeholder=""></div>
+        <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+          <input type="checkbox" id="chequeRecurring" style="width:18px;height:18px;accent-color:#6366f1;">
+          <div><div style="font-weight:700;font-size:13.5px;">Repeat Monthly</div></div>
+        </div>
+        <div class="sacts">
+          <button class="btn ghost" onclick="togglePayForm('cheque-form')">Cancel</button>
+          <button class="btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;" onclick="saveCheque()">Save Cheque</button>
+        </div>
+      </div>
+      <div class="stitle">This Month</div>
+      <div id="chequeList"></div>
+    </div>
+
+    <!-- Others section -->
+    <div id="paySection-others" style="display:none">
+      <button class="addbtn" onclick="togglePayForm('other-form')">+ Add Other Payment</button>
+      <div id="other-form" style="display:none">
+        <div class="field"><label>Payment Name</label><input type="text" id="otherPayName" placeholder="e.g. Gym Membership"></div>
+        <div class="two">
+          <div class="field"><label>Due Date</label><input type="date" id="otherPayDate"></div>
+          <div class="field"><label>Amount (optional)</label><input type="number" inputmode="decimal" id="otherPayAmt" placeholder="0"></div>
+        </div>
+        <div class="field"><label>Notes (optional)</label><input type="text" id="otherPayNotes" placeholder=""></div>
+        <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+          <input type="checkbox" id="otherPayRecurring" style="width:18px;height:18px;accent-color:#6366f1;">
+          <div><div style="font-weight:700;font-size:13.5px;">Repeat Monthly</div></div>
+        </div>
+        <div class="sacts">
+          <button class="btn ghost" onclick="togglePayForm('other-form')">Cancel</button>
+          <button class="btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;" onclick="saveOtherPay()">Save</button>
+        </div>
+      </div>
+      <div class="stitle">This Month</div>
+      <div id="otherPayList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY: SETTINGS -->
+<div class="ov" id="ov-settings">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>⚙️ Settings</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="stitle">Appearance</div>
+    <div class="set-row"><div class="sr-left"><h3>🌙 Dark Mode</h3><p>Switch between light and dark theme</p></div><button onclick="toggleDark()" id="darkSettingBtn">Enable</button></div>
+    <div class="stitle">Reports</div>
+    <div class="set-row"><div class="sr-left"><h3>📄 PDF Report</h3><p>Generate this month's financial report</p></div><button onclick="generatePDF()">Generate</button></div>
+    <div class="stitle">Security</div>
+    <div class="set-row"><div class="sr-left"><h3>🔒 Change PIN</h3><p>Update your app PIN</p></div><button onclick="closeAll();startChangePin()">Change</button></div>
+    <div class="stitle">Notifications</div>
+    <div class="set-row"><div class="sr-left"><h3>🔔 Enable Notifications</h3><p>Alerts for EMIs, cheques, visa expiry</p></div><button onclick="requestNotif()">Enable</button></div>
+    <div class="stitle">Backup</div>
+    <div class="set-row"><div class="sr-left"><h3>💾 Backup Now</h3><p>Save a backup file to your phone</p></div><button onclick="doDailyBackup()">Backup</button></div>
+    <div class="set-row"><div class="sr-left"><h3>⬇️ Export</h3><p>Save all data as JSON file</p></div><button onclick="exportBk()">Export</button></div>
+    <div class="set-row"><div class="sr-left"><h3>⬆️ Import</h3><p>Restore data from backup file</p></div><button onclick="el('impFile').click()">Import</button></div>
+    <input type="file" id="impFile" accept="application/json" style="display:none" onchange="importBk(this)">
+  </div>
+</div>
+
+<!-- OVERLAY: WITHDRAW SAVINGS -->
+<div class="ov" id="ov-withdraw">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>💸 Withdrawal</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="wdAmt" placeholder="0"></div>
+    <div class="field"><label>Type</label>
+      <select id="wdType">
+        <option value="withdrawal">Withdrawal (taken out)</option>
+        <option value="adjustment">Manual Adjustment</option>
+      </select>
+    </div>
+    <div class="field"><label>Savings Type</label>
+      <select id="wdCat">
+        <option value="cash">Cash</option><option value="mf">Mutual Funds</option>
+        <option value="shares">Shares</option><option value="gold">Gold</option>
+        <option value="fd">Fixed Deposit</option><option value="other">Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Date</label><input type="date" id="wdDate"></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="wdNote" placeholder="e.g. Emergency withdrawal"></div>
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn" style="background:linear-gradient(135deg,#e17055,#d63031);color:#fff;" onclick="saveWithdrawal()">Record</button>
+    </div>
+    <div class="stitle" style="margin-top:18px;">Withdrawal History</div>
+    <div id="wdListContainer"></div>
+  </div>
+</div>
 </div>
 <script>
 "use strict";
@@ -1304,6 +1485,7 @@ var EXP_CATS = [
     { id:"school_o",    label:"Others",         icon:"📌" }
   ]},
   { id:"groceries",     label:"Groceries",      icon:"🛒", subs:null },
+  { id:"spa",           label:"Spa",            icon:"💆", subs:null },
   { id:"entertainment", label:"Entertainment",  icon:"🎬", subs:[
     { id:"shopping",    label:"Online Shopping",icon:"🛍️" },
     { id:"movies",      label:"Movies",         icon:"🎥" },
@@ -1989,7 +2171,7 @@ function openOv(id) {
   if (id === "ov-appts")      renderAppts();
   if (id === "ov-savings")    { selSavType = "cash"; initSavingsOv(); }
   if (id === "ov-withdraw")   { renderWithdrawalInOverlay(); }
-  if (id === "ov-payschedule"){ carryForwardPayments().then(function(){renderBills();renderCheques();}); }
+  if (id === "ov-payschedule"){ Promise.all([carryForwardPayments(),carryForwardOtherPays()]).then(function(){renderBills();renderCheques();renderOtherPays();}); }
 }
 function closeAll() {
   document.querySelectorAll(".ov").forEach(function(o) { o.classList.remove("open"); });
@@ -2457,60 +2639,86 @@ async function renderDocs() {
     if (!pid) { if (sec) sec.style.display = "none"; return; }
     sec.style.display = "";
     selDocT = null;
-    document.querySelectorAll(".dtbtn").forEach(function(b){b.classList.remove("sel");});
-    elStyle("docForm","none"); elStyle("tenForm","none"); elStyle("tenDetail","none");
-
-    var docs = (await dbAll("documents")).filter(function(d){return d.personId===pid;});
-    var today = new Date();
-    var docListSec = el("docListSection");
-    var docListEl  = el("docList");
-
-    if (!docs.length) {
-      if (docListSec) docListSec.style.display = "none";
-      return;
-    }
-    if (docListSec) docListSec.style.display = "";
-
-    var tenancies = docs.filter(function(d){return d.type==="tenancy";});
-    var otherDocs = docs.filter(function(d){return d.type!=="tenancy";});
-
-    var tenHTML = tenancies.map(function(d) {
-      var exp  = d.endDate ? new Date(d.endDate+"T00:00:00") : null;
-      var days = exp ? Math.round((exp-today)/86400000) : null;
-      var soon = days !== null && days < 30;
-      return '<div class="doccard" style="cursor:pointer;border-left:3px solid var(--dbt);" data-id="'+d.id+'" data-type="tenancy">'
-        + '<div class="dctop"><div>'
-        + '<div class="dctag" style="color:var(--dbt);">Tenancy Contract</div>'
-        + '<div class="dcnum">' + (d.contractNo||"—") + '</div>'
-        + '<div class="dcexp">Landlord: ' + (d.landlord||"—") + '</div>'
-        + '<div class="dcexp">' + (d.startDate||"") + ' to ' + (d.endDate||"") + '</div>'
-        + (soon ? '<div class="dcexp soon">Expires in '+days+' days</div>' : '')
-        + '</div><div style="color:var(--muted);font-size:18px;">›</div></div></div>';
-    }).join("");
-
-    var otherHTML = otherDocs.map(function(d) {
-      var exp  = d.expiry ? new Date(d.expiry+"T00:00:00") : null;
-      var days = exp ? Math.round((exp-today)/86400000) : null;
-      var soon = days !== null && days < 90;
-      return '<div class="doccard" style="cursor:pointer;" data-id="'+d.id+'" data-type="doc">'
-        + '<div class="dctop"><div>'
-        + '<div class="dctag">' + (DOC_LABELS[d.type]||d.type) + (d.docName?" — "+d.docName:"") + '</div>'
-        + '<div class="dcnum">' + (d.docNum||"—") + '</div>'
-        + (d.expiry ? '<div class="dcexp'+(soon?' soon':'')+'">'  + (soon?"Expires "+d.expiry+" ("+days+" days)":"Expires "+d.expiry) + '</div>' : '')
-        + (d.issuedBy ? '<div class="dcexp">Issued by: '+d.issuedBy+'</div>' : '')
-        + (d.fileData ? '<div class="dcexp" style="color:var(--pri);">File attached</div>' : '')
-        + '</div><div style="color:var(--muted);font-size:18px;">›</div></div></div>';
-    }).join("");
-
-    docListEl.innerHTML = tenHTML + otherHTML || '<div class="empty">No documents saved yet.</div>';
-
-    docListEl.querySelectorAll("[data-type='tenancy']").forEach(function(card) {
-      card.addEventListener("click", function() { openTenancyActionMenu(this.dataset.id); });
-    });
-    docListEl.querySelectorAll("[data-type='doc']").forEach(function(card) {
-      card.addEventListener("click", function() { openDocActionMenu(this.dataset.id); });
-    });
+    document.querySelectorAll(".dtbtn").forEach(function(b){ b.classList.remove("sel"); });
+    elStyle("docForm","none"); elStyle("tenForm","none"); elStyle("tenDetail","none"); elStyle("addDocSection","none");
+  var arw = el("addDocArrow"); if(arw) arw.textContent = "+";
+    var docs = (await dbAll("documents")).filter(function(d){ return d.personId === pid; });
+    // Update saved docs count button
+    var countEl = el("savedDocsCount");
+    if (countEl) countEl.textContent = docs.length > 0 ? docs.length + " document" + (docs.length===1?"":"s") + " saved" : "No documents saved yet";
   } catch(e) { console.error("renderDocs:", e); }
+}
+
+function toggleAddDocSection() {
+  var sec = el("addDocSection");
+  if (!sec) return;
+  var open = sec.style.display !== "none";
+  sec.style.display = open ? "none" : "";
+  var arrow = el("addDocArrow");
+  if (arrow) arrow.textContent = open ? "+" : "x";
+  if (open) { cancelDocForm(); }
+}
+
+function cancelDocForm() {
+  selDocT = null;
+  document.querySelectorAll(".dtbtn").forEach(function(b){ b.classList.remove("sel"); });
+  elStyle("docForm","none"); elStyle("tenForm","none");
+  var ci = el("chequeInputs"); if (ci) ci.innerHTML = "";
+}
+
+// Open saved docs overlay and render list
+async function openSavedDocsOverlay() {
+  var pid = el("personSel").value; if (!pid) return;
+  await renderSavedDocsList(pid);
+  openOv("ov-saved-docs");
+}
+function closeSavedDocs() {
+  document.querySelectorAll(".ov").forEach(function(o){ o.classList.remove("open"); });
+  el("ov-docs").classList.add("open");
+}
+async function renderSavedDocsList(pid) {
+  var container = el("savedDocsList"); if (!container) return;
+  var docs = (await dbAll("documents")).filter(function(d){ return d.personId === pid; });
+  if (!docs.length) { container.innerHTML = "<div class='empty'>No documents saved yet for this person.</div>"; return; }
+  var today = new Date();
+  var tenancies = docs.filter(function(d){ return d.type==="tenancy"; });
+  var otherDocs = docs.filter(function(d){ return d.type!=="tenancy"; });
+  var tenHTML = tenancies.map(function(d) {
+    var exp  = d.endDate ? new Date(d.endDate+"T00:00:00") : null;
+    var days = exp ? Math.round((exp-today)/86400000) : null;
+    var soon = days !== null && days < 30;
+    return '<div class="doccard" style="cursor:pointer;border-left:3px solid var(--dbt);" data-id="'+d.id+'" data-type="tenancy">'
+      + '<div class="dctop"><div>'
+      + '<div class="dctag" style="color:var(--dbt);">🏠 Tenancy Contract</div>'
+      + '<div class="dcnum">'+(d.contractNo||"—")+'</div>'
+      + '<div class="dcexp">Landlord: '+(d.landlord||"—")+'</div>'
+      + '<div class="dcexp">'+(d.startDate||"")+(d.endDate?" to "+d.endDate:"")+'</div>'
+      + (soon?'<div class="dcexp soon">Expires in '+days+' days</div>':"")
+      + (d.fileData?'<div class="dcexp" style="color:var(--pri);">📎 File attached</div>':"")
+      + '</div><div style="color:var(--muted);font-size:18px;">›</div></div></div>';
+  }).join("");
+  var docIcons = { govt_id:"🪪", visa:"🛂", passport:"📘", driving:"🚗", other:"📁" };
+  var otherHTML = otherDocs.map(function(d) {
+    var exp  = d.expiry ? new Date(d.expiry+"T00:00:00") : null;
+    var days = exp ? Math.round((exp-today)/86400000) : null;
+    var soon = days !== null && days < 90;
+    var icon = docIcons[d.type] || "📄";
+    return '<div class="doccard" style="cursor:pointer;" data-id="'+d.id+'" data-type="doc">'
+      + '<div class="dctop"><div>'
+      + '<div class="dctag">'+icon+' '+(DOC_LABELS[d.type]||d.type)+(d.docName?" — "+d.docName:"")+'</div>'
+      + '<div class="dcnum">'+(d.docNum||"—")+'</div>'
+      + (d.expiry?('<div class="dcexp'+(soon?' soon':'')+'">')+(soon?"Expires "+d.expiry+" ("+days+" days)":"Expires "+d.expiry)+('</div>'):"" )
+      + (d.issuedBy?'<div class="dcexp">Issued by: '+d.issuedBy+'</div>':"")
+      + (d.fileData?'<div class="dcexp" style="color:var(--pri);">📎 File attached</div>':"")
+      + '</div><div style="color:var(--muted);font-size:18px;">›</div></div></div>';
+  }).join("");
+  container.innerHTML = tenHTML + otherHTML;
+  container.querySelectorAll("[data-type='tenancy']").forEach(function(card) {
+    card.addEventListener("click", function() { openTenancyActionMenu(this.dataset.id); });
+  });
+  container.querySelectorAll("[data-type='doc']").forEach(function(card) {
+    card.addEventListener("click", function() { openDocActionMenu(this.dataset.id); });
+  });
 }
 
 function cancelDocForm() {
@@ -2558,7 +2766,7 @@ function confirmDelDocEntry(id, label) {
   var btns = el("docActionButtons");
   btns.innerHTML = "<p style='text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;'>Delete <b style='color:var(--ink);'>"+label+"</b>?<br><span style='font-size:11px;'>This cannot be undone.</span></p>";
   function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
-  btns.appendChild(mkB("btn me","Delete Document",async function(){try{await dbDel("documents",id); document.querySelectorAll(".ov").forEach(function(o){o.classList.remove("open");}); el("ov-docs").classList.add("open"); renderDocs();}catch(e){console.error(e);}}));
+  btns.appendChild(mkB("btn me","Delete Document",async function(){try{await dbDel("documents",id); document.querySelectorAll(".ov").forEach(function(o){o.classList.remove("open");}); el("ov-docs").classList.add("open"); await renderDocs(); await renderSavedDocsList(el("personSel").value);}catch(e){console.error(e);}}));
   btns.appendChild(mkB("btn ghost","Cancel",function(){closeAll();}));
   el("docActionTitle").textContent = "Delete Document";
 }
@@ -2601,7 +2809,7 @@ function confirmDelTenancyEntry(id, label) {
   var btns = el("tenActionButtons");
   btns.innerHTML = "<p style='text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;'>Delete contract <b style='color:var(--ink);'>"+label+"</b>?</p>";
   function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
-  btns.appendChild(mkB("btn me","Delete Contract",async function(){try{await dbDel("documents",id); document.querySelectorAll(".ov").forEach(function(o){o.classList.remove("open");}); el("ov-docs").classList.add("open"); renderDocs();}catch(e){console.error(e);}}));
+  btns.appendChild(mkB("btn me","Delete Contract",async function(){try{await dbDel("documents",id); document.querySelectorAll(".ov").forEach(function(o){o.classList.remove("open");}); el("ov-docs").classList.add("open"); await renderDocs(); await renderSavedDocsList(el("personSel").value);}catch(e){console.error(e);}}));
   btns.appendChild(mkB("btn ghost","Cancel",function(){closeAll();}));
   el("tenActionTitle").textContent = "Delete Contract";
 }
@@ -2653,7 +2861,7 @@ async function saveTenancy() {
     await dbPut("documents", doc);
     ["tcContract","tcStart","tcEnd","tcLandlord","tcRent","tcNumCh"].forEach(function(id){el(id).value="";});
     el("chequeInputs").innerHTML = ""; el("tcFile").value = "";
-    cancelDocForm(); renderDocs();
+    cancelDocForm(); await renderDocs(); await renderSavedDocsList(el('personSel').value);
   } catch(e) { console.error("saveTenancy:", e); }
 }
 function selDocType(btn) {
@@ -2667,7 +2875,7 @@ function selDocType(btn) {
   } else {
     elStyle("df-other-name", selDocT==="other" ? "" : "none");
     el("docNumLbl").textContent = DOC_NUMLBL[selDocT] || "Number";
-    ["docNum","docExpiry","docIssued","docName"].forEach(function(id){var e=el(id);if(e)e.value="";});
+    ["docNum","docExpiry","docIssued","docName","docFile"].forEach(function(id){var e=el(id);if(e)e.value="";});
     elStyle("docForm","");
   }
 }
@@ -2679,7 +2887,7 @@ async function saveDoc() {
     var file = el("docFile").files[0];
     if (file) { doc.fileData = await fileToDataURL(file); doc.fileName = file.name; }
     await dbPut("documents", doc);
-    cancelDocForm(); renderDocs();
+    cancelDocForm(); await renderDocs(); await renderSavedDocsList(el('personSel').value);
   } catch(e) { console.error("saveDoc:", e); }
 }
 async function delDoc(id) { if (!confirm("Delete this document?")) return; try { await dbDel("documents",id); renderDocs(); }catch(e){console.error("delDoc:",e);} }
@@ -2775,11 +2983,13 @@ async function checkMonthRollover() {
 var activePayTab = "bills";
 function switchPayTab(tab) {
   activePayTab = tab;
-  ["bills","cheques"].forEach(function(t) {
+  ["bills","cheques","others"].forEach(function(t) {
     elStyle("paySection-"+t, t===tab?"":"none");
     var tb = el("payTab-"+t); if (tb) tb.classList.toggle("active",t===tab);
   });
-  if (tab==="bills") renderBills(); else renderCheques();
+  if (tab==="bills") renderBills();
+  else if (tab==="cheques") renderCheques();
+  else if (tab==="others") renderOtherPays();
 }
 function togglePayForm(id) { var e=el(id); if(e) e.style.display = e.style.display==="none"?"":"none"; }
 function toggleCustomBill() { el("customBillRow").style.display = el("billCat").value==="custom"?"":"none"; }
@@ -2935,6 +3145,94 @@ function hideSplash() {
   var s=el("splash"); if(s){s.classList.add("hide");setTimeout(function(){s.remove();},700);}
 }
 
+
+// ── OTHER PAYMENTS ────────────────────────────────────────────────
+async function saveOtherPay() {
+  try {
+    var name = el("otherPayName").value.trim();
+    var dueDate = el("otherPayDate").value;
+    if (!name || !dueDate) { alert("Please enter payment name and date."); return; }
+    await dbPut("otherpays", {
+      id: mkid(),
+      name: name,
+      dueDate: dueDate,
+      amount: parseFloat(el("otherPayAmt").value)||0,
+      notes: el("otherPayNotes").value.trim(),
+      recurring: el("otherPayRecurring").checked,
+      paid: false,
+      carriedForwardFrom: null,
+      ts: Date.now()
+    });
+    ["otherPayName","otherPayDate","otherPayAmt","otherPayNotes"].forEach(function(id){var e=el(id);if(e)e.value="";});
+    el("otherPayRecurring").checked = false;
+    togglePayForm("other-form");
+    renderOtherPays();
+  } catch(e) { console.error("saveOtherPay:",e); }
+}
+
+async function toggleOtherPayPaid(id) {
+  try { var p=await dbGet("otherpays",id); if(!p)return; p.paid=!p.paid; await dbPut("otherpays",p); renderOtherPays(); } catch(e){console.error(e);}
+}
+async function delOtherPay(id) {
+  if(!confirm("Delete this payment?"))return;
+  try { await dbDel("otherpays",id); renderOtherPays(); } catch(e){console.error(e);}
+}
+
+async function renderOtherPays() {
+  try {
+    var mk=curM(), today=new Date(); today.setHours(0,0,0,0);
+    var pays=(await dbAll("otherpays")).filter(function(p){return mKey(p.dueDate)===mk||p.recurring;}).sort(function(a,b){return a.dueDate.localeCompare(b.dueDate);});
+    var container=el("otherPayList"); if(!container)return;
+    if(!pays.length){container.innerHTML="<div class='empty'>No other payments this month.</div>";return;}
+    var html=pays.map(function(p){
+      var due=new Date(p.dueDate+"T00:00:00"), days=Math.round((due-today)/86400000);
+      var soonTxt=days>=0&&days<=3?"<span class='pay-soon'>Due in "+days+" day(s)</span>":days<0?"<span class='pay-soon'>Overdue</span>":"";
+      var ps=p.paid?"opacity:.5;text-decoration:line-through;":"";
+      var rb=p.recurring?"<span style='font-size:9px;background:#ede9ff;color:#6366f1;font-weight:800;padding:2px 7px;border-radius:10px;margin-right:4px;'>Monthly</span>":"";
+      var pb=p.paid?"<span style='font-size:9px;background:#edfaf5;color:#00966d;font-weight:800;padding:2px 7px;border-radius:10px;'>Paid</span>":"";
+      var bg=p.paid?"#ffe4e3":"#edfaf5", col=p.paid?"#ff5e57":"#00c48c", lbl=p.paid?"Unpay":"Mark Paid";
+      return "<div class='pay-card'><div class='pay-card-head'><div>"
+        +"<span class='pay-tag'>📋 "+p.name+"</span>"
+        +"<div class='pay-name' style='"+ps+"'>"+p.name+"</div>"
+        +"<div class='pay-meta'>Due: "+due.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})+"</div>"
+        +(p.amount?"<div class='pay-amt'>AED "+fmt(p.amount)+"</div>":"")
+        +(p.notes?"<div class='pay-meta'>"+p.notes+"</div>":"")
+        +soonTxt+"<div style='margin-top:6px;'>"+rb+pb+"</div></div>"
+        +"<div style='display:flex;flex-direction:column;gap:6px;align-items:flex-end;'>"
+        +"<button class='pay-del' data-action='del-op' data-id='"+p.id+"'>x</button>"
+        +"<button data-action='paid-op' data-id='"+p.id+"' style='font-size:10px;padding:5px 10px;border-radius:20px;border:none;font-weight:800;background:"+bg+";color:"+col+";'>"+lbl+"</button>"
+        +"</div></div></div>";
+    }).join("");
+    container.innerHTML=html;
+    container.querySelectorAll("[data-action]").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var action=this.dataset.action,id=this.dataset.id;
+        if(action==="del-op") delOtherPay(id);
+        else if(action==="paid-op") toggleOtherPayPaid(id);
+      });
+    });
+  } catch(e){console.error("renderOtherPays:",e);}
+}
+
+async function carryForwardOtherPays() {
+  try {
+    var mk=curM(), today=new Date();
+    var pad=function(n){return String(n).padStart(2,"0");};
+    var items=await dbAll("otherpays");
+    for(var i=0;i<items.length;i++){
+      var item=items[i];
+      if(!item.recurring||!item.dueDate) continue;
+      if(mKey(item.dueDate)===mk) continue;
+      var already=items.some(function(x){return x.carriedForwardFrom===item.id&&mKey(x.dueDate)===mk;});
+      if(already) continue;
+      var orig=new Date(item.dueDate+"T00:00:00");
+      var lastDay=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
+      var day=Math.min(orig.getDate(),lastDay);
+      var newDate=today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(day);
+      await dbPut("otherpays",Object.assign({},item,{id:mkid(),dueDate:newDate,paid:false,carriedForwardFrom:item.id,ts:Date.now()}));
+    }
+  } catch(e){console.warn("carryForwardOtherPays:",e);}
+}
 // ── INIT ──────────────────────────────────────────────────────────
 el("hdate").textContent = new Date().toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",year:"numeric"});
 initDarkMode();
