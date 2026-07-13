@@ -705,28 +705,56 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
   </div>
 </div>
 
-<!-- OVERLAY: DEBT -->
+<!-- OVERLAY: DEBT (main menu) -->
 <div class="ov" id="ov-debt">
   <div class="sheet">
     <div class="drag-bar"></div>
     <div class="sh2"><h2>💸 Debt Tracker</h2><button class="sclose" onclick="closeAll()">✕</button></div>
-    <!-- Loan list view (default) -->
-    <div id="debtListView">
-      <button class="addbtn" onclick="showDebtForm()">+ Add New Loan</button>
-      <div id="debtList"></div>
-    </div>
-    <!-- Add loan form view (hidden by default) -->
-    <div id="debtForm" style="display:none">
-      <div class="sh2" style="margin-bottom:14px;"><h2>New Loan</h2><button class="sclose" onclick="hideDebtForm()">✕</button></div>
-      <div class="field"><label>Loan Type</label><select id="dType"><option value="mortgage">🏠 Mortgage</option><option value="gold">🪙 Gold Loan</option><option value="personal">👤 Personal Loan</option><option value="car">🚗 Car Loan</option><option value="other">📌 Others</option></select></div>
-      <div class="field"><label>Lender / Bank Name</label><input type="text" id="dLender" placeholder="e.g. Emirates NBD"></div>
-      <div class="two"><div class="field"><label>Total Amount</label><input type="number" inputmode="decimal" id="dTotal" placeholder="0"></div><div class="field"><label>Monthly EMI</label><input type="number" inputmode="decimal" id="dEMI" placeholder="0"></div></div>
-      <div class="two"><div class="field"><label>Rate of Interest (%)</label><input type="number" inputmode="decimal" id="dRate" placeholder="e.g. 5.5"></div><div class="field"><label>Currency</label><select id="dCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div></div>
-      <div class="field"><label>Next EMI Date</label><input type="date" id="dEmiDate"></div>
-      <div class="sacts"><button class="btn ghost" onclick="hideDebtForm()">Cancel</button><button class="btn md" onclick="saveDebt()">Add Loan</button></div>
-    </div>
+
+    <!-- View Loans — large prominent button -->
+    <button onclick="openLoanListOverlay()" style="width:100%;background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(99,102,241,.45);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">View Loans</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Tap to view all saved loans</div>
+      </div>
+      <div style="font-size:28px;">📋</div>
+    </button>
+
+    <!-- Add New Loan — second large button -->
+    <button onclick="showDebtForm()" style="width:100%;background:linear-gradient(135deg,#ff6348,#ff9f43);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(255,99,72,.4);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Add New Loan</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Create a new loan</div>
+      </div>
+      <div style="font-size:28px;">➕</div>
+    </button>
+
   </div>
 </div>
+
+<!-- OVERLAY: VIEW LOANS -->
+<div class="ov" id="ov-debt-list">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📋 View Loans</h2><button class="sclose" onclick="closeLoanList()">✕</button></div>
+    <div id="debtList"></div>
+  </div>
+</div>
+
+<!-- OVERLAY: ADD NEW LOAN -->
+<div class="ov" id="ov-debt-add">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>➕ Add New Loan</h2><button class="sclose" onclick="hideDebtForm()">✕</button></div>
+    <div class="field"><label>Loan Type</label><select id="dType"><option value="mortgage">🏠 Mortgage</option><option value="gold">🪙 Gold Loan</option><option value="personal">👤 Personal Loan</option><option value="car">🚗 Car Loan</option><option value="other">📌 Others</option></select></div>
+    <div class="field"><label>Lender / Bank Name</label><input type="text" id="dLender" placeholder="e.g. Emirates NBD"></div>
+    <div class="two"><div class="field"><label>Total Amount</label><input type="number" inputmode="decimal" id="dTotal" placeholder="0"></div><div class="field"><label>Monthly EMI</label><input type="number" inputmode="decimal" id="dEMI" placeholder="0"></div></div>
+    <div class="two"><div class="field"><label>Rate of Interest (%)</label><input type="number" inputmode="decimal" id="dRate" placeholder="e.g. 5.5"></div><div class="field"><label>Currency</label><select id="dCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div></div>
+    <div class="field"><label>Next EMI Date</label><input type="date" id="dEmiDate"></div>
+    <div class="sacts"><button class="btn ghost" onclick="hideDebtForm()">Cancel</button><button class="btn md" onclick="saveDebt()">Add Loan</button></div>
+  </div>
+</div>
+
 
 <!-- OVERLAY: BANK -->
 <div class="ov" id="ov-bank">
@@ -1146,7 +1174,7 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
     <div class="sh2"><h2>📅 Appointments</h2><button class="sclose" onclick="closeAll()">✕</button></div>
 
     <!-- Saved Appointments — large prominent button -->
-    <button id="savedApptsBtn" onclick="openSavedApptsOverlay()" style="width:100%;background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(99,102,241,.45);cursor:pointer;">
+    <button id="savedApptsBtn" onclick="openSavedApptsOverlay()" style="width:100%;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(239,68,68,.45);cursor:pointer;">
       <div style="text-align:left;">
         <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Saved Appointments</div>
         <div style="font-size:12px;opacity:.85;margin-top:2px;" id="savedApptsCount">Tap to view all appointments</div>
@@ -2343,7 +2371,7 @@ function openOv(id) {
   var target = el(id);
   if (!target) { console.warn("openOv: element not found:", id); return; }
   target.classList.add("open");
-  if (id === "ov-debt") { elStyle("debtForm","none"); elStyle("debtListView",""); renderDebtList(); }
+  if (id === "ov-debt-list") { renderDebtList(); }
   if (id === "ov-bank") { hideBankForm(); renderBankList(); }
   if (id === "ov-docs") { selDocT=null; renderPeople(); renderDocs(); }
   if (id === "ov-appts")      updateApptCount();
@@ -2557,16 +2585,21 @@ async function saveEditDebt() {
   } catch(e) { console.error("saveEditDebt:", e); }
 }
 // ── DEBT ─────────────────────────────────────────────────────────
+function openLoanListOverlay() {
+  openOv("ov-debt-list");
+}
+function closeLoanList() {
+  document.querySelectorAll(".ov").forEach(function(o){ o.classList.remove("open"); });
+  el("ov-debt").classList.add("open");
+}
 function showDebtForm() {
-  elStyle("debtListView", "none");
-  elStyle("debtForm", "");
   el("dLender").value = ""; el("dTotal").value = ""; el("dEMI").value = "";
   el("dRate").value = ""; el("dEmiDate").value = "";
   el("dType").value = "mortgage"; el("dCur").value = "AED";
+  openOv("ov-debt-add");
 }
 function hideDebtForm() {
-  elStyle("debtForm", "none");
-  elStyle("debtListView", "");
+  openOv("ov-debt-list");
 }
 async function saveDebt() {
   try {
@@ -2584,7 +2617,6 @@ async function saveDebt() {
       createdAt: todayStr()
     });
     hideDebtForm();
-    renderDebtList();
   } catch(e) { console.error("saveDebt:", e); }
 }
 async function payEMI(id) {
