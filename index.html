@@ -848,6 +848,7 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
 <div class="ov" id="ov-appt-action">
   <div class="sheet"><div class="drag-bar"></div>
     <div class="sh2"><h2 id="apptActionTitle">Appointment</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="apptActionInfo" style="display:none;background:var(--card);border-radius:var(--r2);padding:14px 15px;margin-bottom:14px;box-shadow:var(--sh2);"></div>
     <div id="apptActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
   </div>
 </div>
@@ -873,7 +874,7 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
     </div>
     <input type="hidden" id="editApptId">
     <div class="sacts">
-      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn ghost" onclick="closeAll();openOv('ov-appt-list')">Cancel</button>
       <button class="btn ma" onclick="saveEditAppt()">Save Changes</button>
     </div>
   </div>
@@ -991,12 +992,47 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
 </div>
 
 
-<!-- OVERLAY: APPOINTMENTS -->
+<!-- OVERLAY: APPOINTMENTS (main menu) -->
 <div class="ov" id="ov-appts">
   <div class="sheet">
     <div class="drag-bar"></div>
     <div class="sh2"><h2>📅 Appointments</h2><button class="sclose" onclick="closeAll()">✕</button></div>
-    <div class="stitle" style="margin-top:0">Add Appointment</div>
+
+    <!-- Saved Appointments — large prominent button -->
+    <button id="savedApptsBtn" onclick="openSavedApptsOverlay()" style="width:100%;background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(99,102,241,.45);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Saved Appointments</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;" id="savedApptsCount">Tap to view all appointments</div>
+      </div>
+      <div style="font-size:28px;">📋</div>
+    </button>
+
+    <!-- Add Appointment — second large button -->
+    <button onclick="openAddApptOverlay()" style="width:100%;background:linear-gradient(135deg,#ff6348,#ff9f43);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(255,99,72,.4);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Add Appointment</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Create a new appointment</div>
+      </div>
+      <div style="font-size:28px;">➕</div>
+    </button>
+
+  </div>
+</div>
+
+<!-- OVERLAY: SAVED APPOINTMENTS -->
+<div class="ov" id="ov-appt-list">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📋 Saved Appointments</h2><button class="sclose" onclick="closeApptList()">✕</button></div>
+    <div id="apptList"></div>
+  </div>
+</div>
+
+<!-- OVERLAY: ADD APPOINTMENT -->
+<div class="ov" id="ov-appt-add">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>➕ Add Appointment</h2><button class="sclose" onclick="closeApptAdd()">✕</button></div>
     <div class="atype-row" id="apptTypes">
       <button class="atbtn sel" data-at="doctor" onclick="selAT(this)">🩺 Doctor</button>
       <button class="atbtn" data-at="service" onclick="selAT(this)">🔧 Service</button>
@@ -1014,8 +1050,6 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
       <div><div style="font-weight:700;font-size:13.5px;">Repeat monthly</div><div style="font-size:11px;color:var(--muted);">Auto-carry forward each month</div></div>
     </div>
     <button class="addbtn" onclick="saveAppt()">+ Save Appointment</button>
-    <div class="stitle">Upcoming &amp; Recent</div>
-    <div id="apptList"></div>
   </div>
 </div>
 
@@ -1646,7 +1680,6 @@ function renderList(id, items, kind) {
       + '<div class="eicon' + (isInc ? " big" : "") + '" style="background:' + bg + '">' + c.icon + '</div>'
       + '<div class="emeta"><div class="ecat">' + c.label + '</div><div class="enote">' + note + '</div></div>'
       + '<div class="eamt ' + amtCls + '">' + amt + '</div>'
-      + '<div style="color:var(--muted);font-size:18px;padding-left:4px;">›</div>'
       + '</li>';
   }).join("");
   container.innerHTML = html;
@@ -1674,7 +1707,6 @@ function renderSavList(id, items) {
       + '<div class="eicon" style="background:var(--sav-s)">' + t.icon + '</div>'
       + '<div class="emeta"><div class="ecat">' + t.label + '</div><div class="enote">' + sub + '</div></div>'
       + '<div class="eamt sav">+' + fmt(e.amount || e.totalVal || 0) + '</div>'
-      + '<div style="color:var(--muted);font-size:18px;padding-left:4px;">›</div>'
       + '</li>';
   }).join("");
   container.innerHTML = html;
@@ -1700,7 +1732,7 @@ async function renderWithdrawalInOverlay() {
         + "<div class='eicon' style='background:#fff0ef'>" + icon + "</div>"
         + "<div class='emeta'><div class='ecat'>" + label + "</div><div class='enote'>" + note + "</div></div>"
         + "<div class='eamt exp'>-" + fmt(w.amount) + "</div>"
-        + "<div style='color:var(--muted);font-size:18px;padding-left:4px;'>›</div>"
+        
         + "</li>";
     }).join("");
     wdContainer.innerHTML = "<ul class='elist'>" + html + "</ul>";
@@ -1726,15 +1758,14 @@ function renderWithdrawalList(wds) {
       + '<div class="eicon" style="background:#fff0ef">' + icon + '</div>'
       + '<div class="emeta"><div class="ecat">' + label + '</div><div class="enote">' + note + '</div></div>'
       + '<div class="eamt exp">-' + fmt(w.amount) + '</div>'
-      + '<div style="color:var(--muted);font-size:18px;padding-left:4px;">›</div>'
       + '</li>';
   }).join("");
   container.innerHTML = html;
-  container.querySelectorAll("li[data-id]").forEach(function(row) {
-    row.addEventListener("click", function() {
-      openWithdrawalActionMenu(this.dataset.id, this.dataset.label);
-    });
-  });
+  container.onclick = function(e) {
+    var row = e.target.closest("li[data-id]");
+    if (!row) return;
+    openWithdrawalActionMenu(row.dataset.id, row.dataset.label);
+  };
 }
 async function delItem(kind, id) {
   try {
@@ -1862,12 +1893,12 @@ async function renderSavingsGrouped() {
         + '</div>';
     }).join("");
     container.innerHTML = html;
-    // Wire up tap events
-    container.querySelectorAll("li[data-id]").forEach(function(row) {
-      row.addEventListener("click", function() {
-        openSavingsActionMenu(this.dataset.id, this.dataset.label);
-      });
-    });
+    // Wire up tap events via delegation
+    container.onclick = function(e) {
+      var row = e.target.closest("li[data-id]");
+      if (!row) return;
+      openSavingsActionMenu(row.dataset.id, row.dataset.label);
+    };
   } catch(e) { console.error("renderSavingsGrouped:", e); }
 }
 // ── SAVINGS ACTION MENU ──────────────────────────────────────────
@@ -2168,7 +2199,8 @@ function openOv(id) {
   if (id === "ov-debt") { elStyle("debtForm","none"); elStyle("debtListView",""); renderDebtList(); }
   if (id === "ov-bank") { hideBankForm(); renderBankList(); }
   if (id === "ov-docs") { selDocT=null; renderPeople(); renderDocs(); }
-  if (id === "ov-appts")      renderAppts();
+  if (id === "ov-appts")      updateApptCount();
+  if (id === "ov-appt-list")  renderAppts();
   if (id === "ov-savings")    { selSavType = "cash"; initSavingsOv(); }
   if (id === "ov-withdraw")   { renderWithdrawalInOverlay(); }
   if (id === "ov-payschedule"){ Promise.all([carryForwardPayments(),carryForwardOtherPays()]).then(function(){renderBills();renderCheques();renderOtherPays();}); }
@@ -2455,7 +2487,7 @@ async function renderDebtList() {
       var mLeft = rem > 0 ? Math.ceil(rem/(d.emi||1)) : 0;
       return '<div class="dcard" style="cursor:pointer;" data-id="' + d.id + '">'
         + '<div class="dhead"><div><div class="dtype">' + (DEBT_LABELS[d.type]||d.type) + '</div><div class="dname">' + d.lender + '</div></div>'
-        + '<div style="color:var(--muted);font-size:18px;">›</div></div>'
+        + '</div>'
         + (d.rate ? '<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:2px;">' + d.rate + '% p.a.</div>' : '')
         + '<div style="display:flex;justify-content:space-between;margin:10px 0 6px;">'
         + '<div style="text-align:center;"><div style="font-size:9px;text-transform:uppercase;color:var(--muted);font-weight:700;">Original</div><div style="font-weight:800;font-size:13px;">' + d.currency + ' ' + fmt(d.total) + '</div></div>'
@@ -2468,9 +2500,11 @@ async function renderDebtList() {
         + '</div>';
     }).join("");
     container.innerHTML = html;
-    container.querySelectorAll(".dcard[data-id]").forEach(function(card) {
-      card.addEventListener("click", function() { openDebtActionMenu(this.dataset.id); });
-    });
+    container.onclick = function(e) {
+      var card = e.target.closest(".dcard[data-id]");
+      if (!card) return;
+      openDebtActionMenu(card.dataset.id);
+    };
   } catch(e) { console.error("renderDebtList:", e); }
 }
 
@@ -2571,15 +2605,15 @@ async function renderBankList() {
       return '<div class="bkcard2" style="cursor:pointer;" data-action="bank-menu" data-id="' + b.id + '" data-name="' + b.name + '">'
         + '<div class="bico">🏦</div>'
         + '<div class="binfo"><div class="bname2">' + b.name + '</div><div class="bacc">Acc: ' + b.accNo + '</div><div class="bbal">' + b.currency + ' ' + fmt(b.balance) + '</div></div>'
-        + '<div style="color:var(--muted);font-size:20px;padding-right:2px;">›</div>'
+        + ''
         + '</div>';
     }).join("");
     container.innerHTML = html;
-    container.querySelectorAll("[data-action='bank-menu']").forEach(function(card) {
-      card.addEventListener("click", function() {
-        openBankActionMenu(this.dataset.id, this.dataset.name);
-      });
-    });
+    container.onclick = function(e) {
+      var card = e.target.closest("[data-action='bank-menu']");
+      if (!card) return;
+      openBankActionMenu(card.dataset.id, card.dataset.name);
+    };
   } catch(e) { console.error("renderBankList:", e); }
 }
 
@@ -2942,6 +2976,114 @@ async function renderAppts() {
     });
   } catch(e) { console.error("renderAppts:", e); }
 }
+// ── APPOINTMENTS: MENU NAVIGATION ─────────────────────────────────
+async function updateApptCount() {
+  try {
+    var appts = await dbAll("appointments");
+    var countEl = el("savedApptsCount");
+    if (countEl) countEl.textContent = appts.length > 0 ? appts.length + " appointment" + (appts.length===1?"":"s") + " saved" : "No appointments saved yet";
+  } catch(e) { console.error("updateApptCount:", e); }
+}
+async function openSavedApptsOverlay() {
+  await renderAppts();
+  openOv("ov-appt-list");
+}
+function closeApptList() {
+  document.querySelectorAll(".ov").forEach(function(o){ o.classList.remove("open"); });
+  el("ov-appts").classList.add("open");
+  updateApptCount();
+}
+function openAddApptOverlay() {
+  openOv("ov-appt-add");
+}
+function closeApptAdd() {
+  document.querySelectorAll(".ov").forEach(function(o){ o.classList.remove("open"); });
+  el("ov-appts").classList.add("open");
+  updateApptCount();
+}
+
+// ── APPOINTMENT ACTION MENU (view details / edit / delete) ────────
+async function openApptActionMenu(id, title) {
+  try {
+    var a = await dbGet("appointments", id); if (!a) return;
+    var d = new Date(a.datetime);
+    var dt = d.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"}) + " at " + d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});
+    var typeLabel = {doctor:"🩺 Doctor",service:"🔧 Service",spa:"💆 Spa",other:"📋 Others"}[a.type] || a.type;
+    var info = el("apptActionInfo");
+    if (info) {
+      info.style.display = "";
+      info.innerHTML = '<div class="dctag">'+typeLabel+'</div>'
+        + '<div class="dcnum">'+a.title+'</div>'
+        + '<div class="dcexp">'+dt+'</div>'
+        + (a.type==="service"&&(a.car||a.svcType) ? '<div class="dcexp">'+(a.car||"")+(a.car&&a.svcType?" · ":"")+(a.svcType||"")+'</div>' : "")
+        + (a.notes ? '<div class="dcexp">Notes: '+a.notes+'</div>' : "")
+        + (a.recurring && !a.carriedForwardFrom ? '<div class="dcexp">🔁 Repeats monthly</div>' : "");
+    }
+    var btns = el("apptActionButtons"); btns.innerHTML = "";
+    function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
+    btns.appendChild(mkB("btn mb","Edit Appointment",function(){ openEditAppt(id); }));
+    btns.appendChild(mkB("btn me","Delete Appointment",function(){ confirmDelAppt(id, a.title); }));
+    btns.appendChild(mkB("btn ghost","Cancel",function(){ closeAll(); openOv("ov-appt-list"); }));
+    el("apptActionTitle").textContent = a.title;
+    openOv("ov-appt-action");
+  } catch(e) { console.error("openApptActionMenu:", e); }
+}
+function confirmDelAppt(id, title) {
+  var info = el("apptActionInfo"); if (info) info.style.display = "none";
+  var btns = el("apptActionButtons"); btns.innerHTML = "";
+  var msg = document.createElement("p");
+  msg.style.cssText = "text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px;";
+  msg.innerHTML = 'Delete <b style="color:var(--ink);">'+title+'</b>?<br><span style="font-size:11px;">This cannot be undone.</span>';
+  function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
+  var delBtn = mkB("btn me","Delete Appointment", async function(){ await delAppt(id); closeAll(); openOv("ov-appt-list"); });
+  var cancelBtn = mkB("btn ghost","Cancel", function(){ openApptActionMenu(id, title); });
+  btns.appendChild(msg); btns.appendChild(delBtn); btns.appendChild(cancelBtn);
+  el("apptActionTitle").textContent = "Delete Appointment";
+}
+
+// ── APPOINTMENT EDIT ────────────────────────────────────────────
+var selEditAType = "doctor";
+function selEditAT(btn) {
+  selEditAType = btn.dataset.at;
+  document.querySelectorAll("#editApptTypes .atbtn").forEach(function(b){b.classList.remove("sel");}); btn.classList.add("sel");
+  elStyle("edit-af-service", selEditAType==="service" ? "" : "none");
+}
+async function openEditAppt(id) {
+  try {
+    var a = await dbGet("appointments", id); if (!a) return;
+    el("editApptId").value = a.id;
+    el("editApptTitle").value = a.title;
+    el("editApptDT").value = a.datetime;
+    el("editApptNotes").value = a.notes || "";
+    el("editApptRecurring").checked = !!a.recurring;
+    el("editSvcCar").value = a.car || "";
+    el("editSvcType").value = a.svcType || "";
+    selEditAType = a.type || "doctor";
+    document.querySelectorAll("#editApptTypes .atbtn").forEach(function(b){ b.classList.toggle("sel", b.dataset.at===selEditAType); });
+    elStyle("edit-af-service", selEditAType==="service" ? "" : "none");
+    closeAll();
+    openOv("ov-appt-edit");
+  } catch(e) { console.error("openEditAppt:", e); }
+}
+async function saveEditAppt() {
+  try {
+    var id = el("editApptId").value;
+    var title = el("editApptTitle").value.trim(), dt = el("editApptDT").value;
+    if (!title||!dt) { alert("Please enter title and date/time."); return; }
+    var a = await dbGet("appointments", id); if (!a) return;
+    a.type = selEditAType;
+    a.title = title;
+    a.datetime = dt;
+    a.notes = el("editApptNotes").value.trim();
+    a.recurring = el("editApptRecurring").checked;
+    if (selEditAType === "service") { a.car = el("editSvcCar").value.trim(); a.svcType = el("editSvcType").value.trim(); }
+    else { a.car = ""; a.svcType = ""; }
+    await dbPut("appointments", a);
+    closeAll();
+    openOv("ov-appt-list");
+  } catch(e) { console.error("saveEditAppt:", e); }
+}
+
 async function checkAppointmentCarryForward() {
   try {
     var appts = await dbAll("appointments"), now = new Date();
@@ -3027,13 +3169,12 @@ async function renderBills() {
       return '<div class="pay-card"><div class="pay-card-head"><div><span class="pay-tag">'+info.icon+" "+label+'</span><div class="pay-name" style="'+ps+'">'+label+'</div><div class="pay-meta">Due: '+due.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})+'</div>'+(b.amount?'<div class="pay-amt">AED '+fmt(b.amount)+'</div>':"")+(b.notes?'<div class="pay-meta">'+b.notes+'</div>':"")+soonTxt+'<div style="margin-top:6px;">'+rb+pb+'</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;"><button class="pay-del" data-action="del-bill" data-id="'+b.id+'">x</button><button data-action="paid-bill" data-id="'+b.id+'" style="font-size:10px;padding:5px 10px;border-radius:20px;border:none;font-weight:800;background:'+bg+';color:'+col+';">'+lbl+'</button></div></div></div>';
     }).join("");
     container.innerHTML=html;
-    container.querySelectorAll("[data-action]").forEach(function(btn){
-      btn.addEventListener("click",function(){
-        var action=this.dataset.action,id=this.dataset.id;
-        if(action==="info-bill") openBillActionMenu(id, this.dataset.label);
-        else if(action==="paid-bill") toggleBillPaid(id);
-      });
-    });
+    container.onclick = function(e) {
+      var btn = e.target.closest("[data-action]"); if(!btn) return;
+      var action=btn.dataset.action, id=btn.dataset.id;
+      if(action==="info-bill") openBillActionMenu(id, btn.dataset.label);
+      else if(action==="paid-bill") toggleBillPaid(id);
+    };
   } catch(e){console.error("renderBills:",e);}
 }
 
@@ -3065,13 +3206,12 @@ async function renderCheques() {
       return '<div class="pay-card"><div class="pay-card-head"><div><span class="pay-tag">Cheque</span><div class="pay-name" style="'+ps+'">'+c.payee+'</div><div class="pay-meta">Cheque #'+(c.num||"-")+" · "+(c.bank||"")+'</div><div class="pay-meta">Due: '+due.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})+'</div>'+(c.amount?'<div class="pay-amt">AED '+fmt(c.amount)+'</div>':"")+soonTxt+'<div style="margin-top:6px;">'+rb+pb+'</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;"><button class="pay-del" data-action="del-cheque" data-id="'+c.id+'">x</button><button data-action="paid-cheque" data-id="'+c.id+'" style="font-size:10px;padding:5px 10px;border-radius:20px;border:none;font-weight:800;background:'+bg+';color:'+col+';">'+lbl+'</button></div></div></div>';
     }).join("");
     container.innerHTML=html;
-    container.querySelectorAll("[data-action]").forEach(function(btn){
-      btn.addEventListener("click",function(){
-        var action=this.dataset.action,id=this.dataset.id;
-        if(action==="info-cheque") openChequeActionMenu(id, this.dataset.payee);
-        else if(action==="paid-cheque") toggleChequePaid(id);
-      });
-    });
+    container.onclick = function(e) {
+      var btn = e.target.closest("[data-action]"); if(!btn) return;
+      var action=btn.dataset.action, id=btn.dataset.id;
+      if(action==="info-cheque") openChequeActionMenu(id, btn.dataset.payee);
+      else if(action==="paid-cheque") toggleChequePaid(id);
+    };
   } catch(e){console.error("renderCheques:",e);}
 }
 
@@ -3204,13 +3344,12 @@ async function renderOtherPays() {
         +"</div></div></div>";
     }).join("");
     container.innerHTML=html;
-    container.querySelectorAll("[data-action]").forEach(function(btn){
-      btn.addEventListener("click",function(){
-        var action=this.dataset.action,id=this.dataset.id;
-        if(action==="del-op") delOtherPay(id);
-        else if(action==="paid-op") toggleOtherPayPaid(id);
-      });
-    });
+    container.onclick = function(e) {
+      var btn = e.target.closest("[data-action]"); if(!btn) return;
+      var action=btn.dataset.action, id=btn.dataset.id;
+      if(action==="del-op") delOtherPay(id);
+      else if(action==="paid-op") toggleOtherPayPaid(id);
+    };
   } catch(e){console.error("renderOtherPays:",e);}
 }
 
