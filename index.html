@@ -844,6 +844,153 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
 </div>
 
 
+<!-- EXPENSE ACTION SHEET -->
+<div class="ov" id="ov-expense-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="expenseActionTitle">Expense</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="expenseActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- EXPENSE EDIT SHEET -->
+<div class="ov" id="ov-expense-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Expense</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editExpAmt" placeholder="0"></div>
+    <div class="field">
+      <label>Category</label>
+      <div class="cgrid" id="editExpCatGrid"></div>
+      <div class="subcats" id="editExpSubCats"><div class="sublbl" id="editExpSubLbl"></div><div class="cgrid five" id="editExpSubGrid"></div></div>
+    </div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="editExpNote" placeholder="Add a note"></div>
+    <div class="field"><label>Date</label><input type="date" id="editExpDate"></div>
+    <input type="hidden" id="editExpId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn me" onclick="saveEditExpense()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- INCOME ACTION SHEET -->
+<div class="ov" id="ov-income-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="incomeActionTitle">Income</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="incomeActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- INCOME EDIT SHEET -->
+<div class="ov" id="ov-income-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Income</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editIncAmt" placeholder="0"></div>
+    <div class="field"><label>Source</label><div class="cgrid" id="editIncCatGrid"></div></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="editIncNote" placeholder="Add a note"></div>
+    <div class="field"><label>Date</label><input type="date" id="editIncDate"></div>
+    <input type="hidden" id="editIncId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn mi" onclick="saveEditIncome()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- SAVINGS ACTION SHEET -->
+<div class="ov" id="ov-savings-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="savingsActionTitle">Savings</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="savingsActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- SAVINGS EDIT SHEET -->
+<div class="ov" id="ov-savings-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Savings</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Type</label><div class="cgrid" id="editSavTypeGrid"></div></div>
+    <div id="edit-sf-cash" class="edit-sav-form sav-form" style="display:none">
+      <div class="two"><div class="field"><label>Currency</label><select id="editCashCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div><div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editCashAmt" placeholder="0"></div></div>
+    </div>
+    <div id="edit-sf-mf" class="edit-sav-form sav-form" style="display:none">
+      <div class="field"><label>Fund Name</label><input type="text" id="editMfFund" placeholder="e.g. Axis Bluechip Fund"></div>
+      <div class="field"><label>Amount Invested</label><input type="number" inputmode="decimal" id="editMfAmt" placeholder="0"></div>
+    </div>
+    <div id="edit-sf-shares" class="edit-sav-form sav-form" style="display:none">
+      <div class="field"><label>Company Name</label><input type="text" id="editShComp" placeholder="e.g. Reliance Industries"></div>
+      <div class="two"><div class="field"><label>No of Shares</label><input type="number" inputmode="decimal" id="editShNum" placeholder="0"></div><div class="field"><label>Purchase Value</label><input type="number" inputmode="decimal" id="editShVal" placeholder="per share"></div></div>
+    </div>
+    <div id="edit-sf-gold" class="edit-sav-form sav-form" style="display:none">
+      <div class="two"><div class="field"><label>Quantity (grams)</label><input type="number" inputmode="decimal" id="editGoldGrams" placeholder="0"></div><div class="field"><label>Amount Paid</label><input type="number" inputmode="decimal" id="editGoldAmt" placeholder="0"></div></div>
+    </div>
+    <div id="edit-sf-fd" class="edit-sav-form sav-form" style="display:none">
+      <div class="field"><label>Bank Name</label><input type="text" id="editFdBank" placeholder="e.g. Emirates NBD"></div>
+      <div class="three"><div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editFdAmt" placeholder="0"></div><div class="field"><label>Currency</label><select id="editFdCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div><div class="field"><label>Interest %</label><input type="number" inputmode="decimal" id="editFdRate" placeholder="0"></div></div>
+    </div>
+    <div id="edit-sf-other" class="edit-sav-form sav-form" style="display:none">
+      <div class="field"><label>Description</label><input type="text" id="editSavDesc" placeholder="Describe this saving"></div>
+      <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editSavOtherAmt" placeholder="0"></div>
+    </div>
+    <div class="field"><label>Date</label><input type="date" id="editSavDate"></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="editSavNote" placeholder=""></div>
+    <input type="hidden" id="editSavId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn ms" onclick="saveEditSavings()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- WITHDRAWAL ACTION SHEET -->
+<div class="ov" id="ov-withdrawal-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="wdActionTitle">Withdrawal</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="wdActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- WITHDRAWAL EDIT SHEET -->
+<div class="ov" id="ov-withdrawal-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Withdrawal</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editWdAmt" placeholder="0"></div>
+    <div class="field"><label>Type</label>
+      <select id="editWdType">
+        <option value="withdrawal">Withdrawal (taken out)</option>
+        <option value="adjustment">Manual Adjustment</option>
+      </select>
+    </div>
+    <div class="field"><label>Savings Type</label>
+      <select id="editWdCat">
+        <option value="cash">Cash</option><option value="mf">Mutual Funds</option>
+        <option value="shares">Shares</option><option value="gold">Gold</option>
+        <option value="fd">Fixed Deposit</option><option value="other">Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Date</label><input type="date" id="editWdDate"></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="editWdNote" placeholder="e.g. Emergency withdrawal"></div>
+    <input type="hidden" id="editWdId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn" style="background:linear-gradient(135deg,#e17055,#d63031);color:#fff;" onclick="saveEditWithdrawal()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- BANK ACTION SHEET -->
+<div class="ov" id="ov-bank-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="bankActionTitle">Bank Account</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="bankActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- BANK EDIT SHEET -->
+<div class="ov" id="ov-bank-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Bank</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Bank Name</label><input type="text" id="editBnName" placeholder="e.g. Emirates NBD"></div>
+    <div class="field"><label>Account Number</label><input type="text" id="editBnAcc" placeholder="e.g. 1234 5678 9012"></div>
+    <div class="two"><div class="field"><label>Balance</label><input type="number" inputmode="decimal" id="editBnBal" placeholder="0"></div><div class="field"><label>Currency</label><select id="editBnCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></div></div>
+    <input type="hidden" id="editBnId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll();openOv('ov-bank')">Cancel</button>
+      <button class="btn mb" onclick="saveEditBank()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- APPOINTMENT ACTION SHEET -->
 <div class="ov" id="ov-appt-action">
   <div class="sheet"><div class="drag-bar"></div>
