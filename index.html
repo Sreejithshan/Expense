@@ -746,9 +746,9 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
   <div class="sheet">
     <div class="drag-bar"></div>
     <div class="sh2"><h2>➕ Add Loan</h2><button class="sclose" onclick="hideDebtForm()">✕</button></div>
-    <div class="field"><label>Loan Type</label><select id="dType" onchange="toggleLoanTypeFields()"><option value="mortgage">🏠 Mortgage</option><option value="gold">🪙 Gold Loan</option><option value="personal">👤 Personal Loan</option><option value="car">🚗 Car Loan</option><option value="other">📌 Others</option></select></div>
+    <div class="field"><label>Loan Type</label><select id="dType"><option value="mortgage">🏠 Mortgage</option><option value="gold">🪙 Gold Loan</option><option value="personal">👤 Personal Loan</option><option value="car">🚗 Car Loan</option><option value="other">📌 Others</option></select></div>
     <div class="field"><label>Lender / Bank Name</label><input type="text" id="dLender" placeholder="e.g. Emirates NBD"></div>
-    <div class="two"><div class="field"><label>Total Amount</label><input type="number" inputmode="decimal" id="dTotal" placeholder="0"></div><div class="field"><div id="dEmiField"><label>Monthly EMI</label><input type="number" inputmode="decimal" id="dEMI" placeholder="0"></div><div id="dDueDateField" style="display:none"><label>Due Date</label><input type="date" id="dDueDate"></div></div></div>
+    <div class="two"><div class="field"><label>Total Amount</label><input type="number" inputmode="decimal" id="dTotal" placeholder="0"></div><div class="field"><label>Monthly EMI</label><input type="number" inputmode="decimal" id="dEMI" placeholder="0"></div></div>
     <div class="two"><div class="field"><label>Rate of Interest (%)</label><input type="number" inputmode="decimal" id="dRate" placeholder="e.g. 5.5"></div><div class="field"><label>Currency</label><select id="dCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div></div>
     <div class="field"><label>Next EMI Date</label><input type="date" id="dEmiDate"></div>
     <div class="sacts"><button class="btn ghost" onclick="hideDebtForm()">Cancel</button><button class="btn md" onclick="saveDebt()">Add Loan</button></div>
@@ -2664,16 +2664,10 @@ function closeLoanList() {
   document.querySelectorAll(".ov").forEach(function(o){ o.classList.remove("open"); });
   el("ov-debt").classList.add("open");
 }
-function toggleLoanTypeFields() {
-  var isPersonal = el("dType").value === "personal";
-  elStyle("dEmiField", isPersonal ? "none" : "");
-  elStyle("dDueDateField", isPersonal ? "" : "none");
-}
 function showDebtForm() {
-  el("dLender").value = ""; el("dTotal").value = ""; el("dEMI").value = ""; el("dDueDate").value = "";
+  el("dLender").value = ""; el("dTotal").value = ""; el("dEMI").value = "";
   el("dRate").value = ""; el("dEmiDate").value = "";
   el("dType").value = "mortgage"; el("dCur").value = "AED";
-  toggleLoanTypeFields();
   openOv("ov-debt-add");
 }
 function hideDebtForm() {
@@ -2681,19 +2675,14 @@ function hideDebtForm() {
 }
 async function saveDebt() {
   try {
-    var type = el("dType").value, isPersonal = type === "personal";
-    var total = parseFloat(el("dTotal").value);
-    var emi = isPersonal ? 0 : parseFloat(el("dEMI").value);
-    var dueDate = isPersonal ? el("dDueDate").value : "";
-    if (!isPersonal && (!total || !emi)) { alert("Please fill in total amount and EMI."); return; }
-    if (isPersonal && (!total || !dueDate)) { alert("Please fill in total amount and due date."); return; }
+    var total = parseFloat(el("dTotal").value), emi = parseFloat(el("dEMI").value);
+    if (!total || !emi) { alert("Please fill in total amount and EMI."); return; }
     await dbPut("debts", {
       id: mkid(),
-      type: type,
+      type: el("dType").value,
       lender: el("dLender").value.trim() || "Lender",
       total: total,
       emi: emi,
-      dueDate: dueDate,
       rate: parseFloat(el("dRate").value) || 0,
       currency: el("dCur").value,
       emiDate: el("dEmiDate").value,
