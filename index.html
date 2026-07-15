@@ -757,14 +757,48 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
 
 
 <!-- OVERLAY: BANK -->
+<!-- OVERLAY: BANK (main menu) -->
 <div class="ov" id="ov-bank">
   <div class="sheet">
     <div class="drag-bar"></div>
     <div class="sh2"><h2>🏦 My Banks</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+
+    <!-- View Banks — large prominent button -->
+    <button onclick="openBankListOverlay()" style="width:100%;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(239,68,68,.45);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">View Banks</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Tap to view all saved banks</div>
+      </div>
+      <div style="font-size:28px;">📋</div>
+    </button>
+
+    <!-- Add Bank — second large button -->
+    <button onclick="openBankAddOverlay()" style="width:100%;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(245,158,11,.4);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Add Bank</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Add a new bank account</div>
+      </div>
+      <div style="font-size:28px;">➕</div>
+    </button>
+
+  </div>
+</div>
+
+<!-- OVERLAY: VIEW BANKS -->
+<div class="ov" id="ov-bank-list">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📋 View Banks</h2><button class="sclose" onclick="closeBankList()">✕</button></div>
     <div id="bankList"></div>
-    <button class="addbtn" id="bankAddBtn" onclick="showBankForm()">+ Add Bank Account</button>
-    <div id="bankForm" style="display:none">
-      <div class="stitle">New Bank Account</div>
+  </div>
+</div>
+
+<!-- OVERLAY: ADD BANK -->
+<div class="ov" id="ov-bank-add">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>➕ Add Bank</h2><button class="sclose" onclick="hideBankForm()">✕</button></div>
+    <div id="bankForm">
       <div class="field"><label>Bank Name</label><input type="text" id="bnName" placeholder="e.g. Emirates NBD"></div>
       <div class="field"><label>Account Number</label><input type="text" id="bnAcc" placeholder="e.g. 1234 5678 9012"></div>
       <div class="two"><div class="field"><label>Balance</label><input type="number" inputmode="decimal" id="bnBal" placeholder="0"></div><div class="field"><label>Currency</label><select id="bnCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></div></div>
@@ -1013,7 +1047,7 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
     <div class="two"><div class="field"><label>Balance</label><input type="number" inputmode="decimal" id="editBnBal" placeholder="0"></div><div class="field"><label>Currency</label><select id="editBnCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></div></div>
     <input type="hidden" id="editBnId">
     <div class="sacts">
-      <button class="btn ghost" onclick="closeAll();openOv('ov-bank')">Cancel</button>
+      <button class="btn ghost" onclick="closeAll();openOv('ov-bank-list')">Cancel</button>
       <button class="btn mb" onclick="saveEditBank()">Save Changes</button>
     </div>
   </div>
@@ -2443,7 +2477,7 @@ function openOv(id) {
   if (!target) { console.warn("openOv: element not found:", id); return; }
   target.classList.add("open");
   if (id === "ov-debt-list") { renderDebtList(); }
-  if (id === "ov-bank") { hideBankForm(); renderBankList(); }
+  if (id === "ov-bank-list") { renderBankList(); }
   if (id === "ov-docs") { selDocT=null; renderPeople(); renderDocs(); }
   if (id === "ov-appts")      updateApptCount();
   if (id === "ov-appt-list")  renderAppts();
@@ -2760,24 +2794,31 @@ async function renderDebtList() {
 }
 
 // ── BANK ──────────────────────────────────────────────────────────
-function showBankForm() {
-  elStyle("bankForm", "");
-  elStyle("bankAddBtn", "none");
+function openBankListOverlay() {
+  openOv("ov-bank-list");
+}
+function closeBankList() {
+  closeAll(); openOv("ov-bank");
+}
+function openBankAddOverlay() {
+  ["bnName","bnAcc","bnBal"].forEach(function(id){ var e=el(id); if(e) e.value=""; });
+  el("bnCur").value = "AED";
+  openOv("ov-bank-add");
   setTimeout(function(){ var e=el("bnName"); if(e) e.focus(); }, 60);
 }
 function hideBankForm() {
-  elStyle("bankForm", "none");
-  elStyle("bankAddBtn", "");
   ["bnName","bnAcc","bnBal"].forEach(function(id){ var e=el(id); if(e) e.value=""; });
   el("bnCur").value = "AED";
+  closeAll(); openOv("ov-bank");
 }
 async function saveBank() {
   try {
     var name = el("bnName").value.trim(), acc = el("bnAcc").value.trim();
     if (!name || !acc) { alert("Please enter bank name and account number."); return; }
     await dbPut("banks", { id:mkid(), name:name, accNo:acc, balance:parseFloat(el("bnBal").value)||0, currency:el("bnCur").value });
-    hideBankForm();
-    renderBankList();
+    ["bnName","bnAcc","bnBal"].forEach(function(id){ var e=el(id); if(e) e.value=""; });
+    el("bnCur").value = "AED";
+    openOv("ov-bank-list");
   } catch(e) { console.error("saveBank:", e); }
 }
 async function delBank(id) {
@@ -2794,7 +2835,7 @@ function confirmDelBank(id, name) {
   var cancelBtn = document.createElement("button");
   cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
   cancelBtn.style.cssText = "padding:14px;font-size:15px;";
-  cancelBtn.addEventListener("click", function() { closeAll(); openOv("ov-bank"); });
+  cancelBtn.addEventListener("click", function() { closeAll(); openOv("ov-bank-list"); });
   btns.appendChild(delBtn); btns.appendChild(cancelBtn);
   el("bankActionTitle").textContent = "Delete Bank";
   openOv("ov-bank-action");
@@ -2816,7 +2857,7 @@ function openBankActionMenu(id, name) {
   var cancelBtn = document.createElement("button");
   cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
   cancelBtn.style.cssText = "padding:14px;font-size:15px;";
-  cancelBtn.addEventListener("click", function() { closeAll(); openOv("ov-bank"); });
+  cancelBtn.addEventListener("click", function() { closeAll(); openOv("ov-bank-list"); });
   btns.appendChild(editBtn); btns.appendChild(delBtn); btns.appendChild(cancelBtn);
   el("bankActionTitle").textContent = name;
   openOv("ov-bank-action");
