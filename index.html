@@ -798,6 +798,7 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
     <div id="bankForm">
       <div class="field"><label>Bank Name</label><input type="text" id="bnName" placeholder="e.g. Emirates NBD"></div>
       <div class="field"><label>Account Number</label><input type="text" id="bnAcc" placeholder="e.g. 1234 5678 9012"></div>
+      <div class="field"><label>IBAN / IFSC</label><input type="text" id="bnIban" placeholder="e.g. AE07 0331 2345 6789 0123 456"></div>
       <div class="two"><div class="field"><label>Balance</label><input type="number" inputmode="decimal" id="bnBal" placeholder="0"></div><div class="field"><label>Currency</label><select id="bnCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></div></div>
       <div class="sacts"><button class="btn ghost" onclick="hideBankForm()">Cancel</button><button class="btn mb" onclick="saveBank()">Add Bank</button></div>
     </div>
@@ -1044,6 +1045,7 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
     <div class="sh2"><h2>Edit Bank</h2><button class="sclose" onclick="closeAll()">✕</button></div>
     <div class="field"><label>Bank Name</label><input type="text" id="editBnName" placeholder="e.g. Emirates NBD"></div>
     <div class="field"><label>Account Number</label><input type="text" id="editBnAcc" placeholder="e.g. 1234 5678 9012"></div>
+    <div class="field"><label>IBAN / IFSC</label><input type="text" id="editBnIban" placeholder="e.g. AE07 0331 2345 6789 0123 456"></div>
     <div class="two"><div class="field"><label>Balance</label><input type="number" inputmode="decimal" id="editBnBal" placeholder="0"></div><div class="field"><label>Currency</label><select id="editBnCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></div></div>
     <input type="hidden" id="editBnId">
     <div class="sacts">
@@ -1189,6 +1191,25 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
     <div class="sh2"><h2 id="docActionTitle">Document Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
     <div id="docActionInfo" style="background:var(--exp-s);border-radius:var(--r2);padding:14px;margin-bottom:14px;border-left:3px solid var(--pri);display:none;"></div>
     <div id="docActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- DOCUMENT EDIT SHEET -->
+<div class="ov" id="ov-doc-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="docEditTitle">Edit Document</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="editDf-other-name" style="display:none">
+      <div class="field"><label>Document Name</label><input type="text" id="editDocName" placeholder="e.g. NOC Letter"></div>
+    </div>
+    <div class="field"><label id="editDocNumLbl">Number</label><input type="text" id="editDocNum" placeholder="Enter number"></div>
+    <div class="two">
+      <div class="field"><label>Expiry Date (optional)</label><input type="date" id="editDocExpiry"></div>
+      <div class="field"><label>Issued By (optional)</label><input type="text" id="editDocIssued" placeholder="e.g. ICA Dubai"></div>
+    </div>
+    <input type="hidden" id="editDocId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll();openOv('ov-docs-view')">Cancel</button>
+      <button class="btn mb" onclick="saveEditDoc()">Save Changes</button>
+    </div>
   </div>
 </div>
 <!-- TENANCY ACTION SHEET -->
@@ -1558,6 +1579,48 @@ function dbDel(s, id) {
 // ── PIN ──────────────────────────────────────────────────────────
 var pinBuf = "", pinMode = "enter", newPinBuf = "";
 
+function randomSaltHex() {
+  var arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(function(b){ return b.toString(16).padStart(2,"0"); }).join("");
+}
+async function sha256Hex(str) {
+  try {
+    if (!window.crypto || !window.crypto.subtle) return null; // unsupported context, caller falls back
+    var enc = new TextEncoder().encode(str);
+    var buf = await crypto.subtle.digest("SHA-256", enc);
+    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,"0"); }).join("");
+  } catch(e) { console.warn("sha256Hex:", e); return null; }
+}
+// Stores the PIN as a salted hash. Falls back to legacy plaintext storage
+// only if Web Crypto is unavailable (very old/insecure context) so PIN
+// protection never silently breaks.
+async function savePin(pin) {
+  var salt = randomSaltHex();
+  var hash = await sha256Hex(salt + ":" + pin);
+  if (hash) { await dbPut("config", { key:"pin", salt:salt, hash:hash }); }
+  else { await dbPut("config", { key:"pin", value: pin }); }
+}
+// Verifies an entered PIN against the stored record. Understands both the
+// new salted-hash format and the legacy plaintext format (for anyone who
+// already had a PIN set before this change) — and silently upgrades a
+// legacy record to the hashed format the moment it's successfully verified,
+// so existing users are never locked out and everyone converges to the
+// safer format over time.
+async function verifyAndMigratePin(pin) {
+  var cfg = await dbGet("config", "pin");
+  if (!cfg) return false;
+  if (cfg.hash && cfg.salt) {
+    var h = await sha256Hex(cfg.salt + ":" + pin);
+    return h !== null && h === cfg.hash;
+  }
+  if (cfg.value !== undefined) {
+    if (cfg.value === pin) { await savePin(pin); return true; }
+    return false;
+  }
+  return false;
+}
+
 async function initPin() {
   try {
     var cfg = await dbGet("config", "pin");
@@ -1587,15 +1650,15 @@ function ppDel() { if (pinBuf.length > 0) { pinBuf = pinBuf.slice(0, -1); update
 async function handlePin() {
   try {
     if (pinMode === "setup") {
-      await dbPut("config", { key: "pin", value: pinBuf });
+      await savePin(pinBuf);
       unlockApp();
     } else if (pinMode === "enter") {
-      var cfg = await dbGet("config", "pin");
-      if (cfg && cfg.value === pinBuf) { unlockApp(); }
+      var ok = await verifyAndMigratePin(pinBuf);
+      if (ok) { unlockApp(); }
       else { el("pinErr").textContent = "Wrong PIN"; pinBuf = ""; updateDots(); }
     } else if (pinMode === "ch-old") {
-      var cfg = await dbGet("config", "pin");
-      if (cfg && cfg.value === pinBuf) {
+      var ok2 = await verifyAndMigratePin(pinBuf);
+      if (ok2) {
         pinMode = "ch-new"; pinBuf = "";
         el("pinTitle").textContent = "Enter New PIN"; updateDots(); el("pinErr").textContent = "";
       } else { el("pinErr").textContent = "Wrong PIN"; pinBuf = ""; updateDots(); }
@@ -1604,7 +1667,7 @@ async function handlePin() {
       el("pinTitle").textContent = "Confirm New PIN"; updateDots();
     } else if (pinMode === "ch-confirm") {
       if (pinBuf === newPinBuf) {
-        await dbPut("config", { key: "pin", value: pinBuf });
+        await savePin(pinBuf);
         alert("PIN changed successfully!"); unlockApp();
       } else {
         el("pinErr").textContent = "PINs do not match";
@@ -2642,7 +2705,7 @@ async function openDebtActionMenu(id) {
       + '<div style="font-size:10px;color:var(--muted);margin-top:4px;font-weight:600;">' + pct + '% paid off</div>';
     var btns = el("debtActionButtons"); btns.innerHTML = "";
     function mkB(cls, txt, fn) { var b = document.createElement("button"); b.className = cls; b.textContent = txt; b.style.cssText = "padding:14px;font-size:15px;"; b.addEventListener("click", fn); return b; }
-    if (rem > 0) btns.appendChild(mkB("btn md", "Pay EMI", async function() { await payEMI(id); closeAll(); }));
+    if (rem > 0) btns.appendChild(mkB("btn md", "Pay EMI", async function() { await payEMI(id); closeAll(); openOv("ov-debt-list"); }));
     if (pmts.length > 0) btns.appendChild(mkB("btn ghost", "Undo Last EMI Payment", async function() { await undoLastEMIPayment(id); }));
     btns.appendChild(mkB("btn mb",    "Edit Loan",   function() { closeAll(); openEditDebt(id); }));
     btns.appendChild(mkB("btn ghost", "Delete Loan", function() { confirmDelDebt(id, d.lender); }));
@@ -2763,7 +2826,7 @@ async function payEMI(id) {
 async function undoLastEMIPayment(id) {
   try {
     var pmts = (await dbAll("payments")).filter(function(p){return p.debtId===id;}).sort(function(a,b){return b.ts-a.ts;});
-    if (!pmts.length) { closeAll(); return; }
+    if (!pmts.length) { closeAll(); openOv("ov-debt-list"); return; }
     var last = pmts[0];
     await dbDel("payments", last.id);
     var exps = await dbAll("expenses");
@@ -2779,7 +2842,7 @@ async function undoLastEMIPayment(id) {
       await dbPut("debts", d);
     }
     closeAll();
-    renderDebtList();
+    openOv("ov-debt-list");
     renderAll();
   } catch(e) { console.error("undoLastEMIPayment:", e); }
 }
@@ -2837,13 +2900,13 @@ function closeBankList() {
   closeAll(); openOv("ov-bank");
 }
 function openBankAddOverlay() {
-  ["bnName","bnAcc","bnBal"].forEach(function(id){ var e=el(id); if(e) e.value=""; });
+  ["bnName","bnAcc","bnIban","bnBal"].forEach(function(id){ var e=el(id); if(e) e.value=""; });
   el("bnCur").value = "AED";
   openOv("ov-bank-add");
   setTimeout(function(){ var e=el("bnName"); if(e) e.focus(); }, 60);
 }
 function hideBankForm() {
-  ["bnName","bnAcc","bnBal"].forEach(function(id){ var e=el(id); if(e) e.value=""; });
+  ["bnName","bnAcc","bnIban","bnBal"].forEach(function(id){ var e=el(id); if(e) e.value=""; });
   el("bnCur").value = "AED";
   closeAll(); openOv("ov-bank");
 }
@@ -2851,8 +2914,8 @@ async function saveBank() {
   try {
     var name = el("bnName").value.trim(), acc = el("bnAcc").value.trim();
     if (!name || !acc) { alert("Please enter bank name and account number."); return; }
-    await dbPut("banks", { id:mkid(), name:name, accNo:acc, balance:parseFloat(el("bnBal").value)||0, currency:el("bnCur").value });
-    ["bnName","bnAcc","bnBal"].forEach(function(id){ var e=el(id); if(e) e.value=""; });
+    await dbPut("banks", { id:mkid(), name:name, accNo:acc, iban:el("bnIban").value.trim(), balance:parseFloat(el("bnBal").value)||0, currency:el("bnCur").value });
+    ["bnName","bnAcc","bnIban","bnBal"].forEach(function(id){ var e=el(id); if(e) e.value=""; });
     el("bnCur").value = "AED";
     openOv("ov-bank-list");
   } catch(e) { console.error("saveBank:", e); }
@@ -2913,6 +2976,7 @@ async function viewBankDetails(id, name) {
     info.innerHTML = '<div class="dctag">Bank Account</div>'
       + '<div class="dcnum">'+b.name+'</div>'
       + '<div class="dcexp">Account No: '+(b.accNo||"—")+'</div>'
+      + '<div class="dcexp">IBAN / IFSC: '+(b.iban||"—")+'</div>'
       + '<div class="dcexp">Balance: '+(b.currency||"")+' '+fmt(b.balance||0)+'</div>';
     var btns = el("bankActionButtons"); btns.innerHTML = "";
     var backBtn = document.createElement("button");
@@ -2929,6 +2993,7 @@ async function openEditBank(id) {
     el("editBnId").value  = b.id;
     el("editBnName").value = b.name;
     el("editBnAcc").value  = b.accNo;
+    el("editBnIban").value = b.iban || "";
     el("editBnBal").value  = b.balance;
     el("editBnCur").value  = b.currency;
     openOv("ov-bank-edit");
@@ -2943,6 +3008,7 @@ async function saveEditBank() {
     var b = await dbGet("banks", id); if (!b) return;
     b.name     = name;
     b.accNo    = acc;
+    b.iban     = el("editBnIban").value.trim();
     b.balance  = parseFloat(el("editBnBal").value) || 0;
     b.currency = el("editBnCur").value;
     await dbPut("banks", b);
@@ -3132,11 +3198,35 @@ async function openDocActionMenu(id) {
     }
     var btns = el("docActionButtons"); btns.innerHTML = "";
     function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
+    btns.appendChild(mkB("btn mb","View Document",function(){viewDocDetails(id,label);}));
+    btns.appendChild(mkB("btn mb","Edit Document",function(){closeAll();openEditDoc(id);}));
     btns.appendChild(mkB("btn ghost","Delete Document",function(){confirmDelDocEntry(id,label);}));
     btns.appendChild(mkB("btn ghost","Cancel",function(){closeAll();}));
     el("docActionTitle").textContent = label;
     openOv("ov-doc-action");
   } catch(e){console.error("openDocActionMenu:",e);}
+}
+// Read-only "View Document" — opens the attached file if there is one,
+// otherwise shows a read-only summary of the saved details.
+async function viewDocDetails(id, label) {
+  try {
+    var d = await dbGet("documents", id); if (!d) return;
+    if (d.fileData) { viewFile(id); return; }
+    var info = el("docActionInfo");
+    if (info) {
+      info.style.display = "";
+      info.innerHTML = '<div class="dctag">'+label+'</div>'
+        + '<div class="dcnum">'+(d.docNum||"—")+'</div>'
+        + (d.docName  ? '<div class="dcexp">Name: '+d.docName+'</div>' : '')
+        + (d.expiry   ? '<div class="dcexp">Expires: '+d.expiry+'</div>' : '')
+        + (d.issuedBy ? '<div class="dcexp">Issued by: '+d.issuedBy+'</div>' : '')
+        + '<div class="dcexp" style="margin-top:6px;">No file attached to this document.</div>';
+    }
+    var btns = el("docActionButtons"); btns.innerHTML = "";
+    function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
+    btns.appendChild(mkB("btn ghost","Back",function(){openDocActionMenu(id);}));
+    el("docActionTitle").textContent = label;
+  } catch(e) { console.error("viewDocDetails:", e); }
 }
 
 function confirmDelDocEntry(id, label) {
@@ -3175,11 +3265,37 @@ async function openTenancyActionMenu(id) {
     if(el("taBtnRm"))   el("taBtnRm").addEventListener("click",function(){removeTenFile(id);});
     var btns = el("tenActionButtons"); btns.innerHTML = "";
     function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
+    btns.appendChild(mkB("btn mb","View Contract",function(){viewTenancyDetails(id);}));
     btns.appendChild(mkB("btn ghost","Delete Contract",function(){confirmDelTenancyEntry(id,d.contractNo||"this contract");}));
     btns.appendChild(mkB("btn ghost","Cancel",function(){closeAll();}));
     el("tenActionTitle").textContent = d.contractNo || "Tenancy Contract";
     openOv("ov-ten-action");
   } catch(e){console.error("openTenancyActionMenu:",e);}
+}
+// Read-only "View Contract" — opens the attached file if there is one,
+// otherwise shows a read-only summary of the saved contract details.
+async function viewTenancyDetails(id) {
+  try {
+    var d = await dbGet("documents", id); if (!d) return;
+    if (d.fileData) { viewTenFile(id); return; }
+    var info = el("tenActionInfo");
+    if (info) {
+      info.innerHTML = '<div style="font-size:9px;color:var(--dbt);font-weight:800;text-transform:uppercase;letter-spacing:.08em;">Tenancy Contract</div>'
+        + '<div style="font-weight:800;font-size:15px;margin:4px 0;">'+(d.contractNo||"—")+'</div>'
+        + '<div style="font-size:11.5px;color:var(--muted);">Landlord: '+(d.landlord||"—")+'</div>'
+        + '<div style="font-size:11.5px;color:var(--muted);">'+(d.startDate||"")+' to '+(d.endDate||"")+'</div>'
+        + '<div style="font-size:11.5px;color:var(--muted);margin-top:4px;">Total Rent: '+fmt(d.totalRent||0)+' · '+(d.cheques||[]).length+' cheques</div>'
+        + (d.cheques&&d.cheques.length
+          ? '<div style="margin-top:10px;"><div class="stitle" style="margin:8px 0 6px;">Cheques</div>'
+            + d.cheques.map(function(ch,i){return '<div class="ch-row" style="margin-bottom:6px;"><div class="cr-top">Cheque #'+(i+1)+' — AED '+fmt(ch.amount)+'</div><div style="font-size:11px;color:var(--muted);">Due: '+(ch.date||"—")+'</div></div>';}).join("")
+            + '</div>' : '')
+        + '<div class="dcexp" style="margin-top:6px;">No file attached to this contract.</div>';
+    }
+    var btns = el("tenActionButtons"); btns.innerHTML = "";
+    function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
+    btns.appendChild(mkB("btn ghost","Back",function(){openTenancyActionMenu(id);}));
+    el("tenActionTitle").textContent = d.contractNo || "Tenancy Contract";
+  } catch(e) { console.error("viewTenancyDetails:", e); }
 }
 
 function confirmDelTenancyEntry(id, label) {
@@ -3236,6 +3352,33 @@ async function saveDoc() {
     await dbPut("documents", doc);
     cancelDocForm(); await renderDocs(); await renderSavedDocsList(el('personSel').value);
   } catch(e) { console.error("saveDoc:", e); }
+}
+async function openEditDoc(id) {
+  try {
+    var d = await dbGet("documents", id); if (!d) return;
+    el("editDocId").value = id;
+    el("editDocNumLbl").textContent = DOC_NUMLBL[d.type] || "Number";
+    elStyle("editDf-other-name", d.type === "other" ? "" : "none");
+    el("editDocName").value = d.docName || "";
+    el("editDocNum").value = d.docNum || "";
+    el("editDocExpiry").value = d.expiry || "";
+    el("editDocIssued").value = d.issuedBy || "";
+    el("docEditTitle").textContent = "Edit " + (DOC_LABELS[d.type] || d.type);
+    openOv("ov-doc-edit");
+  } catch(e) { console.error("openEditDoc:", e); }
+}
+async function saveEditDoc() {
+  try {
+    var id = el("editDocId").value;
+    var d = await dbGet("documents", id); if (!d) return;
+    d.docNum = el("editDocNum").value.trim();
+    d.expiry = el("editDocExpiry").value;
+    d.issuedBy = el("editDocIssued").value.trim();
+    if (d.type === "other") d.docName = el("editDocName").value.trim();
+    await dbPut("documents", d);
+    closeAll();
+    openOv("ov-docs-view");
+  } catch(e) { console.error("saveEditDoc:", e); }
 }
 async function viewFile(id)    { try{var d=await dbGet("documents",id); if(d&&d.fileData){var w=window.open();w.document.write('<iframe src="'+d.fileData+'" style="width:100%;height:100vh;border:none"></iframe>');}}catch(e){console.error(e);} }
 async function dlFile(id)      { try{var d=await dbGet("documents",id); if(d&&d.fileData){var a=document.createElement("a");a.href=d.fileData;a.download=d.fileName||"document";a.click();}}catch(e){console.error(e);} }
