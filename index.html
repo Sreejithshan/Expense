@@ -1197,6 +1197,7 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
 <div class="ov" id="ov-doc-edit">
   <div class="sheet"><div class="drag-bar"></div>
     <div class="sh2"><h2 id="docEditTitle">Edit Document</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="editDocFileActions" style="margin-bottom:14px;"></div>
     <div id="editDf-other-name" style="display:none">
       <div class="field"><label>Document Name</label><input type="text" id="editDocName" placeholder="e.g. NOC Letter"></div>
     </div>
@@ -3183,18 +3184,7 @@ async function openDocActionMenu(id) {
         + '<div class="dcnum">'+(d.docNum||"—")+'</div>'
         + (d.expiry ? '<div class="dcexp">Expires: '+d.expiry+'</div>' : '')
         + (d.issuedBy ? '<div class="dcexp">Issued by: '+d.issuedBy+'</div>' : '')
-        + (d.fileData
-          ? '<div class="file-actions" style="margin-top:8px;">'
-            + '<button class="file-btn view" id="daBtnView">View</button>'
-            + '<button class="file-btn dl" id="daBtnDl">Download</button>'
-            + '<button class="file-btn rep" id="daBtnRep">Replace</button>'
-            + '<button class="file-btn rm" id="daBtnRm">Remove</button></div>'
-          : '<div class="file-actions" style="margin-top:8px;">'
-            + '<button class="file-btn rep" id="daBtnRep">Attach File</button></div>');
-      if(el("daBtnView")) el("daBtnView").addEventListener("click",function(){viewFile(id);});
-      if(el("daBtnDl"))   el("daBtnDl").addEventListener("click",function(){dlFile(id);});
-      if(el("daBtnRep"))  el("daBtnRep").addEventListener("click",function(){replaceFile(id);});
-      if(el("daBtnRm"))   el("daBtnRm").addEventListener("click",function(){removeFile(id);});
+        + (d.fileData ? '<div class="dcexp" style="margin-top:6px;">📎 File attached</div>' : '<div class="dcexp" style="margin-top:6px;">No file attached</div>');
     }
     var btns = el("docActionButtons"); btns.innerHTML = "";
     function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
@@ -3206,12 +3196,12 @@ async function openDocActionMenu(id) {
     openOv("ov-doc-action");
   } catch(e){console.error("openDocActionMenu:",e);}
 }
-// Read-only "View Document" — opens the attached file if there is one,
-// otherwise shows a read-only summary of the saved details.
+// Read-only "View Document" — shows the saved details plus View/Download
+// buttons if a file is attached. No file-management actions here; those
+// live exclusively in Edit Document.
 async function viewDocDetails(id, label) {
   try {
     var d = await dbGet("documents", id); if (!d) return;
-    if (d.fileData) { viewFile(id); return; }
     var info = el("docActionInfo");
     if (info) {
       info.style.display = "";
@@ -3220,10 +3210,14 @@ async function viewDocDetails(id, label) {
         + (d.docName  ? '<div class="dcexp">Name: '+d.docName+'</div>' : '')
         + (d.expiry   ? '<div class="dcexp">Expires: '+d.expiry+'</div>' : '')
         + (d.issuedBy ? '<div class="dcexp">Issued by: '+d.issuedBy+'</div>' : '')
-        + '<div class="dcexp" style="margin-top:6px;">No file attached to this document.</div>';
+        + (d.fileData ? '' : '<div class="dcexp" style="margin-top:6px;">No file attached to this document.</div>');
     }
     var btns = el("docActionButtons"); btns.innerHTML = "";
     function mkB(cls,txt,fn){var b=document.createElement("button");b.className=cls;b.textContent=txt;b.style.cssText="padding:14px;font-size:15px;";b.addEventListener("click",fn);return b;}
+    if (d.fileData) {
+      btns.appendChild(mkB("btn mb","View File",function(){viewFile(id);}));
+      btns.appendChild(mkB("btn ghost","Download File",function(){dlFile(id);}));
+    }
     btns.appendChild(mkB("btn ghost","Back",function(){openDocActionMenu(id);}));
     el("docActionTitle").textContent = label;
   } catch(e) { console.error("viewDocDetails:", e); }
@@ -3363,6 +3357,14 @@ async function openEditDoc(id) {
     el("editDocNum").value = d.docNum || "";
     el("editDocExpiry").value = d.expiry || "";
     el("editDocIssued").value = d.issuedBy || "";
+    var fa = el("editDocFileActions");
+    if (fa) {
+      fa.innerHTML = d.fileData
+        ? '<div class="file-actions"><button class="file-btn rep" id="edBtnRep">Replace File</button><button class="file-btn rm" id="edBtnRm">Remove File</button></div>'
+        : '<div class="file-actions"><button class="file-btn rep" id="edBtnRep">Attach File</button></div>';
+      if (el("edBtnRep")) el("edBtnRep").addEventListener("click", function(){ replaceFile(id); });
+      if (el("edBtnRm"))  el("edBtnRm").addEventListener("click", function(){ removeFile(id); });
+    }
     el("docEditTitle").textContent = "Edit " + (DOC_LABELS[d.type] || d.type);
     openOv("ov-doc-edit");
   } catch(e) { console.error("openEditDoc:", e); }
