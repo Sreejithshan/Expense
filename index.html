@@ -298,7 +298,7 @@ nav.tabs button.active{background:linear-gradient(135deg,var(--pri),#ff9f43);col
 .bico{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,#74b9ff,#0984e3);display:flex;align-items:center;justify-content:center;font-size:21px;flex:0 0 44px;box-shadow:0 4px 14px -4px rgba(9,132,227,.4);}
 .binfo{flex:1;}
 .bname2{font-weight:800;font-size:14px;}
-.bacc{font-size:10.5px;color:var(--muted);font-weight:500;margin-top:2px;}
+.bacc{font-weight:800;font-size:14px;margin-top:2px;}
 .bbal{font-weight:800;font-size:15px;color:var(--inc);margin-top:3px;}
 .bdel{border:none;background:var(--exp-s);color:var(--exp);width:28px;height:28px;border-radius:50%;font-size:14px;display:flex;align-items:center;justify-content:center;}
 
@@ -3024,7 +3024,7 @@ async function renderBankList() {
     var html = banks.map(function(b) {
       return '<div class="bkcard2" style="cursor:pointer;" data-action="bank-menu" data-id="' + b.id + '" data-name="' + b.name + '">'
         + '<div class="bico">🏦</div>'
-        + '<div class="binfo"><div class="bname2">' + b.name + '</div><div class="bacc">Acc: ' + b.accNo + '</div><div class="bbal">' + b.currency + ' ' + fmt(b.balance) + '</div></div>'
+        + '<div class="binfo"><div class="bname2">' + b.name + '</div><div class="bacc">Acc: ' + b.accNo + '</div></div>'
         + ''
         + '</div>';
     }).join("");
@@ -3382,8 +3382,48 @@ async function saveEditDoc() {
     openOv("ov-docs-view");
   } catch(e) { console.error("saveEditDoc:", e); }
 }
-async function viewFile(id)    { try{var d=await dbGet("documents",id); if(d&&d.fileData){var w=window.open();w.document.write('<iframe src="'+d.fileData+'" style="width:100%;height:100vh;border:none"></iframe>');}}catch(e){console.error(e);} }
-async function dlFile(id)      { try{var d=await dbGet("documents",id); if(d&&d.fileData){var a=document.createElement("a");a.href=d.fileData;a.download=d.fileName||"document";a.click();}}catch(e){console.error(e);} }
+// Converts a "data:<mime>;base64,...." string into a Blob, so attached
+// files can be opened/downloaded via a Blob URL rather than a raw data
+// URL — this is what lets browsers reliably render PDFs/images in a new
+// tab using their native viewer, across all supported file types.
+function dataURLtoBlob(dataURL) {
+  var parts = dataURL.split(",");
+  var mimeMatch = parts[0].match(/data:([^;]+);base64/);
+  var mime = mimeMatch ? mimeMatch[1] : "application/octet-stream";
+  var byteString = atob(parts[1]);
+  var arr = new Uint8Array(byteString.length);
+  for (var i = 0; i < byteString.length; i++) arr[i] = byteString.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+async function viewFile(id) {
+  // Open the tab synchronously, before any await — browsers block
+  // window.open() once a promise has resolved, since it's no longer seen
+  // as a direct result of the user's tap. Opening first and redirecting
+  // it once the data is ready avoids that popup block entirely.
+  var w = window.open("", "_blank");
+  try {
+    var d = await dbGet("documents", id);
+    if (!d || !d.fileData) { if (w) w.close(); alert("No file attached to this document."); return; }
+    var url = URL.createObjectURL(dataURLtoBlob(d.fileData));
+    if (w) { w.location.href = url; }
+    else {
+      // Popup was blocked outright — fall back to a direct link click
+      var a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
+  } catch(e) { console.error("viewFile:", e); if (w) w.close(); alert("Couldn't open the file."); }
+}
+async function dlFile(id) {
+  try {
+    var d = await dbGet("documents", id);
+    if (!d || !d.fileData) { alert("No file attached to this document."); return; }
+    var url = URL.createObjectURL(dataURLtoBlob(d.fileData));
+    var a = document.createElement("a"); a.href = url; a.download = d.fileName || "document";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
+  } catch(e) { console.error("dlFile:", e); alert("Couldn't download the file."); }
+}
 async function replaceFile(id) { var inp=document.createElement("input");inp.type="file";inp.accept=".pdf,.jpg,.jpeg,.png";inp.onchange=async function(e){var f=e.target.files[0];if(!f)return;try{var d=await dbGet("documents",id);d.fileData=await fileToDataURL(f);d.fileName=f.name;await dbPut("documents",d);closeAll();openOv("ov-docs-view");}catch(err){console.error(err);}};inp.click(); }
 async function removeFile(id)  { if(!confirm("Remove attached file?"))return; try{var d=await dbGet("documents",id);d.fileData=null;d.fileName=null;await dbPut("documents",d);closeAll();openOv("ov-docs-view");}catch(e){console.error(e);} }
 async function viewTenFile(id)    { viewFile(id); }
