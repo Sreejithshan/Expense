@@ -1035,7 +1035,7 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
 <div class="ov" id="ov-bank-action">
   <div class="sheet"><div class="drag-bar"></div>
     <div class="sh2"><h2 id="bankActionTitle">Bank Account</h2><button class="sclose" onclick="closeAll()">✕</button></div>
-    <div id="bankActionInfo" style="display:none;background:var(--card);border-radius:var(--r2);padding:14px 15px;margin-bottom:14px;box-shadow:var(--sh2);"></div>
+    <div id="bankActionInfo" style="display:none;background:linear-gradient(135deg,rgba(248,113,113,.10),rgba(239,68,68,.04));border-left:3px solid #ef4444;border-radius:var(--r2);padding:14px 15px;margin-bottom:14px;box-shadow:var(--sh2);"></div>
     <div id="bankActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
   </div>
 </div>
@@ -2947,7 +2947,7 @@ function openBankActionMenu(id, name) {
   btns.innerHTML = "";
   // View button
   var viewBtn = document.createElement("button");
-  viewBtn.className = "btn ghost"; viewBtn.textContent = "View Bank";
+  viewBtn.className = "btn ms"; viewBtn.textContent = "View Bank";
   viewBtn.style.cssText = "padding:14px;font-size:15px;";
   viewBtn.addEventListener("click", function() { viewBankDetails(id, name); });
   // Edit button
@@ -2974,11 +2974,11 @@ async function viewBankDetails(id, name) {
     var b = await dbGet("banks", id); if (!b) return;
     var info = el("bankActionInfo");
     info.style.display = "";
-    info.innerHTML = '<div class="dctag">Bank Account</div>'
+    info.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><div style="font-size:22px;">🏦</div><div class="dctag" style="color:#ef4444;">Bank Account</div></div>'
       + '<div class="dcnum">'+b.name+'</div>'
       + '<div class="dcexp">Account No: '+(b.accNo||"—")+'</div>'
       + '<div class="dcexp">IBAN / IFSC: '+(b.iban||"—")+'</div>'
-      + '<div class="dcexp">Balance: '+(b.currency||"")+' '+fmt(b.balance||0)+'</div>';
+      + '<div style="font-weight:800;font-size:18px;color:#ef4444;margin-top:8px;">'+(b.currency||"")+' '+fmt(b.balance||0)+'</div>';
     var btns = el("bankActionButtons"); btns.innerHTML = "";
     var backBtn = document.createElement("button");
     backBtn.className = "btn ghost"; backBtn.textContent = "Back";
