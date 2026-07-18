@@ -850,48 +850,57 @@ body.dark .fi-settings{ background:linear-gradient(145deg,#134e4a,#0f766e) !impo
     <div id="docSection" style="display:none">
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-        <button class="dtbtn" data-dt="govt_id"  onclick="selDocType(this)">🪪 Government ID</button>
-        <button class="dtbtn" data-dt="visa"     onclick="selDocType(this)">🛂 Visa</button>
-        <button class="dtbtn" data-dt="passport" onclick="selDocType(this)">📘 Passport</button>
-        <button class="dtbtn" data-dt="driving"  onclick="selDocType(this)">🚗 Driving License</button>
-        <button class="dtbtn" data-dt="tenancy"  onclick="selDocType(this)">🏠 Tenancy Contract</button>
-        <button class="dtbtn" data-dt="other"    onclick="selDocType(this)">📁 Others</button>
-      </div>
-
-      <!-- Standard doc form -->
-      <div id="docForm" style="display:none">
-        <div id="df-other-name" style="display:none">
-          <div class="field"><label>Document Name</label><input type="text" id="docName" placeholder="e.g. NOC Letter"></div>
-        </div>
-        <div class="field"><label id="docNumLbl">Number</label><input type="text" id="docNum" placeholder="Enter number"></div>
-        <div class="two">
-          <div class="field"><label>Expiry Date (optional)</label><input type="date" id="docExpiry"></div>
-          <div class="field"><label>Issued By (optional)</label><input type="text" id="docIssued" placeholder="e.g. ICA Dubai"></div>
-        </div>
-        <div class="field"><label>Attach File (optional)</label><input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png"></div>
-        <div class="sacts">
-          <button class="btn ghost" onclick="cancelDocForm()">Cancel</button>
-          <button class="addbtn" style="flex:1;margin:0;" onclick="saveDoc()">Save Document</button>
-        </div>
-      </div>
-
-      <!-- Tenancy form -->
-      <div id="tenForm" style="display:none">
-        <div class="field"><label>Contract No</label><input type="text" id="tcContract" placeholder="e.g. TN-2024-001"></div>
-        <div class="two"><div class="field"><label>Start Date</label><input type="date" id="tcStart"></div><div class="field"><label>End Date</label><input type="date" id="tcEnd"></div></div>
-        <div class="field"><label>Landlord Name</label><input type="text" id="tcLandlord" placeholder="e.g. Ahmed Al Mansouri"></div>
-        <div class="stitle">Cheque Details</div>
-        <div class="two"><div class="field"><label>Total Rent</label><input type="number" inputmode="decimal" id="tcRent" placeholder="0"></div><div class="field"><label>No of Cheques</label><input type="number" id="tcNumCh" placeholder="e.g. 4" min="1" max="12"></div></div>
-        <button class="addbtn" onclick="genCheques()">Generate Cheque Fields</button>
-        <div id="chequeInputs"></div>
-        <div class="field"><label>Attach Contract (optional)</label><input type="file" id="tcFile" accept=".pdf,.jpg,.jpeg,.png"></div>
-        <div class="sacts">
-          <button class="btn ghost" onclick="cancelDocForm()">Cancel</button>
-          <button class="btn md" onclick="saveTenancy()">Save Contract</button>
-        </div>
+        <button class="dtbtn" data-dt="govt_id"  onclick="openDocEntry('govt_id')">🪪 Government ID</button>
+        <button class="dtbtn" data-dt="visa"     onclick="openDocEntry('visa')">🛂 Visa</button>
+        <button class="dtbtn" data-dt="passport" onclick="openDocEntry('passport')">📘 Passport</button>
+        <button class="dtbtn" data-dt="driving"  onclick="openDocEntry('driving')">🚗 Driving License</button>
+        <button class="dtbtn" data-dt="tenancy"  onclick="openDocEntry('tenancy')">🏠 Tenancy Contract</button>
+        <button class="dtbtn" data-dt="other"    onclick="openDocEntry('other')">📁 Others</button>
       </div>
 
     </div>
+  </div>
+</div>
+
+<!-- OVERLAY: DOCUMENT ENTRY (separate screen, opened after picking a category) -->
+<div class="ov" id="ov-doc-entry">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2 id="docEntryTitle">Add Document</h2><button class="sclose" onclick="cancelDocForm()">✕</button></div>
+
+    <!-- Standard doc form -->
+    <div id="docForm" style="display:none">
+      <div id="df-other-name" style="display:none">
+        <div class="field"><label>Document Name</label><input type="text" id="docName" placeholder="e.g. NOC Letter"></div>
+      </div>
+      <div class="field"><label id="docNumLbl">Number</label><input type="text" id="docNum" placeholder="Enter number"></div>
+      <div class="two">
+        <div class="field"><label>Expiry Date (optional)</label><input type="date" id="docExpiry"></div>
+        <div class="field"><label>Issued By (optional)</label><input type="text" id="docIssued" placeholder="e.g. ICA Dubai"></div>
+      </div>
+      <div class="field"><label>Attach File (optional)</label><input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png"></div>
+      <div class="sacts">
+        <button class="btn ghost" onclick="cancelDocForm()">Cancel</button>
+        <button class="addbtn" style="flex:1;margin:0;" onclick="saveDoc()">Save Document</button>
+      </div>
+    </div>
+
+    <!-- Tenancy form -->
+    <div id="tenForm" style="display:none">
+      <div class="field"><label>Contract No</label><input type="text" id="tcContract" placeholder="e.g. TN-2024-001"></div>
+      <div class="two"><div class="field"><label>Start Date</label><input type="date" id="tcStart"></div><div class="field"><label>End Date</label><input type="date" id="tcEnd"></div></div>
+      <div class="field"><label>Landlord Name</label><input type="text" id="tcLandlord" placeholder="e.g. Ahmed Al Mansouri"></div>
+      <div class="stitle">Cheque Details</div>
+      <div class="two"><div class="field"><label>Total Rent</label><input type="number" inputmode="decimal" id="tcRent" placeholder="0"></div><div class="field"><label>No of Cheques</label><input type="number" id="tcNumCh" placeholder="e.g. 4" min="1" max="12"></div></div>
+      <button class="addbtn" onclick="genCheques()">Generate Cheque Fields</button>
+      <div id="chequeInputs"></div>
+      <div class="field"><label>Attach Contract (optional)</label><input type="file" id="tcFile" accept=".pdf,.jpg,.jpeg,.png"></div>
+      <div class="sacts">
+        <button class="btn ghost" onclick="cancelDocForm()">Cancel</button>
+        <button class="btn md" onclick="saveTenancy()">Save Contract</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -3050,11 +3059,11 @@ async function addPerson() {
     if (existing.some(function(p) { return p.name.toLowerCase() === name.toLowerCase(); })) {
       alert("A person with this name already exists."); return;
     }
-    await dbPut("people", { id:mkid(), name:name });
+    var newId = mkid();
+    await dbPut("people", { id:newId, name:name });
     el("newPerson").value = "";
     await renderPeople();
-    var people = await dbAll("people");
-    el("personSel").value = people[people.length-1].id;
+    el("personSel").value = newId;
     renderDocs();
   } catch(e) { console.error("addPerson:", e); }
 }
@@ -3084,9 +3093,10 @@ async function renderDocs() {
 
 function cancelDocForm() {
   selDocT = null;
-  document.querySelectorAll(".dtbtn").forEach(function(b){ b.classList.remove("sel"); });
   elStyle("docForm","none"); elStyle("tenForm","none");
   var ci = el("chequeInputs"); if (ci) ci.innerHTML = "";
+  closeAll();
+  openOv("ov-docs-add");
 }
 
 // Open saved docs overlay and render list
@@ -3297,20 +3307,21 @@ async function saveTenancy() {
     cancelDocForm(); await renderDocs(); await renderSavedDocsList(el('personSel').value);
   } catch(e) { console.error("saveTenancy:", e); }
 }
-function selDocType(btn) {
-  selDocT = btn.dataset.dt;
-  document.querySelectorAll(".dtbtn").forEach(function(b){b.classList.remove("sel");}); btn.classList.add("sel");
-  elStyle("docForm","none"); elStyle("tenForm","none");
-  if (selDocT === "tenancy") {
+function openDocEntry(dt) {
+  selDocT = dt;
+  if (dt === "tenancy") {
     var ci = el("chequeInputs"); if(ci) ci.innerHTML = "";
     ["tcContract","tcStart","tcEnd","tcLandlord","tcRent","tcNumCh"].forEach(function(id){var e=el(id);if(e)e.value="";});
-    elStyle("tenForm","");
+    elStyle("docForm","none"); elStyle("tenForm","");
+    el("docEntryTitle").textContent = "Add Tenancy Contract";
   } else {
-    elStyle("df-other-name", selDocT==="other" ? "" : "none");
-    el("docNumLbl").textContent = DOC_NUMLBL[selDocT] || "Number";
+    elStyle("df-other-name", dt==="other" ? "" : "none");
+    el("docNumLbl").textContent = DOC_NUMLBL[dt] || "Number";
     ["docNum","docExpiry","docIssued","docName","docFile"].forEach(function(id){var e=el(id);if(e)e.value="";});
-    elStyle("docForm","");
+    elStyle("tenForm","none"); elStyle("docForm","");
+    el("docEntryTitle").textContent = "Add " + (DOC_LABELS[dt] || dt);
   }
+  openOv("ov-doc-entry");
 }
 async function saveDoc() {
   try {
