@@ -2945,11 +2945,6 @@ function openBankActionMenu(id, name) {
   if (info) info.style.display = "none";
   var btns = el("bankActionButtons");
   btns.innerHTML = "";
-  // View button
-  var viewBtn = document.createElement("button");
-  viewBtn.className = "btn ms"; viewBtn.textContent = "View Bank";
-  viewBtn.style.cssText = "padding:14px;font-size:15px;";
-  viewBtn.addEventListener("click", function() { viewBankDetails(id, name); });
   // Edit button
   var editBtn = document.createElement("button");
   editBtn.className = "btn mb"; editBtn.textContent = "Edit Bank";
@@ -2965,28 +2960,9 @@ function openBankActionMenu(id, name) {
   cancelBtn.className = "btn ghost"; cancelBtn.textContent = "Cancel";
   cancelBtn.style.cssText = "padding:14px;font-size:15px;";
   cancelBtn.addEventListener("click", function() { closeAll(); openOv("ov-bank-list"); });
-  btns.appendChild(viewBtn); btns.appendChild(editBtn); btns.appendChild(delBtn); btns.appendChild(cancelBtn);
+  btns.appendChild(editBtn); btns.appendChild(delBtn); btns.appendChild(cancelBtn);
   el("bankActionTitle").textContent = name;
   openOv("ov-bank-action");
-}
-async function viewBankDetails(id, name) {
-  try {
-    var b = await dbGet("banks", id); if (!b) return;
-    var info = el("bankActionInfo");
-    info.style.display = "";
-    info.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><div style="font-size:22px;">🏦</div><div class="dctag" style="color:#ef4444;">Bank Account</div></div>'
-      + '<div class="dcnum">'+b.name+'</div>'
-      + '<div class="dcexp">Account No: '+(b.accNo||"—")+'</div>'
-      + '<div class="dcexp">IBAN / IFSC: '+(b.iban||"—")+'</div>'
-      + '<div style="font-weight:800;font-size:18px;color:#ef4444;margin-top:8px;">'+(b.currency||"")+' '+fmt(b.balance||0)+'</div>';
-    var btns = el("bankActionButtons"); btns.innerHTML = "";
-    var backBtn = document.createElement("button");
-    backBtn.className = "btn ghost"; backBtn.textContent = "Back";
-    backBtn.style.cssText = "padding:14px;font-size:15px;";
-    backBtn.addEventListener("click", function() { openBankActionMenu(id, name); });
-    btns.appendChild(backBtn);
-    el("bankActionTitle").textContent = name;
-  } catch(e) { console.error("viewBankDetails:", e); }
 }
 async function openEditBank(id) {
   try {
@@ -3024,7 +3000,7 @@ async function renderBankList() {
     var html = banks.map(function(b) {
       return '<div class="bkcard2" style="cursor:pointer;" data-action="bank-menu" data-id="' + b.id + '" data-name="' + b.name + '">'
         + '<div class="bico">🏦</div>'
-        + '<div class="binfo"><div class="bname2">' + b.name + '</div><div class="bacc">Acc: ' + b.accNo + '</div></div>'
+        + '<div class="binfo"><div class="bname2">' + b.name + '</div><div class="bacc">Acc: ' + b.accNo + '</div><div style="font-size:13px;color:var(--ink);font-weight:800;margin-top:2px;">IBAN: ' + (b.iban || '—') + '</div><div class="bbal">' + b.currency + ' ' + fmt(b.balance) + '</div></div>'
         + ''
         + '</div>';
     }).join("");
