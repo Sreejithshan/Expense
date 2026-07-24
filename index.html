@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FinMob">
+<title>FinMob</title>
+<link rel="manifest" href="manifest.json">
+
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="splash">
+  <div class="sp-glow"></div>
+  <div class="sp-logo">💰</div>
+  <div class="sp-name">FinMob</div>
+  <div class="sp-tag">Your Personal Finance Manager</div>
+  <div class="sp-dots"><div class="sp-dot"></div><div class="sp-dot"></div><div class="sp-dot"></div></div>
+</div>
+<div id="pinScreen">
+  <div class="pin-logo">💰</div>
+  <h2 id="pinTitle">Enter PIN</h2>
+  <div id="pinDots"><div class="pdot" id="pd0"></div><div class="pdot" id="pd1"></div><div class="pdot" id="pd2"></div><div class="pdot" id="pd3"></div></div>
+  <div id="pinErr"></div>
+  <div class="pin-pad">
+    <button class="pp-btn" onclick="pp(1)">1</button><button class="pp-btn" onclick="pp(2)">2</button><button class="pp-btn" onclick="pp(3)">3</button>
+    <button class="pp-btn" onclick="pp(4)">4</button><button class="pp-btn" onclick="pp(5)">5</button><button class="pp-btn" onclick="pp(6)">6</button>
+    <button class="pp-btn" onclick="pp(7)">7</button><button class="pp-btn" onclick="pp(8)">8</button><button class="pp-btn" onclick="pp(9)">9</button>
+    <button class="pp-btn" onclick="ppDel()">⌫</button><button class="pp-btn" onclick="pp(0)">0</button><button class="pp-btn" style="opacity:.2">✓</button>
+  </div>
+  <button id="pinChangeBtn" onclick="startChangePin()" style="display:none">Change PIN</button>
+</div>
+<div id="app">
+<header>
+  <div class="htop">
+    <h1>FinMob</h1>
+    <div class="hright">
+      <div class="hdate" id="hdate"></div>
+      <button class="dark-toggle hico-btn" onclick="toggleDark()" id="darkBtn">🌙</button>
+      <button class="hico-btn" onclick="openOv('ov-settings')">⚙️</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="bal">
+      <div class="bl">Balance — This Month</div>
+      <div class="bv" id="balVal">0</div>
+      <div class="bal-subs">
+        <span>Income <b id="bInc">0</b></span>
+        <span>Spent <b id="bSpent">0</b></span>
+        <span>Saved <b id="bSaved">0</b></span>
+        <span>Debt Left <b id="totalDebtRemaining">0</b></span>
+      </div>
+    </div>
+    <div class="dash-panel">
+      <div class="dash-panel-label">Quick Actions</div>
+      <div class="mini">
+        <div class="mc e"><div class="ml">Today</div><div class="mv" id="todayV">0</div></div>
+        <div class="mc i"><div class="ml">Month Inc</div><div class="mv" id="mIncV">0</div></div>
+        <div class="mc s"><div class="ml">Total Saved</div><div class="mv" id="totalSavV">0</div></div>
+      </div>
+      <div class="feat-sec">
+        <div class="feat-row">
+          <button class="fbtn" onclick="openEntry('income')"><div class="fi fi-income">📥</div><div class="fl">Income</div></button>
+          <button class="fbtn" onclick="openEntry('expense')"><div class="fi fi-expense">💳</div><div class="fl">Expenses</div></button>
+          <button class="fbtn" onclick="openOv('ov-savings')"><div class="fi fi-savings">💰</div><div class="fl">Savings</div></button>
+          <button class="fbtn" onclick="openOv('ov-debt')"><div class="fi fi-debt">💸</div><div class="fl">Debt</div></button>
+        </div>
+        <div class="feat-row">
+          <button class="fbtn" onclick="openOv('ov-bank')"><div class="fi fi-bank">🏦</div><div class="fl">Bank</div></button>
+          <button class="fbtn" onclick="openOv('ov-docs')"><div class="fi fi-docs">📄</div><div class="fl">Documents</div></button>
+          <button class="fbtn" onclick="openOv('ov-appts')"><div class="fi fi-appts">📅</div><div class="fl">Appointments</div></button>
+          <button class="fbtn fbtn-payschedule" onclick="openOv('ov-payschedule')"><div class="fi fi-payschedule">📆</div><div class="fl">Payment Schedule</div></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+  <div class="notif-banner" id="notifBanner"><b>🔔 Reminders</b><ul id="notifList"></ul></div>
+  <div class="notif-banner" id="backupReminder" style="background:linear-gradient(135deg,#1e3a5f,#0d6efd);cursor:pointer;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <b>&#128190; Daily Backup Reminder</b>
+        <div style="font-size:11px;font-weight:500;margin-top:3px;opacity:.9;">Tap to save today's backup to your phone</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="doDailyBackup()" style="background:rgba(255,255,255,.9);color:#1e3a5f;border:none;padding:7px 14px;border-radius:20px;font-weight:800;font-size:12px;">Save Now</button>
+        <button onclick="dismissBackupReminder()" style="background:rgba(255,255,255,.2);color:#fff;border:none;padding:7px 10px;border-radius:20px;font-weight:800;font-size:12px;">Later</button>
+      </div>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="active" data-t="income" onclick="switchTab('income')">Income</button>
+    <button data-t="today" onclick="switchTab('today')">Today</button>
+    <button data-t="month" onclick="switchTab('month')">This Month</button>
+    <button data-t="breakdown" onclick="switchTab('breakdown')">By Category</button>
+    <button data-t="savings" onclick="switchTab('savings')">Savings</button>
+    <button data-t="history" onclick="switchTab('history')">History</button>
+  </nav>
+  <section id="tab-income"><div class="stitle">Income this month</div><ul class="elist" id="lIncome"></ul></section>
+  <section id="tab-today" style="display:none"><div class="stitle">Today's expenses</div><ul class="elist" id="lToday"></ul></section>
+  <section id="tab-month" style="display:none"><div class="stitle">All expenses this month</div><ul class="elist" id="lMonth"></ul></section>
+  <section id="tab-breakdown" style="display:none"><div class="stitle">Spending by category</div><div class="cbars" id="catBars"></div></section>
+  <section id="tab-savings" style="display:none">
+    <!-- Overall savings card -->
+    <div class="savtop" style="position:relative;">
+      <div class="stl">Overall Savings Balance</div>
+      <div class="stv" id="savAllV">0</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:6px;">Accumulated across all months</div>
+    </div>
+    <!-- Monthly savings card -->
+    <div style="background:var(--card);border-radius:var(--r2);padding:14px;box-shadow:var(--sh2);border-top:3px solid var(--sav);margin-bottom:14px;">
+      <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;">This Month</div>
+      <div style="font-size:24px;font-weight:800;margin-top:4px;color:#c07800;" id="savMonthV">0</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;">Saved so far this month</div>
+    </div>
+    <div class="stitle">Savings by Month</div>
+    <div id="lSavingsGrouped"></div>
+    <!-- Hidden withdrawal list still needed for renderAll -->
+    <ul class="elist" id="lWithdrawals" style="display:none;"></ul>
+    <span id="savWithdrawV" style="display:none;">0</span>
+  </section>
+  <section id="tab-history" style="display:none">
+    <div class="stitle">Previous months</div><div id="histList"></div>
+    <div class="bkcard">
+      <div class="bt">🔒 Backup your data</div>
+      <div class="bs">Export a full backup or restore on a new phone.</div>
+      <div class="bkrow">
+        <button class="bkbtn exp" onclick="exportBk()">⬇️ Export</button>
+        <button class="bkbtn imp" onclick="document.getElementById('impFile').click()">⬆️ Import</button>
+      </div>
+      <input type="file" id="impFile" accept="application/json" style="display:none" onchange="importBk(this)">
+    </div>
+  </section>
+</div>
+
+<!-- OVERLAY: ENTRY -->
+<div class="ov" id="ov-entry">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2 id="entTitle">Add Expense</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="entAmt" placeholder="0"></div>
+    <div class="field">
+      <label id="catLbl">Category</label>
+      <div class="cgrid" id="catGrid"></div>
+      <div class="subcats" id="subCats"><div class="sublbl" id="subLbl"></div><div class="cgrid five" id="subGrid"></div></div>
+      <div class="remf" id="remF">
+        <div class="two" style="margin-top:8px">
+          <div class="field"><label>Currency</label>
+            <select id="remCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option><option>PHP</option><option>PKR</option><option>SAR</option></select>
+          </div>
+          <div class="field"><label>Destination</label><input type="text" id="remDest" placeholder="e.g. Kerala"></div>
+        </div>
+      </div>
+    </div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="entNote" placeholder="Add a note"></div>
+    <div class="field"><label>Date</label><input type="date" id="entDate"></div>
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn me" id="entSaveBtn" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY: SAVINGS -->
+<div class="ov" id="ov-savings">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>💰 Add Savings</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Type</label><div class="cgrid" id="savTypeGrid"></div></div>
+    <div id="sf-cash" class="sav-form" style="display:none">
+      <div class="two"><div class="field"><label>Currency</label><select id="cashCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div><div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="cashAmt" placeholder="0"></div></div>
+    </div>
+    <div id="sf-mf" class="sav-form" style="display:none">
+      <div class="field"><label>Fund Name</label><input type="text" id="mfFund" placeholder="e.g. Axis Bluechip Fund"></div>
+      <div class="field"><label>Amount Invested</label><input type="number" inputmode="decimal" id="mfAmt" placeholder="0"></div>
+    </div>
+    <div id="sf-shares" class="sav-form" style="display:none">
+      <div class="field"><label>Company Name</label><input type="text" id="shComp" placeholder="e.g. Reliance Industries"></div>
+      <div class="two"><div class="field"><label>No of Shares</label><input type="number" inputmode="decimal" id="shNum" placeholder="0"></div><div class="field"><label>Purchase Value</label><input type="number" inputmode="decimal" id="shVal" placeholder="per share"></div></div>
+    </div>
+    <div id="sf-gold" class="sav-form" style="display:none">
+      <div class="two"><div class="field"><label>Quantity (grams)</label><input type="number" inputmode="decimal" id="goldGrams" placeholder="0"></div><div class="field"><label>Amount Paid</label><input type="number" inputmode="decimal" id="goldAmt" placeholder="0"></div></div>
+    </div>
+    <div id="sf-fd" class="sav-form" style="display:none">
+      <div class="field"><label>Bank Name</label><input type="text" id="fdBank" placeholder="e.g. Emirates NBD"></div>
+      <div class="three"><div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="fdAmt" placeholder="0"></div><div class="field"><label>Currency</label><select id="fdCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div><div class="field"><label>Interest %</label><input type="number" inputmode="decimal" id="fdRate" placeholder="0"></div></div>
+      <div class="two"><div class="field"><label>Deposit Date</label><input type="date" id="fdDep"></div><div class="field"><label>Maturity Date</label><input type="date" id="fdMat"></div></div>
+    </div>
+    <div id="sf-other" class="sav-form" style="display:none">
+      <div class="field"><label>Description</label><input type="text" id="savOtherDesc" placeholder="Describe this saving"></div>
+      <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="savOtherAmt" placeholder="0"></div>
+    </div>
+    <div class="field"><label>Date</label><input type="date" id="savDate"></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="savNote" placeholder=""></div>
+    <div class="sacts"><button class="btn ghost" onclick="closeAll()">Cancel</button><button class="btn ms" onclick="saveSaving()">Save Savings</button></div>
+  </div>
+</div>
+
+<!-- OVERLAY: DEBT (main menu) -->
+<div class="ov" id="ov-debt">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>💸 Debt Tracker</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+
+    <!-- View Loans — large prominent button -->
+    <button onclick="openLoanListOverlay()" style="width:100%;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(239,68,68,.45);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">View Loans</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Tap to view all saved loans</div>
+      </div>
+      <div style="font-size:28px;">📋</div>
+    </button>
+
+    <!-- Add Loan — second large button -->
+    <button onclick="showDebtForm()" style="width:100%;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(245,158,11,.4);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Add Loan</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Create a new loan</div>
+      </div>
+      <div style="font-size:28px;">➕</div>
+    </button>
+
+  </div>
+</div>
+
+<!-- OVERLAY: VIEW LOANS -->
+<div class="ov" id="ov-debt-list">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📋 View Loans</h2><button class="sclose" onclick="closeLoanList()">✕</button></div>
+    <div id="debtList"></div>
+  </div>
+</div>
+
+<!-- OVERLAY: ADD NEW LOAN -->
+<div class="ov" id="ov-debt-add">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>➕ Add Loan</h2><button class="sclose" onclick="hideDebtForm()">✕</button></div>
+    <div class="field"><label>Loan Type</label><select id="dType"><option value="mortgage">🏠 Mortgage</option><option value="gold">🪙 Gold Loan</option><option value="personal">👤 Personal Loan</option><option value="car">🚗 Car Loan</option><option value="other">📌 Others</option></select></div>
+    <div class="field"><label>Lender / Bank Name</label><input type="text" id="dLender" placeholder="e.g. Emirates NBD"></div>
+    <div class="two"><div class="field"><label>Total Amount</label><input type="number" inputmode="decimal" id="dTotal" placeholder="0"></div><div class="field"><label>Monthly EMI</label><input type="number" inputmode="decimal" id="dEMI" placeholder="0"></div></div>
+    <div class="two"><div class="field"><label>Rate of Interest (%)</label><input type="number" inputmode="decimal" id="dRate" placeholder="e.g. 5.5"></div><div class="field"><label>Currency</label><select id="dCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div></div>
+    <div class="two"><div class="field"><label>Next EMI Date</label><input type="date" id="dEmiDate"></div><div class="field"><label>EMIs Pending</label><input type="number" id="dEmisPending" placeholder="e.g. 24"></div></div>
+    <div class="sacts"><button class="btn ghost" onclick="hideDebtForm()">Cancel</button><button class="btn md" onclick="saveDebt()">Add Loan</button></div>
+  </div>
+</div>
+
+
+<!-- OVERLAY: BANK -->
+<!-- OVERLAY: BANK (main menu) -->
+<div class="ov" id="ov-bank">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>🏦 My Banks</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+
+    <!-- View Banks — large prominent button -->
+    <button onclick="openBankListOverlay()" style="width:100%;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(239,68,68,.45);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">View Banks</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Tap to view all saved banks</div>
+      </div>
+      <div style="font-size:28px;">📋</div>
+    </button>
+
+    <!-- Add Bank — second large button -->
+    <button onclick="openBankAddOverlay()" style="width:100%;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(245,158,11,.4);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Add Bank</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Add a new bank account</div>
+      </div>
+      <div style="font-size:28px;">➕</div>
+    </button>
+
+  </div>
+</div>
+
+<!-- OVERLAY: VIEW BANKS -->
+<div class="ov" id="ov-bank-list">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📋 View Banks</h2><button class="sclose" onclick="closeBankList()">✕</button></div>
+    <div id="bankList"></div>
+  </div>
+</div>
+
+<!-- OVERLAY: ADD BANK -->
+<div class="ov" id="ov-bank-add">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>➕ Add Bank</h2><button class="sclose" onclick="hideBankForm()">✕</button></div>
+    <div id="bankForm">
+      <div class="field"><label>Bank Name</label><input type="text" id="bnName" placeholder="e.g. Emirates NBD"></div>
+      <div class="field"><label>Account Number</label><input type="text" id="bnAcc" placeholder="e.g. 1234 5678 9012"></div>
+      <div class="field"><label>ID Type</label><select id="bnIdType" onchange="toggleBnIdType()"><option value="iban">IBAN</option><option value="ifsc">IFSC</option></select></div>
+      <div class="field" id="bnIbanRow"><label>IBAN</label><input type="text" id="bnIban" placeholder="e.g. AE07 0331 2345 6789 0123 456"></div>
+      <div class="field" id="bnIfscRow" style="display:none"><label>IFSC</label><input type="text" id="bnIfsc" placeholder="e.g. SBIN0001234"></div>
+      <div class="two"><div class="field"><label>Balance</label><input type="number" inputmode="decimal" id="bnBal" placeholder="0"></div><div class="field"><label>Currency</label><select id="bnCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></div></div>
+      <div class="sacts"><button class="btn ghost" onclick="hideBankForm()">Cancel</button><button class="btn mb" onclick="saveBank()">Add Bank</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY: DOCUMENTS -->
+<!-- OVERLAY: DOCUMENTS (main menu) -->
+<div class="ov" id="ov-docs">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📄 Documents</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+
+    <!-- Add Documents — large prominent button -->
+    <button onclick="openDocsAddOverlay()" style="width:100%;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(239,68,68,.45);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Add Documents</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Select a person to add a document</div>
+      </div>
+      <div style="font-size:28px;">➕</div>
+    </button>
+
+    <!-- View Documents — second large button -->
+    <button onclick="openDocsViewOverlay()" style="width:100%;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(245,158,11,.4);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">View Documents</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Select a person to view their documents</div>
+      </div>
+      <div style="font-size:28px;">📂</div>
+    </button>
+
+  </div>
+</div>
+
+<!-- OVERLAY: ADD DOCUMENTS -->
+<div class="ov" id="ov-docs-add">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>➕ Add Documents</h2><button class="sclose" onclick="closeDocsAdd()">✕</button></div>
+
+    <!-- Add person -->
+    <div class="addprow"><input type="text" id="newPerson" placeholder="Add person name (e.g. Sreejith)"><button onclick="addPerson()">+ Add</button></div>
+    <div class="person-list" id="personList"></div>
+
+    <!-- Select person -->
+    <div class="pbar"><select id="personSel" onchange="renderDocs()"><option value="">— Select person —</option></select></div>
+
+    <!-- Shown only after person selected -->
+    <div id="docSection" style="display:none">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <button class="dtbtn" data-dt="govt_id"  onclick="openDocEntry('govt_id')">🪪 Government ID</button>
+        <button class="dtbtn" data-dt="visa"     onclick="openDocEntry('visa')">🛂 Visa</button>
+        <button class="dtbtn" data-dt="passport" onclick="openDocEntry('passport')">📘 Passport</button>
+        <button class="dtbtn" data-dt="driving"  onclick="openDocEntry('driving')">🚗 Driving License</button>
+        <button class="dtbtn" data-dt="tenancy"  onclick="openDocEntry('tenancy')">🏠 Tenancy Contract</button>
+        <button class="dtbtn" data-dt="other"    onclick="openDocEntry('other')">📁 Others</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY: DOCUMENT ENTRY (separate screen, opened after picking a category) -->
+<div class="ov" id="ov-doc-entry">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2 id="docEntryTitle">Add Document</h2><button class="sclose" onclick="cancelDocForm()">✕</button></div>
+
+    <!-- Standard doc form -->
+    <div id="docForm" style="display:none">
+      <div id="df-other-name" style="display:none">
+        <div class="field"><label>Document Name</label><input type="text" id="docName" placeholder="e.g. NOC Letter"></div>
+      </div>
+      <div class="field"><label id="docNumLbl">Number</label><input type="text" id="docNum" placeholder="Enter number"></div>
+      <div class="two">
+        <div class="field"><label>Expiry Date (optional)</label><input type="date" id="docExpiry"></div>
+        <div class="field"><label>Issued By (optional)</label><input type="text" id="docIssued" placeholder="e.g. ICA Dubai"></div>
+      </div>
+      <div class="field"><label>Attach File (optional)</label><input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png"></div>
+      <div class="sacts">
+        <button class="btn ghost" onclick="cancelDocForm()">Cancel</button>
+        <button class="addbtn" style="flex:1;margin:0;" onclick="saveDoc()">Save Document</button>
+      </div>
+    </div>
+
+    <!-- Tenancy form -->
+    <div id="tenForm" style="display:none">
+      <div class="field"><label>Contract No</label><input type="text" id="tcContract" placeholder="e.g. TN-2024-001"></div>
+      <div class="two"><div class="field"><label>Start Date</label><input type="date" id="tcStart"></div><div class="field"><label>End Date</label><input type="date" id="tcEnd"></div></div>
+      <div class="field"><label>Landlord Name</label><input type="text" id="tcLandlord" placeholder="e.g. Ahmed Al Mansouri"></div>
+      <div class="stitle">Cheque Details</div>
+      <div class="two"><div class="field"><label>Total Rent</label><input type="number" inputmode="decimal" id="tcRent" placeholder="0"></div><div class="field"><label>No of Cheques</label><input type="number" id="tcNumCh" placeholder="e.g. 4" min="1" max="12"></div></div>
+      <button class="addbtn" onclick="genCheques()">Generate Cheque Fields</button>
+      <div id="chequeInputs"></div>
+      <div class="field"><label>Attach Contract (optional)</label><input type="file" id="tcFile" accept=".pdf,.jpg,.jpeg,.png"></div>
+      <div class="sacts">
+        <button class="btn ghost" onclick="cancelDocForm()">Cancel</button>
+        <button class="btn md" onclick="saveTenancy()">Save Contract</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- OVERLAY: VIEW DOCUMENTS -->
+<div class="ov" id="ov-docs-view">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📂 View Documents</h2><button class="sclose" onclick="closeDocsView()">✕</button></div>
+    <div class="pbar"><select id="personSelView" onchange="renderSavedDocsList(this.value)"><option value="">— Select person —</option></select></div>
+    <div id="savedDocsList"></div>
+  </div>
+</div>
+
+
+<!-- EXPENSE ACTION SHEET -->
+<div class="ov" id="ov-expense-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="expenseActionTitle">Expense</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="expenseActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- EXPENSE EDIT SHEET -->
+<div class="ov" id="ov-expense-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Expense</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editExpAmt" placeholder="0"></div>
+    <div class="field">
+      <label>Category</label>
+      <div class="cgrid" id="editExpCatGrid"></div>
+      <div class="subcats" id="editExpSubCats"><div class="sublbl" id="editExpSubLbl"></div><div class="cgrid five" id="editExpSubGrid"></div></div>
+    </div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="editExpNote" placeholder="Add a note"></div>
+    <div class="field"><label>Date</label><input type="date" id="editExpDate"></div>
+    <input type="hidden" id="editExpId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn me" onclick="saveEditExpense()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- INCOME ACTION SHEET -->
+<div class="ov" id="ov-income-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="incomeActionTitle">Income</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="incomeActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- INCOME EDIT SHEET -->
+<div class="ov" id="ov-income-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Income</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editIncAmt" placeholder="0"></div>
+    <div class="field"><label>Source</label><div class="cgrid" id="editIncCatGrid"></div></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="editIncNote" placeholder="Add a note"></div>
+    <div class="field"><label>Date</label><input type="date" id="editIncDate"></div>
+    <input type="hidden" id="editIncId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn mi" onclick="saveEditIncome()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- SAVINGS ACTION SHEET -->
+<div class="ov" id="ov-savings-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="savingsActionTitle">Savings</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="savingsActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- SAVINGS EDIT SHEET -->
+<div class="ov" id="ov-savings-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Savings</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Type</label><div class="cgrid" id="editSavTypeGrid"></div></div>
+    <div id="edit-sf-cash" class="edit-sav-form sav-form" style="display:none">
+      <div class="two"><div class="field"><label>Currency</label><select id="editCashCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div><div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editCashAmt" placeholder="0"></div></div>
+    </div>
+    <div id="edit-sf-mf" class="edit-sav-form sav-form" style="display:none">
+      <div class="field"><label>Fund Name</label><input type="text" id="editMfFund" placeholder="e.g. Axis Bluechip Fund"></div>
+      <div class="field"><label>Amount Invested</label><input type="number" inputmode="decimal" id="editMfAmt" placeholder="0"></div>
+    </div>
+    <div id="edit-sf-shares" class="edit-sav-form sav-form" style="display:none">
+      <div class="field"><label>Company Name</label><input type="text" id="editShComp" placeholder="e.g. Reliance Industries"></div>
+      <div class="two"><div class="field"><label>No of Shares</label><input type="number" inputmode="decimal" id="editShNum" placeholder="0"></div><div class="field"><label>Purchase Value</label><input type="number" inputmode="decimal" id="editShVal" placeholder="per share"></div></div>
+    </div>
+    <div id="edit-sf-gold" class="edit-sav-form sav-form" style="display:none">
+      <div class="two"><div class="field"><label>Quantity (grams)</label><input type="number" inputmode="decimal" id="editGoldGrams" placeholder="0"></div><div class="field"><label>Amount Paid</label><input type="number" inputmode="decimal" id="editGoldAmt" placeholder="0"></div></div>
+    </div>
+    <div id="edit-sf-fd" class="edit-sav-form sav-form" style="display:none">
+      <div class="field"><label>Bank Name</label><input type="text" id="editFdBank" placeholder="e.g. Emirates NBD"></div>
+      <div class="three"><div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editFdAmt" placeholder="0"></div><div class="field"><label>Currency</label><select id="editFdCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div><div class="field"><label>Interest %</label><input type="number" inputmode="decimal" id="editFdRate" placeholder="0"></div></div>
+    </div>
+    <div id="edit-sf-other" class="edit-sav-form sav-form" style="display:none">
+      <div class="field"><label>Description</label><input type="text" id="editSavDesc" placeholder="Describe this saving"></div>
+      <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editSavOtherAmt" placeholder="0"></div>
+    </div>
+    <div class="field"><label>Date</label><input type="date" id="editSavDate"></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="editSavNote" placeholder=""></div>
+    <input type="hidden" id="editSavId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn ms" onclick="saveEditSavings()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- WITHDRAWAL ACTION SHEET -->
+<div class="ov" id="ov-withdrawal-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="wdActionTitle">Withdrawal</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="wdActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- WITHDRAWAL EDIT SHEET -->
+<div class="ov" id="ov-withdrawal-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Withdrawal</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editWdAmt" placeholder="0"></div>
+    <div class="field"><label>Type</label>
+      <select id="editWdType">
+        <option value="withdrawal">Withdrawal (taken out)</option>
+        <option value="adjustment">Manual Adjustment</option>
+      </select>
+    </div>
+    <div class="field"><label>Savings Type</label>
+      <select id="editWdCat">
+        <option value="cash">Cash</option><option value="mf">Mutual Funds</option>
+        <option value="shares">Shares</option><option value="gold">Gold</option>
+        <option value="fd">Fixed Deposit</option><option value="other">Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Date</label><input type="date" id="editWdDate"></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="editWdNote" placeholder="e.g. Emergency withdrawal"></div>
+    <input type="hidden" id="editWdId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn" style="background:linear-gradient(135deg,#e17055,#d63031);color:#fff;" onclick="saveEditWithdrawal()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- BANK ACTION SHEET -->
+<div class="ov" id="ov-bank-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="bankActionTitle">Bank Account</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="bankActionInfo" style="display:none;background:linear-gradient(135deg,rgba(248,113,113,.10),rgba(239,68,68,.04));border-left:3px solid #ef4444;border-radius:var(--r2);padding:14px 15px;margin-bottom:14px;box-shadow:var(--sh2);"></div>
+    <div id="bankActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- BANK EDIT SHEET -->
+<div class="ov" id="ov-bank-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Bank</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Bank Name</label><input type="text" id="editBnName" placeholder="e.g. Emirates NBD"></div>
+    <div class="field"><label>Account Number</label><input type="text" id="editBnAcc" placeholder="e.g. 1234 5678 9012"></div>
+    <div class="field"><label>ID Type</label><select id="editBnIdType" onchange="toggleEditBnIdType()"><option value="iban">IBAN</option><option value="ifsc">IFSC</option></select></div>
+    <div class="field" id="editBnIbanRow"><label>IBAN</label><input type="text" id="editBnIban" placeholder="e.g. AE07 0331 2345 6789 0123 456"></div>
+    <div class="field" id="editBnIfscRow" style="display:none"><label>IFSC</label><input type="text" id="editBnIfsc" placeholder="e.g. SBIN0001234"></div>
+    <div class="two"><div class="field"><label>Balance</label><input type="number" inputmode="decimal" id="editBnBal" placeholder="0"></div><div class="field"><label>Currency</label><select id="editBnCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></div></div>
+    <input type="hidden" id="editBnId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll();openOv('ov-bank-list')">Cancel</button>
+      <button class="btn mb" onclick="saveEditBank()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- APPOINTMENT ACTION SHEET -->
+<div class="ov" id="ov-appt-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="apptActionTitle">Appointment</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="apptActionInfo" style="display:none;background:var(--card);border-radius:var(--r2);padding:14px 15px;margin-bottom:14px;box-shadow:var(--sh2);"></div>
+    <div id="apptActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- APPOINTMENT EDIT SHEET -->
+<div class="ov" id="ov-appt-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Appointment</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="atype-row" id="editApptTypes">
+      <button class="atbtn" data-at="doctor" onclick="selEditAT(this)">🩺 Doctor</button>
+      <button class="atbtn" data-at="service" onclick="selEditAT(this)">🔧 Service</button>
+      <button class="atbtn" data-at="spa" onclick="selEditAT(this)">💆 Spa</button>
+      <button class="atbtn" data-at="other" onclick="selEditAT(this)">📋 Others</button>
+    </div>
+    <div id="edit-af-service" style="display:none">
+      <div class="two"><div class="field"><label>Vehicle</label><input type="text" id="editSvcCar" placeholder="e.g. Toyota Camry"></div><div class="field"><label>Service Type</label><input type="text" id="editSvcType" placeholder="e.g. Oil Change"></div></div>
+    </div>
+    <div class="field"><label>Title / Description</label><input type="text" id="editApptTitle" placeholder="e.g. Dr. Ahmed — Dental"></div>
+    <div class="field"><label>Date &amp; Time</label><input type="datetime-local" id="editApptDT"></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="editApptNotes" placeholder="Any extra notes..."></textarea></div>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--sh1);margin-bottom:8px;">
+      <input type="checkbox" id="editApptRecurring" style="width:18px;height:18px;accent-color:var(--pri);">
+      <div><div style="font-weight:700;font-size:13.5px;">Repeat monthly</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Auto-carry forward to same date next month</div></div>
+    </div>
+    <input type="hidden" id="editApptId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll();openOv('ov-appt-list')">Cancel</button>
+      <button class="btn ma" onclick="saveEditAppt()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- BILL ACTION SHEET -->
+<div class="ov" id="ov-bill-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="billActionTitle">Bill Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="billActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- BILL EDIT SHEET -->
+<div class="ov" id="ov-bill-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Bill</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Bill Category</label>
+      <select id="editBillCat" onchange="toggleEditCustomBill()">
+        <option value="electricity">⚡ Electricity Bill</option>
+        <option value="phone">📱 Phone Bill</option>
+        <option value="internet">🌐 Internet Bill</option>
+        <option value="school">🎓 School Fees</option>
+        <option value="custom">✏️ Custom Bill</option>
+      </select>
+    </div>
+    <div class="field" id="editCustomBillRow" style="display:none"><label>Bill Name</label><input type="text" id="editCustomBillName" placeholder="e.g. Water Bill"></div>
+    <div class="two">
+      <div class="field"><label>Due Date</label><input type="date" id="editBillDueDate"></div>
+      <div class="field"><label>Amount (optional)</label><input type="number" inputmode="decimal" id="editBillAmt" placeholder="0"></div>
+    </div>
+    <div class="field"><label>Notes (optional)</label><input type="text" id="editBillNotes" placeholder="Any notes..."></div>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--sh1);margin-bottom:8px;">
+      <input type="checkbox" id="editBillRecurring" style="width:18px;height:18px;accent-color:#6366f1;">
+      <div><div style="font-weight:700;font-size:13.5px;">Repeat Monthly</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Auto-add every month on same date</div></div>
+    </div>
+    <input type="hidden" id="editBillId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;" onclick="saveEditBill()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- CHEQUE ACTION SHEET -->
+<div class="ov" id="ov-cheque-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="chequeActionTitle">Cheque Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="chequeActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- CHEQUE EDIT SHEET -->
+<div class="ov" id="ov-cheque-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Cheque</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="two">
+      <div class="field"><label>Cheque Number</label><input type="text" id="editChequeNum" placeholder="e.g. 001234"></div>
+      <div class="field"><label>Cheque Date</label><input type="date" id="editChequeDueDate"></div>
+    </div>
+    <div class="field"><label>Payee (To Whom)</label><input type="text" id="editChequePayee" placeholder="e.g. Al Futtaim Properties"></div>
+    <div class="two">
+      <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="editChequeAmt" placeholder="0"></div>
+      <div class="field"><label>Bank (optional)</label><input type="text" id="editChequeBankName" placeholder="e.g. Emirates NBD"></div>
+    </div>
+    <div class="field"><label>Notes (optional)</label><input type="text" id="editChequeNotes" placeholder="Any notes..."></div>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--sh1);margin-bottom:8px;">
+      <input type="checkbox" id="editChequeRecurring" style="width:18px;height:18px;accent-color:#6366f1;">
+      <div><div style="font-weight:700;font-size:13.5px;">Repeat Monthly</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Auto-add every month on same date</div></div>
+    </div>
+    <input type="hidden" id="editChequeId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;" onclick="saveEditCheque()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEBT ACTION SHEET -->
+<div class="ov" id="ov-debt-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="debtActionTitle">Loan Details</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="debtActionInfo" style="background:var(--dbt-s);border-radius:var(--r2);padding:14px;margin-bottom:14px;border-left:3px solid var(--dbt);"></div>
+    <div id="debtActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- DEBT EDIT SHEET -->
+<div class="ov" id="ov-debt-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2>Edit Loan</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Loan Type</label><select id="editDType"><option value="mortgage">🏠 Mortgage</option><option value="gold">🪙 Gold Loan</option><option value="personal">👤 Personal Loan</option><option value="car">🚗 Car Loan</option><option value="other">📌 Others</option></select></div>
+    <div class="field"><label>Lender / Bank Name</label><input type="text" id="editDLender" placeholder="e.g. Emirates NBD"></div>
+    <div class="two"><div class="field"><label>Total Amount</label><input type="number" inputmode="decimal" id="editDTotal" placeholder="0"></div><div class="field"><label>Monthly EMI</label><input type="number" inputmode="decimal" id="editDEMI" placeholder="0"></div></div>
+    <div class="two"><div class="field"><label>Rate of Interest (%)</label><input type="number" inputmode="decimal" id="editDRate" placeholder="e.g. 5.5"></div><div class="field"><label>Currency</label><select id="editDCur"><option>AED</option><option>INR</option><option>USD</option><option>EUR</option></select></div></div>
+    <div class="field"><label>Next EMI Date</label><input type="date" id="editDEmiDate"></div>
+    <input type="hidden" id="editDId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn md" onclick="saveEditDebt()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- DOCUMENT ACTION SHEET -->
+<div class="ov" id="ov-doc-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="docActionTitle">Document Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="docActionInfo" style="background:var(--exp-s);border-radius:var(--r2);padding:14px;margin-bottom:14px;border-left:3px solid var(--pri);display:none;"></div>
+    <div id="docActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+<!-- DOCUMENT EDIT SHEET -->
+<div class="ov" id="ov-doc-edit">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="docEditTitle">Edit Document</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="editDocFileActions" style="margin-bottom:14px;"></div>
+    <div id="editDf-other-name" style="display:none">
+      <div class="field"><label>Document Name</label><input type="text" id="editDocName" placeholder="e.g. NOC Letter"></div>
+    </div>
+    <div class="field"><label id="editDocNumLbl">Number</label><input type="text" id="editDocNum" placeholder="Enter number"></div>
+    <div class="two">
+      <div class="field"><label>Expiry Date (optional)</label><input type="date" id="editDocExpiry"></div>
+      <div class="field"><label>Issued By (optional)</label><input type="text" id="editDocIssued" placeholder="e.g. ICA Dubai"></div>
+    </div>
+    <input type="hidden" id="editDocId">
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll();openOv('ov-docs-view')">Cancel</button>
+      <button class="btn mb" onclick="saveEditDoc()">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- TENANCY ACTION SHEET -->
+<div class="ov" id="ov-ten-action">
+  <div class="sheet"><div class="drag-bar"></div>
+    <div class="sh2"><h2 id="tenActionTitle">Contract Options</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div id="tenActionInfo" style="background:var(--dbt-s);border-radius:var(--r2);padding:14px;margin-bottom:14px;border-left:3px solid var(--dbt);"></div>
+    <div id="tenActionButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;"></div>
+  </div>
+</div>
+
+
+<!-- OVERLAY: APPOINTMENTS (main menu) -->
+<div class="ov" id="ov-appts">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📅 Appointments</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+
+    <!-- Saved Appointments — large prominent button -->
+    <button id="savedApptsBtn" onclick="openSavedApptsOverlay()" style="width:100%;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(239,68,68,.45);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Saved Appointments</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;" id="savedApptsCount">Tap to view all appointments</div>
+      </div>
+      <div style="font-size:28px;">📋</div>
+    </button>
+
+    <!-- Add Appointment — second large button -->
+    <button onclick="openAddApptOverlay()" style="width:100%;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(245,158,11,.4);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Add Appointment</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Create a new appointment</div>
+      </div>
+      <div style="font-size:28px;">➕</div>
+    </button>
+
+  </div>
+</div>
+
+<!-- OVERLAY: SAVED APPOINTMENTS -->
+<div class="ov" id="ov-appt-list">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📋 Saved Appointments</h2><button class="sclose" onclick="closeApptList()">✕</button></div>
+    <div id="apptList"></div>
+  </div>
+</div>
+
+<!-- OVERLAY: ADD APPOINTMENT -->
+<div class="ov" id="ov-appt-add">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>➕ Add Appointment</h2><button class="sclose" onclick="closeApptAdd()">✕</button></div>
+    <div class="atype-row" id="apptTypes">
+      <button class="atbtn sel" data-at="doctor" onclick="selAT(this)">🩺 Doctor</button>
+      <button class="atbtn" data-at="service" onclick="selAT(this)">🔧 Service</button>
+      <button class="atbtn" data-at="spa" onclick="selAT(this)">💆 Spa</button>
+      <button class="atbtn" data-at="other" onclick="selAT(this)">📋 Others</button>
+    </div>
+    <div id="af-service" style="display:none">
+      <div class="two"><div class="field"><label>Vehicle</label><input type="text" id="svcCar" placeholder="e.g. Toyota Camry"></div><div class="field"><label>Service Type</label><input type="text" id="svcType" placeholder="e.g. Oil Change"></div></div>
+    </div>
+    <div class="field"><label>Title</label><input type="text" id="apptTitle" placeholder="e.g. Dr. Ahmed"></div>
+    <div class="field"><label>Date &amp; Time</label><input type="datetime-local" id="apptDT"></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="apptNotes" placeholder="Any extra notes..."></textarea></div>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--sh1);margin-bottom:8px;">
+      <input type="checkbox" id="apptRecurring" style="width:18px;height:18px;accent-color:var(--pri);">
+      <div><div style="font-weight:700;font-size:13.5px;">Repeat monthly</div><div style="font-size:11px;color:var(--muted);">Auto-carry forward each month</div></div>
+    </div>
+    <button class="addbtn" onclick="saveAppt()">+ Save Appointment</button>
+  </div>
+</div>
+
+<!-- OVERLAY: PAYMENT SCHEDULE -->
+<!-- OVERLAY: PAYMENT SCHEDULE (main menu) -->
+<div class="ov" id="ov-payschedule">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📆 Payment Schedule</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+
+    <!-- Scheduled Bills — large prominent button -->
+    <button onclick="openPayScheduleList()" style="width:100%;background:linear-gradient(135deg,#f87171,#ef4444);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(239,68,68,.45);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Scheduled Bills</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">View all bills, cheques &amp; payments</div>
+      </div>
+      <div style="font-size:28px;">📋</div>
+    </button>
+
+    <!-- Add Bill — second large button -->
+    <button onclick="openAddBillType()" style="width:100%;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;border:none;border-radius:var(--r2);padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(245,158,11,.4);cursor:pointer;">
+      <div style="text-align:left;">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;">Add Bill</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px;">Create a new bill, cheque or payment</div>
+      </div>
+      <div style="font-size:28px;">➕</div>
+    </button>
+
+  </div>
+</div>
+
+<!-- OVERLAY: SCHEDULED BILLS -->
+<div class="ov" id="ov-payschedule-list">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📋 Scheduled Bills</h2><button class="sclose" onclick="closePayScheduleList()">✕</button></div>
+    <div class="pay-section-tabs">
+      <button class="pay-tab active" id="payTab-bills" onclick="switchPayTab('bills')">🧾 Utility Bills</button>
+      <button class="pay-tab" id="payTab-cheques" onclick="switchPayTab('cheques')">💳 Cheques</button>
+      <button class="pay-tab" id="payTab-others" onclick="switchPayTab('others')">📋 Others</button>
+    </div>
+    <div id="paySection-bills">
+      <div class="stitle" style="margin-top:0">This Month</div>
+      <div id="billList"></div>
+    </div>
+    <div id="paySection-cheques" style="display:none">
+      <div class="stitle" style="margin-top:0">This Month</div>
+      <div id="chequeList"></div>
+    </div>
+    <div id="paySection-others" style="display:none">
+      <div class="stitle" style="margin-top:0">This Month</div>
+      <div id="otherPayList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY: ADD BILL (type picker) -->
+<div class="ov" id="ov-payschedule-addtype">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>➕ Add Bill</h2><button class="sclose" onclick="closeAddBillType()">✕</button></div>
+
+    <button onclick="openBillAddOverlay()" style="width:100%;background:linear-gradient(135deg,#34d399,#10b981);color:#fff;border:none;border-radius:var(--r2);padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(16,185,129,.4);cursor:pointer;">
+      <div style="text-align:left;"><div style="font-size:15px;font-weight:800;letter-spacing:-.01em;">Utility Bills</div><div style="font-size:12px;opacity:.85;margin-top:2px;">Electricity, phone, internet, school fees...</div></div>
+      <div style="font-size:24px;">🧾</div>
+    </button>
+
+    <button onclick="openChequeAddOverlay()" style="width:100%;background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;border:none;border-radius:var(--r2);padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(99,102,241,.4);cursor:pointer;">
+      <div style="text-align:left;"><div style="font-size:15px;font-weight:800;letter-spacing:-.01em;">Cheque</div><div style="font-size:12px;opacity:.85;margin-top:2px;">Track a post-dated cheque</div></div>
+      <div style="font-size:24px;">💳</div>
+    </button>
+
+    <button onclick="openOtherPayAddOverlay()" style="width:100%;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;border:none;border-radius:var(--r2);padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px -6px rgba(245,158,11,.4);cursor:pointer;">
+      <div style="text-align:left;"><div style="font-size:15px;font-weight:800;letter-spacing:-.01em;">Other Payment</div><div style="font-size:12px;opacity:.85;margin-top:2px;">Any other recurring or one-off payment</div></div>
+      <div style="font-size:24px;">📋</div>
+    </button>
+
+  </div>
+</div>
+
+<!-- OVERLAY: ADD UTILITY BILL -->
+<div class="ov" id="ov-bill-add">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>🧾 Add Bill</h2><button class="sclose" onclick="closeBillAdd()">✕</button></div>
+    <div id="bill-form">
+      <div class="field"><label>Category</label>
+        <select id="billCat" onchange="toggleCustomBill()">
+          <option value="electricity">⚡ Electricity Bill</option>
+          <option value="phone">📱 Phone Bill</option>
+          <option value="internet">🌐 Internet Bill</option>
+          <option value="school">🎓 School Fees</option>
+          <option value="custom">✏️ Custom Bill</option>
+        </select>
+      </div>
+      <div class="field" id="customBillRow" style="display:none"><label>Bill Name</label><input type="text" id="customBillName" placeholder="e.g. Water Bill"></div>
+      <div class="two">
+        <div class="field"><label>Due Date</label><input type="date" id="billDueDate"></div>
+        <div class="field"><label>Amount (optional)</label><input type="number" inputmode="decimal" id="billAmt" placeholder="0"></div>
+      </div>
+      <div class="field"><label>Notes (optional)</label><input type="text" id="billNotes" placeholder=""></div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+        <input type="checkbox" id="billRecurring" style="width:18px;height:18px;accent-color:#6366f1;">
+        <div><div style="font-weight:700;font-size:13.5px;">Repeat Monthly</div></div>
+      </div>
+      <div class="sacts">
+        <button class="btn ghost" onclick="closeBillAdd()">Cancel</button>
+        <button class="btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;" onclick="saveBill()">Save Bill</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY: ADD CHEQUE -->
+<div class="ov" id="ov-cheque-add">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>💳 Add Cheque</h2><button class="sclose" onclick="closeChequeAdd()">✕</button></div>
+    <div id="cheque-form">
+      <div class="two">
+        <div class="field"><label>Cheque No</label><input type="text" id="chequeNum" placeholder="e.g. 001234"></div>
+        <div class="field"><label>Cheque Date</label><input type="date" id="chequeDueDate"></div>
+      </div>
+      <div class="field"><label>Payee</label><input type="text" id="chequePayee" placeholder="e.g. Al Futtaim Properties"></div>
+      <div class="two">
+        <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="chequeAmt" placeholder="0"></div>
+        <div class="field"><label>Bank (optional)</label><input type="text" id="chequeBankName" placeholder="e.g. Emirates NBD"></div>
+      </div>
+      <div class="field"><label>Notes (optional)</label><input type="text" id="chequeNotes" placeholder=""></div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+        <input type="checkbox" id="chequeRecurring" style="width:18px;height:18px;accent-color:#6366f1;">
+        <div><div style="font-weight:700;font-size:13.5px;">Repeat Monthly</div></div>
+      </div>
+      <div class="sacts">
+        <button class="btn ghost" onclick="closeChequeAdd()">Cancel</button>
+        <button class="btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;" onclick="saveCheque()">Save Cheque</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY: ADD OTHER PAYMENT -->
+<div class="ov" id="ov-otherpay-add">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>📋 Add Other Payment</h2><button class="sclose" onclick="closeOtherPayAdd()">✕</button></div>
+    <div id="other-form">
+      <div class="field"><label>Payment Name</label><input type="text" id="otherPayName" placeholder="e.g. Gym Membership"></div>
+      <div class="two">
+        <div class="field"><label>Due Date</label><input type="date" id="otherPayDate"></div>
+        <div class="field"><label>Amount (optional)</label><input type="number" inputmode="decimal" id="otherPayAmt" placeholder="0"></div>
+      </div>
+      <div class="field"><label>Notes (optional)</label><input type="text" id="otherPayNotes" placeholder=""></div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+        <input type="checkbox" id="otherPayRecurring" style="width:18px;height:18px;accent-color:#6366f1;">
+        <div><div style="font-weight:700;font-size:13.5px;">Repeat Monthly</div></div>
+      </div>
+      <div class="sacts">
+        <button class="btn ghost" onclick="closeOtherPayAdd()">Cancel</button>
+        <button class="btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;" onclick="saveOtherPay()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY: SETTINGS -->
+<div class="ov" id="ov-settings">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>⚙️ Settings</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="stitle">Appearance</div>
+    <div class="set-row"><div class="sr-left"><h3>🌙 Dark Mode</h3><p>Switch between light and dark theme</p></div><button onclick="toggleDark()" id="darkSettingBtn">Enable</button></div>
+    <div class="stitle">Reports</div>
+    <div class="set-row"><div class="sr-left"><h3>📄 PDF Report</h3><p>Generate this month's financial report</p></div><button onclick="generatePDF()">Generate</button></div>
+    <div class="stitle">Security</div>
+    <div class="set-row"><div class="sr-left"><h3>🔒 Change PIN</h3><p>Update your app PIN</p></div><button onclick="closeAll();startChangePin()">Change</button></div>
+    <div class="stitle">Notifications</div>
+    <div class="set-row"><div class="sr-left"><h3>🔔 Notifications</h3><p id="notifSettingSub">Alerts for EMIs, cheques, visa expiry</p></div><button onclick="toggleNotifications()" id="notifSettingBtn">Enable</button></div>
+    <div class="stitle">Backup</div>
+    <div class="set-row"><div class="sr-left"><h3>💾 Backup Now</h3><p>Save a backup file to your phone</p></div><button onclick="doDailyBackup()">Backup</button></div>
+    <div class="set-row"><div class="sr-left"><h3>⬇️ Export</h3><p>Save all data as JSON file</p></div><button onclick="exportBk()">Export</button></div>
+    <div class="set-row"><div class="sr-left"><h3>⬆️ Import</h3><p>Restore data from backup file</p></div><button onclick="el('impFileSettings').click()">Import</button></div>
+    <input type="file" id="impFileSettings" accept="application/json" style="display:none" onchange="importBk(this)">
+  </div>
+</div>
+
+<!-- OVERLAY: WITHDRAW SAVINGS -->
+<div class="ov" id="ov-withdraw">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2>💸 Withdrawal</h2><button class="sclose" onclick="closeAll()">✕</button></div>
+    <div class="field"><label>Amount</label><input type="number" inputmode="decimal" id="wdAmt" placeholder="0"></div>
+    <div class="field"><label>Type</label>
+      <select id="wdType">
+        <option value="withdrawal">Withdrawal (taken out)</option>
+        <option value="adjustment">Manual Adjustment</option>
+      </select>
+    </div>
+    <div class="field"><label>Savings Type</label>
+      <select id="wdCat">
+        <option value="cash">Cash</option><option value="mf">Mutual Funds</option>
+        <option value="shares">Shares</option><option value="gold">Gold</option>
+        <option value="fd">Fixed Deposit</option><option value="other">Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Date</label><input type="date" id="wdDate"></div>
+    <div class="field"><label>Note (optional)</label><input type="text" id="wdNote" placeholder="e.g. Emergency withdrawal"></div>
+    <div class="sacts">
+      <button class="btn ghost" onclick="closeAll()">Cancel</button>
+      <button class="btn" style="background:linear-gradient(135deg,#e17055,#d63031);color:#fff;" onclick="saveWithdrawal()">Record</button>
+    </div>
+    <div class="stitle" style="margin-top:18px;">Withdrawal History</div>
+    <div id="wdListContainer"></div>
+  </div>
+</div>
+</div>
+<script src="core.js"></script>
+<script src="settings.js"></script>
+<script src="income-expense.js"></script>
+<script src="savings.js"></script>
+<script src="debt.js"></script>
+<script src="bank.js"></script>
+<script src="documents.js"></script>
+<script src="appointments.js"></script>
+<script src="payment-schedule.js"></script>
+<script src="init.js"></script>
+</body>
+</html>
