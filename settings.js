@@ -215,6 +215,19 @@ async function importBk(input) {
   };
   reader.readAsText(file);
 }
+function populatePdfMonthSelect() {
+  var sel = el("pdfReportMonth"); if (!sel) return;
+  var prev = sel.value;
+  var now = new Date();
+  var opts = [];
+  for (var i = 0; i < 12; i++) {
+    var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    var key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+    opts.push('<option value="' + key + '">' + mLabel(key) + '</option>');
+  }
+  sel.innerHTML = opts.join("");
+  sel.value = prev || curM();
+}
 async function generatePDF() {
   // Open the tab synchronously, before any await — otherwise the browser
   // treats window.open() as no longer being a direct result of the click
@@ -222,12 +235,22 @@ async function generatePDF() {
   // nothing at all.
   var w = window.open("", "_blank");
   try {
-    var mk=curM(), mName=mLabel(mk);
+    var sel = el("pdfReportMonth");
+    var mk = (sel && sel.value) ? sel.value : curM();
+    var mName = mLabel(mk);
     var exps=await dbAll("expenses"),incs=await dbAll("incomes"),savs=await dbAll("savings");
     var mExp=exps.filter(function(e){return mKey(e.date)===mk;}), mInc=incs.filter(function(e){return mKey(e.date)===mk;}), mSav=savs.filter(function(e){return mKey(e.date)===mk;});
     var spent=mExp.reduce(function(s,e){return s+Number(e.amount||0);},0), earned=mInc.reduce(function(s,e){return s+Number(e.amount||0);},0), saved=mSav.reduce(function(s,e){return s+Number(e.amount||e.totalVal||0);},0);
     function row(l,v,c,a){var bg=a?"background:#fff;":"";return"<tr><td style='padding:12px 16px;font-weight:700;"+bg+"'>"+l+"</td><td style='padding:12px 16px;text-align:right;font-weight:800;color:"+c+";"+bg+"'>"+v+"</td></tr>";}
-    var html="<html><head><meta charset='UTF-8'><style>body{font-family:-apple-system,sans-serif;color:#1a1a2e;padding:28px;}h1{font-size:26px;font-weight:800;color:#ff5f8f;margin:0 0 3px;}table{width:100%;border-collapse:collapse;font-size:12.5px;}td{padding:8px 10px;border-bottom:1px solid #eaeaf2;}tr:nth-child(even){background:#f7f8fa;}</style></head><body><h1>FinMob</h1><p style='color:#888;margin-bottom:22px;'>Monthly Report  -  "+mName+"</p><table>"+row("Income",fmt(earned),"#00c48c",false)+row("Spent",fmt(spent),"#ff5e57",true)+row("Saved",fmt(saved),"#f5a623",false)+row("Balance",fmt(earned-spent-saved),"#7c5cff",true)+"</table></body></html>";
+    // Category-wise breakdown - same grouping as the dashboard's By Category tab
+    // (group by subcategory where present, else category; sorted highest first)
+    var catSums = {};
+    mExp.forEach(function(e){ var k = e.subcat || e.cat; catSums[k] = (catSums[k]||0) + Number(e.amount||0); });
+    var catRows = Object.entries(catSums).sort(function(a,b){return b[1]-a[1];}).map(function(entry){
+      var cid = entry[0], tot = entry[1], c = catInfo(cid, false);
+      return "<tr><td style='padding:8px 16px;'>"+c.icon+" "+c.label+"</td><td style='padding:8px 16px;text-align:right;font-weight:700;'>"+fmt(tot)+"</td></tr>";
+    }).join("") || "<tr><td style='padding:8px 16px;color:#999;' colspan='2'>No expenses this month.</td></tr>";
+    var html="<html><head><meta charset='UTF-8'><style>body{font-family:-apple-system,sans-serif;color:#1a1a2e;padding:28px;}h1{font-size:26px;font-weight:800;color:#ff5f8f;margin:0 0 3px;}h2{font-size:15px;font-weight:800;color:#1a1a2e;margin:28px 0 10px;}table{width:100%;border-collapse:collapse;font-size:12.5px;}td{padding:8px 10px;border-bottom:1px solid #eaeaf2;}tr:nth-child(even){background:#f7f8fa;}</style></head><body><h1>FinMob</h1><p style='color:#888;margin-bottom:22px;'>Monthly Report  -  "+mName+"</p><table>"+row("Income",fmt(earned),"#00c48c",false)+row("Spent",fmt(spent),"#ff5e57",true)+row("Saved",fmt(saved),"#f5a623",false)+row("Balance",fmt(earned-spent-saved),"#7c5cff",true)+"</table><h2>Spending by Category</h2><table>"+catRows+"</table></body></html>";
     if (w) {
       w.document.write(html); w.document.close();
       setTimeout(function(){ w.print(); },500);

@@ -415,7 +415,7 @@ function openOv(id) {
   target.classList.add("open");
   if (id === "ov-debt-list") { renderDebtList(); }
   if (id === "ov-bank-list") { renderBankList(); }
-  if (id === "ov-settings") { updateNotifBtnUI(); }
+  if (id === "ov-settings") { updateNotifBtnUI(); populatePdfMonthSelect(); }
   if (id === "ov-docs-add") { selDocT=null; renderPeople(); renderDocs(); }
   if (id === "ov-docs-view") { renderPeople(); renderSavedDocsList(el("personSelView").value); }
   if (id === "ov-appts")      updateApptCount();
