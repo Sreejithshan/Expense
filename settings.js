@@ -229,11 +229,6 @@ function populatePdfMonthSelect() {
   sel.value = prev || curM();
 }
 async function generatePDF() {
-  // Open the tab synchronously, before any await — otherwise the browser
-  // treats window.open() as no longer being a direct result of the click
-  // and silently blocks it, which is why this previously appeared to do
-  // nothing at all.
-  var w = window.open("", "_blank");
   try {
     var sel = el("pdfReportMonth");
     var mk = (sel && sel.value) ? sel.value : curM();
@@ -251,14 +246,54 @@ async function generatePDF() {
       return "<tr><td style='padding:8px 16px;'>"+c.icon+" "+c.label+"</td><td style='padding:8px 16px;text-align:right;font-weight:700;'>"+fmt(tot)+"</td></tr>";
     }).join("") || "<tr><td style='padding:8px 16px;color:#999;' colspan='2'>No expenses this month.</td></tr>";
     var html="<html><head><meta charset='UTF-8'><style>body{font-family:-apple-system,sans-serif;color:#1a1a2e;padding:28px;}h1{font-size:26px;font-weight:800;color:#ff5f8f;margin:0 0 3px;}h2{font-size:15px;font-weight:800;color:#1a1a2e;margin:28px 0 10px;}table{width:100%;border-collapse:collapse;font-size:12.5px;}td{padding:8px 10px;border-bottom:1px solid #eaeaf2;}tr:nth-child(even){background:#f7f8fa;}</style></head><body><h1>FinMob</h1><p style='color:#888;margin-bottom:22px;'>Monthly Report  -  "+mName+"</p><table>"+row("Income",fmt(earned),"#00c48c",false)+row("Spent",fmt(spent),"#ff5e57",true)+row("Saved",fmt(saved),"#f5a623",false)+row("Balance",fmt(earned-spent-saved),"#7c5cff",true)+"</table><h2>Spending by Category</h2><table>"+catRows+"</table></body></html>";
-    if (w) {
-      w.document.write(html); w.document.close();
-      setTimeout(function(){ w.print(); },500);
-    } else {
-      alert("Please allow pop-ups for this site, then tap Generate again.");
-    }
-  } catch(e){ console.error("generatePDF:",e); if (w) w.close(); alert("Couldn't generate the report."); }
+    openPdfReportView(mName, html);
+  } catch(e){ console.error("generatePDF:",e); alert("Couldn't generate the report."); }
 }
+// Shows the generated report inside the app's own overlay system instead of
+// a separate browser window/tab. The old window.open() approach left no way
+// back on installed/Android PWAs (no browser chrome in that context) short
+// of force-closing the app - this keeps the report inside the app's normal
+// navigation, with the usual sclose "✕", a Back button, and the system/
+// gesture back button all closing it the same way.
+var pdfReportHistoryPushed = false;
+function openPdfReportView(title, html) {
+  el("pdfReportTitle").textContent = title;
+  el("pdfReportFrame").srcdoc = html;
+  closeAll();
+  openOv("ov-pdf-report");
+  // If the History API is unavailable (some sandboxed contexts), the report
+  // still opens and the on-screen Back/✕ still work - only the system back
+  // gesture falls back to its default behavior.
+  try { history.pushState({ pdfReport: true }, ""); pdfReportHistoryPushed = true; }
+  catch(e) { pdfReportHistoryPushed = false; }
+}
+function closePdfReportView() {
+  closeAll();
+  openOv("ov-settings");
+  if (pdfReportHistoryPushed) {
+    pdfReportHistoryPushed = false;
+    history.back();
+  }
+}
+function printPdfReport() {
+  try { var frame = el("pdfReportFrame"); frame.contentWindow.focus(); frame.contentWindow.print(); }
+  catch(e) { console.error("printPdfReport:", e); }
+}
+window.addEventListener("popstate", function() {
+  if (pdfReportHistoryPushed) {
+    pdfReportHistoryPushed = false;
+    if (el("ov-pdf-report") && el("ov-pdf-report").classList.contains("open")) {
+      closeAll();
+      openOv("ov-settings");
+    }
+  }
+});
+// Tapping the dimmed area outside the sheet behaves like Back (returns to
+// Settings and clears the history entry) rather than dropping out to Home.
+(function() {
+  var ov = el("ov-pdf-report");
+  if (ov) ov.addEventListener("click", function(e) { if (e.target === ov) closePdfReportView(); });
+})();
 
 // ── SPLASH ────────────────────────────────────────────────────────
 function hideSplash() {

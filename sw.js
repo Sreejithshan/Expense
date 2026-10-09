@@ -4,8 +4,8 @@
 // ═══════════════════════════════════════════════════════════
 
 const BASE        = '/Expense/';
-const SHELL_CACHE = 'finmob-shell-v12';
-const DATA_CACHE  = 'finmob-data-v12';
+const SHELL_CACHE = 'finmob-shell-v13';
+const DATA_CACHE  = 'finmob-data-v13';
 
 // App shell — cached immediately on install
 const SHELL_FILES = [

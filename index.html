@@ -977,6 +977,21 @@
   </div>
 </div>
 
+<!-- OVERLAY: PDF REPORT VIEWER -->
+<div class="ov" id="ov-pdf-report">
+  <div class="sheet">
+    <div class="drag-bar"></div>
+    <div class="sh2"><h2 id="pdfReportTitle">Report</h2><button class="sclose" onclick="closePdfReportView()">✕</button></div>
+    <div style="border-radius:var(--r2);overflow:hidden;background:#fff;box-shadow:var(--sh2);margin-bottom:14px;">
+      <iframe id="pdfReportFrame" title="Monthly report" style="width:100%;height:65vh;border:none;display:block;"></iframe>
+    </div>
+    <div class="sacts">
+      <button class="btn ghost" onclick="closePdfReportView()">Back</button>
+      <button class="btn mb" onclick="printPdfReport()">Print / Save as PDF</button>
+    </div>
+  </div>
+</div>
+
 <!-- OVERLAY: WITHDRAW SAVINGS -->
 <div class="ov" id="ov-withdraw">
   <div class="sheet">
